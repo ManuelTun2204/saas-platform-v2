@@ -1,0 +1,26 @@
+﻿# Archivos sensibles (NUNCA subir estos)
+.env
+*.key
+*.pem
+
+# Dependencias y caché de Python/Node
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Datos persistentes, bases de datos locales y vectores
+data/
+*.sqlite3
+*.db
+
+# Logs
+*.log
+logs/
+
+# Archivos de sistema y editores de código
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

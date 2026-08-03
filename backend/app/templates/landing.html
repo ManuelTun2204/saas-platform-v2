@@ -1,0 +1,127 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ hero_title | default('Mi Empresa') }} | Soluciones Premium</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* BOTÓN ARREGLADO: Azul sólido con texto blanco, imposible que sea invisible */
+        .btn-agendar {
+            background-color: #2563eb !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            border-radius: 9999px !important;
+            padding: 12px 32px !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3) !important;
+            transition: all 0.3s ease !important;
+        }
+        .btn-agendar:hover {
+            background-color: #1d4ed8 !important;
+            transform: translateY(-2px) !important;
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800 antialiased bg-gray-50">
+
+    <!-- NAVEGACIÓN -->
+    <nav class="fixed w-full z-50 top-0 bg-white/90 backdrop-blur-md shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between px-6 py-4">
+            <span class="text-2xl font-extrabold text-blue-600">{{ hero_title.split(' ')[0] | default('MiEmpresa') }}</span>
+            <div class="flex gap-4 items-center">
+                <a href="#servicios" class="hidden md:block text-gray-700 hover:text-blue-600 font-semibold transition">Servicios</a>
+                <a href="#contacto" class="hidden md:block text-gray-700 hover:text-blue-600 font-semibold transition">Contacto</a>
+                {% if calendly_url %}
+                    <a href="{{ calendly_url }}" target="_blank" class="btn-agendar">📅 Agendar Cita</a>
+                {% else %}
+                    <a href="#contacto" class="btn-agendar">{{ cta_text | default('Contáctanos') }}</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden min-h-[85vh] flex items-center bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div class="relative z-10 max-w-5xl mx-auto text-center px-6">
+            <span class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-4 py-1 rounded-full mb-6">✨ Soluciones de vanguardia para {{ industry | default('tu industria') }}</span>
+            <h1 class="text-5xl md:text-6xl font-extrabold text-gray-900 mb-8 leading-tight">{{ hero_title | default('Impulsa tu negocio') }}</h1>
+            <p class="text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">{{ hero_subtitle | default('Ofrecemos servicios premium diseñados meticulosamente para potenciar tu operación.') }}</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                {% if calendly_url %}
+                    <a href="{{ calendly_url }}" target="_blank" class="btn-agendar text-lg px-10 py-4">Agendar Cita Gratuita</a>
+                {% else %}
+                    <a href="#contacto" class="btn-agendar text-lg px-10 py-4">{{ cta_text | default('Contáctanos') }}</a>
+                {% endif %}
+                <a href="#servicios" class="inline-block text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-semibold rounded-full px-8 py-4 text-lg transition-all shadow-sm">Conocer más</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICIOS -->
+    <section id="servicios" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Nuestros Servicios Exclusivos</h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-12">Diseñados meticulosamente para potenciar tu operación.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {% for service in services %}
+                <div class="p-8 bg-gray-50 rounded-2xl shadow-sm hover:shadow-xl transition border border-gray-100">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">{{ service.title }}</h3>
+                    <p class="text-gray-600 leading-relaxed">{{ service.description }}</p>
+                </div>
+                {% else %}
+                <div class="col-span-3 text-gray-500">No hay servicios disponibles en este momento.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACTO -->
+    <section id="contacto" class="py-20 bg-gray-900 text-white">
+        <div class="max-w-5xl mx-auto px-6 text-center">
+            <h2 class="text-4xl font-bold mb-6">¿Listo para empezar?</h2>
+            <p class="text-gray-400 text-xl mb-10">Contáctanos o agenda una cita directamente.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center mb-12">
+                {% if contact_email %}
+                <div>
+                    <div class="text-4xl mb-4">📧</div>
+                    <h3 class="font-bold text-xl mb-2">Email</h3>
+                    <a href="mailto:{{ contact_email }}" class="text-blue-400 hover:underline">{{ contact_email }}</a>
+                </div>
+                {% endif %}
+                {% if contact_phone %}
+                <div>
+                    <div class="text-4xl mb-4">📱</div>
+                    <h3 class="font-bold text-xl mb-2">WhatsApp</h3>
+                    <a href="https://wa.me/{{ contact_phone | replace(' ', '') | replace('+', '') | replace('-', '') }}" target="_blank" class="text-green-400 hover:underline">{{ contact_phone }}</a>
+                </div>
+                {% endif %}
+                {% if contact_address %}
+                <div>
+                    <div class="text-4xl mb-4">📍</div>
+                    <h3 class="font-bold text-xl mb-2">Ubicación</h3>
+                    <p class="text-gray-400">{{ contact_address }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if calendly_url %}
+                <a href="{{ calendly_url }}" target="_blank" class="btn-agendar text-lg px-12 py-4">Abrir Calendario y Agendar Cita</a>
+            {% endif %}
+        </div>
+    </section>
+
+    <footer class="bg-gray-950 text-gray-500 py-8 text-center text-sm border-t border-gray-800">
+        <p>&copy; 2026 {{ hero_title.split(' ')[0] | default('MiEmpresa') }}. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- WIDGET DEL CHATBOT -->
+    <script>
+        var CHATBOT_TENANT_ID = '{{ tenant_id | default("default") }}';
+    </script>
+    <script src="/static/widget/widget.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,383 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SaaS Platform Pro | Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Inter', sans-serif; } .glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); } </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<div id="login-screen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 p-6">
+    <div class="glass rounded-2xl p-8 w-full max-w-md shadow-2xl">
+        <h1 class="text-2xl font-bold text-gray-900 text-center mb-6">SaaS Platform Pro</h1>
+        <form id="login-form" class="space-y-4">
+            <input type="text" id="login-user" required class="w-full p-3 border rounded-lg" placeholder="Usuario">
+            <input type="password" id="login-pass" required class="w-full p-3 border rounded-lg" placeholder="Contraseña">
+            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg">Iniciar Sesión</button>
+            <button type="button" onclick="showRegister()" class="w-full text-blue-600 hover:underline text-sm">¿No tienes cuenta? Regístrate</button>
+        </form>
+    </div>
+</div>
+
+<div id="app-main" class="hidden">
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-gray-900">SaaS Platform Pro</h1>
+            <div class="flex gap-2">
+                <button onclick="showView('companies')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white">🏢 Empresas</button>
+                <button onclick="logout()" class="px-4 py-2 rounded-lg text-sm font-semibold bg-red-100 text-red-700">Salir</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto p-6">
+        <div id="view-companies" class="view-content">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Mis Empresas</h2>
+            <div id="companies-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </div>
+
+        <div id="view-company-detail" class="view-content hidden">
+            <button onclick="showView('companies')" class="mb-4 text-blue-600 font-semibold">← Volver</button>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h2 id="detail-name" class="text-2xl font-bold mb-1"></h2>
+                <p id="detail-industry" class="text-gray-600 mb-6"></p>
+                
+                <div class="border-b border-gray-200 mb-6 flex gap-6">
+                    <button onclick="showDetailTab('web')" class="detail-tab pb-2 border-b-2 border-blue-600 text-blue-600 font-semibold">🌐 Web</button>
+                    <button onclick="showDetailTab('chatbot')" class="detail-tab pb-2 border-b-2 border-transparent text-gray-600 font-semibold">🤖 Chatbot</button>
+                    <button onclick="showDetailTab('seo')" class="detail-tab pb-2 border-b-2 border-transparent text-gray-600 font-semibold">📈 SEO</button>
+                </div>
+
+                <div id="detail-tab-web" class="detail-tab-content">
+                    <a id="web-link" href="#" target="_blank" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">Ver Sitio Web ↗</a>
+                </div>
+
+                <!-- TAB CHATBOT CON BOTONES GARANTIZADOS -->
+                <div id="detail-tab-chatbot" class="detail-tab-content hidden">
+                    <div class="mb-6">
+                        <h3 class="font-bold text-gray-900 mb-3">📚 Alimentar el Chatbot</h3>
+                        
+                        <!-- BOTONES DE MODO -->
+                        <div class="flex gap-2 mb-6">
+                            <button onclick="showChatbotMode('upload')" id="btn-mode-upload" class="flex-1 py-3 px-4 rounded-lg font-semibold bg-indigo-600 text-white transition">📁 Subir Archivos</button>
+                            <button onclick="showChatbotMode('form')" id="btn-mode-form" class="flex-1 py-3 px-4 rounded-lg font-semibold bg-gray-200 text-gray-700 transition">✏️ Llenar Plantillas</button>
+                        </div>
+                        
+                        <!-- MODO 1: SUBIR ARCHIVOS -->
+                        <div id="mode-upload" class="bg-white rounded-xl p-6 border border-gray-200">
+                            <h4 class="font-bold text-gray-900 mb-2">Subir Documentos (.txt o .pdf)</h4>
+                            <input type="file" id="doc-upload" accept=".txt,.pdf" class="w-full p-2 border rounded-lg mb-3">
+                            <button onclick="uploadDoc()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700">Subir y Procesar</button>
+                            <p id="upload-status" class="text-sm mt-2"></p>
+                        </div>
+                        
+                        <!-- MODO 2: LLENAR PLANTILLAS (FORMULARIOS) -->
+                        <div id="mode-form" class="hidden space-y-6">
+                            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                                <p class="text-sm text-blue-800">💡 <strong>Modo guiado:</strong> Llena los campos y el sistema generará los archivos .txt automáticamente con el formato exacto.</p>
+                            </div>
+                            
+                            <!-- CATÁLOGO -->
+                            <details class="group bg-white border border-gray-200 rounded-xl overflow-hidden" open>
+                                <summary class="flex justify-between items-center p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 font-semibold">
+                                    <span>📦 Plantilla 1: Catálogo de Productos/Servicios</span>
+                                    <span class="transition group-open:rotate-180">▼</span>
+                                </summary>
+                                <div class="p-4 space-y-3">
+                                    <input type="text" id="cat-company" class="w-full p-2 border rounded" placeholder="Nombre de tu empresa">
+                                    <div id="cat-products" class="space-y-3">
+                                        <div class="product-item bg-gray-50 p-4 rounded border">
+                                            <input type="text" class="cat-prod-name w-full p-2 border rounded mb-2 font-semibold" placeholder="Nombre del plan/servicio (Ej: Plan Básico)">
+                                            <input type="text" class="cat-prod-price w-full p-2 border rounded mb-2" placeholder="Precio (Ej: 499)">
+                                            <textarea class="cat-prod-desc w-full p-2 border rounded mb-2" rows="2" placeholder="Descripción breve de 1-2 líneas"></textarea>
+                                            <textarea class="cat-prod-features w-full p-2 border rounded mb-2" rows="3" placeholder="Características (una por línea, Ej: - Soporte 24/7)"></textarea>
+                                            <textarea class="cat-prod-benefits w-full p-2 border rounded mb-2" rows="2" placeholder="Beneficios para el cliente (uno por línea)"></textarea>
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <input type="text" class="cat-prod-delivery w-full p-2 border rounded" placeholder="Tiempo de entrega (Ej: 2 semanas)">
+                                                <input type="text" class="cat-prod-guarantee w-full p-2 border rounded" placeholder="Garantía (Ej: 30 días)">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button onclick="addProduct()" class="text-sm text-blue-600 hover:underline font-semibold">+ Agregar otro producto/plan</button>
+                                </div>
+                            </details>
+                            
+                            <!-- POLÍTICAS -->
+                            <details class="group bg-white border border-gray-200 rounded-xl overflow-hidden">
+                                <summary class="flex justify-between items-center p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 font-semibold">
+                                    <span>📋 Plantilla 2: Políticas de la Empresa</span>
+                                    <span class="transition group-open:rotate-180">▼</span>
+                                </summary>
+                                <div class="p-4 space-y-3">
+                                    <input type="text" id="pol-company" class="w-full p-2 border rounded" placeholder="Nombre de tu empresa">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        <input type="text" id="pol-guarantee" class="p-2 border rounded" placeholder="Garantía de satisfacción (Ej: 30 días)">
+                                        <input type="text" id="pol-refund" class="p-2 border rounded" placeholder="Política de reembolso">
+                                        <input type="text" id="pol-processing" class="p-2 border rounded" placeholder="Tiempo de procesamiento (Ej: 3 días hábiles)">
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        <input type="text" id="pol-hours-week" class="p-2 border rounded" placeholder="Horario L-V (Ej: 09:00 - 18:00)">
+                                        <input type="text" id="pol-hours-sat" class="p-2 border rounded" placeholder="Horario Sábados (Ej: 10:00 - 14:00)">
+                                        <input type="text" id="pol-emergency" class="p-2 border rounded" placeholder="Soporte de emergencia">
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        <input type="email" id="pol-email" class="p-2 border rounded" placeholder="Email">
+                                        <input type="text" id="pol-phone" class="p-2 border rounded" placeholder="Teléfono/WhatsApp">
+                                    </div>
+                                    <input type="text" id="pol-address" class="w-full p-2 border rounded" placeholder="Dirección">
+                                    <input type="text" id="pol-social" class="w-full p-2 border rounded" placeholder="Redes sociales">
+                                </div>
+                            </details>
+                            
+                            <!-- FAQs -->
+                            <details class="group bg-white border border-gray-200 rounded-xl overflow-hidden">
+                                <summary class="flex justify-between items-center p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 font-semibold">
+                                    <span>❓ Plantilla 3: Preguntas Frecuentes (FAQs)</span>
+                                    <span class="transition group-open:rotate-180">▼</span>
+                                </summary>
+                                <div class="p-4 space-y-3">
+                                    <div id="faq-items" class="space-y-2">
+                                        <div class="faq-item bg-gray-50 p-3 rounded border">
+                                            <input type="text" class="faq-q w-full p-2 border rounded mb-2 font-semibold" placeholder="Pregunta (Ej: ¿Cuánto tiempo tarda?)">
+                                            <textarea class="faq-a w-full p-2 border rounded" rows="2" placeholder="Respuesta exacta"></textarea>
+                                        </div>
+                                    </div>
+                                    <button onclick="addFaq()" class="text-sm text-blue-600 hover:underline font-semibold">+ Agregar otra pregunta</button>
+                                </div>
+                            </details>
+                            
+                            <button onclick="saveTemplates()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-4 rounded-xl hover:shadow-lg transition text-lg">
+                                💾 Guardar Plantillas y Procesar
+                            </button>
+                            <div id="templates-status" class="text-center text-sm font-semibold"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="detail-tab-seo" class="detail-tab-content hidden">
+                    <a id="seo-link" href="#" target="_blank" class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700">Ver Reporte SEO ↗</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+let currentTenantId = '';
+
+// Auth simple
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const user = document.getElementById('login-user').value;
+    const pass = document.getElementById('login-pass').value;
+    try {
+        const res = await fetch('/api/auth/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ username: user, password: pass }) });
+        const data = await res.json();
+        if (data.status === 'success') {
+            localStorage.setItem('user', JSON.stringify(data.user));
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-main').classList.remove('hidden');
+            loadCompanies();
+        } else { alert('Credenciales inválidas'); }
+    } catch(e) { alert('Error de conexión'); }
+});
+
+window.addEventListener('load', () => {
+    if (localStorage.getItem('user')) {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app-main').classList.remove('hidden');
+        loadCompanies();
+    }
+});
+
+function logout() { localStorage.clear(); location.reload(); }
+function showRegister() { alert('Usa el usuario y contraseña que creaste al inicio.'); }
+
+function showView(view) {
+    document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById('view-' + view).classList.remove('hidden');
+    if (view === 'companies') loadCompanies();
+}
+
+async function loadCompanies() {
+    try {
+        const res = await fetch('/api/tenants');
+        const data = await res.json();
+        document.getElementById('companies-grid').innerHTML = data.tenants.map(t => {
+            const id = t.tenant_id || t.id;
+            return `<div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition cursor-pointer" onclick="viewCompanyDetails('${id}')">
+                <h3 class="font-bold text-lg mb-1">${t.company_name || id}</h3>
+                <p class="text-sm text-gray-500 mb-3">${t.industry || 'Sin industria'}</p>
+                <span class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">${t.package || 'full'}</span>
+            </div>`;
+        }).join('');
+    } catch(e) {}
+}
+
+async function viewCompanyDetails(tenantId) {
+    currentTenantId = tenantId;
+    showView('company-detail');
+    try {
+        const res = await fetch('/api/tenant/' + tenantId + '/details');
+        const data = await res.json();
+        const t = data.tenant || {};
+        document.getElementById('detail-name').innerText = t.company_name || tenantId;
+        document.getElementById('detail-industry').innerText = t.industry || '';
+        document.getElementById('web-link').href = '/data/websites/' + tenantId + '/index.html';
+        document.getElementById('seo-link').href = '/data/websites/' + tenantId + '/seo-report.html';
+    } catch(e) { alert('Error cargando detalles'); }
+}
+
+function showDetailTab(tab) {
+    document.querySelectorAll('.detail-tab-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById('detail-tab-' + tab).classList.remove('hidden');
+    document.querySelectorAll('.detail-tab').forEach(btn => { 
+        btn.classList.remove('border-blue-600', 'text-blue-600'); 
+        btn.classList.add('border-transparent', 'text-gray-600'); 
+    });
+    event.target.classList.remove('border-transparent', 'text-gray-600');
+    event.target.classList.add('border-blue-600', 'text-blue-600');
+}
+
+// ===== FUNCIONES DEL CHATBOT (MODO DUAL) =====
+function showChatbotMode(mode) {
+    document.getElementById('mode-upload').classList.toggle('hidden', mode !== 'upload');
+    document.getElementById('mode-form').classList.toggle('hidden', mode !== 'form');
+    
+    const btnUpload = document.getElementById('btn-mode-upload');
+    const btnForm = document.getElementById('btn-mode-form');
+    
+    if (mode === 'upload') {
+        btnUpload.className = 'flex-1 py-3 px-4 rounded-lg font-semibold bg-indigo-600 text-white transition';
+        btnForm.className = 'flex-1 py-3 px-4 rounded-lg font-semibold bg-gray-200 text-gray-700 transition';
+    } else {
+        btnForm.className = 'flex-1 py-3 px-4 rounded-lg font-semibold bg-indigo-600 text-white transition';
+        btnUpload.className = 'flex-1 py-3 px-4 rounded-lg font-semibold bg-gray-200 text-gray-700 transition';
+    }
+}
+
+function addProduct() {
+    const container = document.getElementById('cat-products');
+    const div = document.createElement('div');
+    div.className = 'product-item bg-gray-50 p-4 rounded border mt-3';
+    div.innerHTML = `
+        <input type="text" class="cat-prod-name w-full p-2 border rounded mb-2 font-semibold" placeholder="Nombre del plan/servicio">
+        <input type="text" class="cat-prod-price w-full p-2 border rounded mb-2" placeholder="Precio">
+        <textarea class="cat-prod-desc w-full p-2 border rounded mb-2" rows="2" placeholder="Descripción breve"></textarea>
+        <textarea class="cat-prod-features w-full p-2 border rounded mb-2" rows="3" placeholder="Características (una por línea)"></textarea>
+        <textarea class="cat-prod-benefits w-full p-2 border rounded mb-2" rows="2" placeholder="Beneficios"></textarea>
+        <div class="grid grid-cols-2 gap-2">
+            <input type="text" class="cat-prod-delivery w-full p-2 border rounded" placeholder="Tiempo de entrega">
+            <input type="text" class="cat-prod-guarantee w-full p-2 border rounded" placeholder="Garantía">
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-xs text-red-600 hover:underline mt-2 font-semibold">Eliminar este producto</button>
+    `;
+    container.appendChild(div);
+}
+
+function addFaq() {
+    const container = document.getElementById('faq-items');
+    const div = document.createElement('div');
+    div.className = 'faq-item bg-gray-50 p-3 rounded border mt-2';
+    div.innerHTML = `
+        <input type="text" class="faq-q w-full p-2 border rounded mb-2 font-semibold" placeholder="Pregunta">
+        <textarea class="faq-a w-full p-2 border rounded" rows="2" placeholder="Respuesta"></textarea>
+        <button onclick="this.parentElement.remove()" class="text-xs text-red-600 hover:underline mt-2 font-semibold">Eliminar esta pregunta</button>
+    `;
+    container.appendChild(div);
+}
+
+async function saveTemplates() {
+    const status = document.getElementById('templates-status');
+    status.innerText = '⏳ Guardando y procesando...';
+    status.className = 'text-center text-sm font-semibold text-blue-600';
+    
+    const catCompany = document.getElementById('cat-company').value || 'MI EMPRESA';
+    let catalogo = 'CATALOGO DE PRODUCTOS/SERVICIOS - ' + catCompany + '\n=====================================\n';
+    
+    document.querySelectorAll('.product-item').forEach((item, idx) => {
+        const name = item.querySelector('.cat-prod-name').value;
+        const price = item.querySelector('.cat-prod-price').value;
+        const desc = item.querySelector('.cat-prod-desc').value;
+        const features = item.querySelector('.cat-prod-features').value;
+        const benefits = item.querySelector('.cat-prod-benefits').value;
+        const delivery = item.querySelector('.cat-prod-delivery').value;
+        const guarantee = item.querySelector('.cat-prod-guarantee').value;
+        
+        if (name) {
+            catalogo += 'PRODUCTO ' + (idx + 1) + ': ' + name + '\n=====================================\n';
+            catalogo += 'Precio: $' + price + ' USD\n';
+            catalogo += 'Descripcion: ' + desc + '\n';
+            catalogo += 'Caracteristicas principales:\n' + features.split('\n').map(l => l.trim() ? '- ' + l : '').filter(l => l.length > 1).join('\n') + '\n';
+            catalogo += 'Beneficios para el cliente:\n' + benefits.split('\n').map(l => l.trim() ? '- ' + l : '').filter(l => l.length > 1).join('\n') + '\n';
+            catalogo += 'Tiempo de entrega: ' + delivery + '\n';
+            catalogo += 'Garantia: ' + guarantee + '\n';
+            catalogo += '=====================================\n';
+        }
+    });
+    
+    const polCompany = document.getElementById('pol-company').value || 'MI EMPRESA';
+    let politicas = 'POLITICAS DE LA EMPRESA - ' + polCompany + '\n=====================================\n';
+    politicas += 'GARANTIAS Y DEVOLUCIONES\n=====================================\n';
+    politicas += '- Garantia de satisfaccion: ' + document.getElementById('pol-guarantee').value + '\n';
+    politicas += '- Politica de reembolso: ' + document.getElementById('pol-refund').value + '\n';
+    politicas += '- Tiempo de procesamiento: ' + document.getElementById('pol-processing').value + ' dias habiles\n';
+    politicas += '=====================================\n';
+    politicas += 'HORARIOS DE ATENCION\n=====================================\n';
+    politicas += '- Lunes a Viernes: ' + document.getElementById('pol-hours-week').value + '\n';
+    politicas += '- Sabados: ' + document.getElementById('pol-hours-sat').value + '\n';
+    politicas += '- Soporte de emergencia: ' + document.getElementById('pol-emergency').value + '\n';
+    politicas += '=====================================\n';
+    politicas += 'INFORMACION DE CONTACTO\n=====================================\n';
+    politicas += '- Email: ' + document.getElementById('pol-email').value + '\n';
+    politicas += '- Telefono/WhatsApp: ' + document.getElementById('pol-phone').value + '\n';
+    politicas += '- Direccion: ' + document.getElementById('pol-address').value + '\n';
+    politicas += '- Redes: ' + document.getElementById('pol-social').value + '\n';
+    
+    let faqs = 'PREGUNTAS FRECUENTES - ' + catCompany + '\n';
+    document.querySelectorAll('.faq-item').forEach(item => {
+        const q = item.querySelector('.faq-q').value;
+        const a = item.querySelector('.faq-a').value;
+        if (q && a) {
+            faqs += 'P: ¿' + q + '?\nR: ' + a + '\n';
+        }
+    });
+    
+    try {
+        const res = await fetch('/api/chatbot/save-templates/' + currentTenantId, {
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ catalogo: catalogo, politicas: politicas, faqs: faqs })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            status.innerHTML = '✅ ¡Plantillas guardadas! ' + data.chunks_indexed + ' fragmentos indexados.<br><small>Catálogo: ' + (data.files_created.catalogo ? '✓' : '✗') + ', Políticas: ' + (data.files_created.politicas ? '✓' : '✗') + ', FAQs: ' + (data.files_created.faqs ? '✓' : '✗') + '</small>';
+            status.className = 'text-center text-sm font-semibold text-green-600';
+        } else { 
+            status.innerText = '❌ Error: ' + data.detail; 
+            status.className = 'text-center text-sm font-semibold text-red-600'; 
+        }
+    } catch(e) { 
+        status.innerText = '❌ Error de conexión'; 
+        status.className = 'text-center text-sm font-semibold text-red-600'; 
+    }
+}
+
+async function uploadDoc() {
+    const file = document.getElementById('doc-upload').files[0];
+    const status = document.getElementById('upload-status');
+    if (!file) { status.innerText = '⚠️ Selecciona un archivo'; return; }
+    status.innerText = '⏳ Procesando...';
+    const formData = new FormData(); 
+    formData.append('file', file);
+    try {
+        const res = await fetch('/api/documents/upload/' + currentTenantId, { method: 'POST', body: formData });
+        const data = await res.json();
+        status.innerText = data.status === 'success' ? '✅ ' + data.chunks_indexed + ' fragmentos indexados' : '❌ Error';
+    } catch(e) { status.innerText = '❌ Error de conexión'; }
+}
+</script>
+</body>
+</html>

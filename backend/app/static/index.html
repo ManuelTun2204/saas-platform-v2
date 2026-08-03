@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Platform V2 - Generador Modular</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+    <header class="bg-white shadow-sm p-4 text-center">
+        <h1 class="text-2xl font-bold text-gray-900">Configura tu Servicio</h1>
+        <p class="text-sm text-gray-500">Selecciona el paquete que mejor se adapte a tu negocio</p>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-6">
+        <form id="generator-form" class="space-y-6">
+            <input type="text" id="tenant-id" value="cliente-01" class="w-full p-3 border rounded" placeholder="ID del Cliente">
+            
+            <!-- Selector de Paquetes -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label class="cursor-pointer border-2 border-blue-500 bg-blue-50 rounded-xl p-4 flex flex-col items-center text-center hover:shadow-md transition package-option" onclick="selectPackage('full', this)">
+                    <input type="radio" name="package" value="full" class="hidden" checked>
+                    <span class="text-2xl mb-2">🚀</span>
+                    <span class="font-bold text-lg">Servicio Completo</span>
+                    <span class="text-sm text-gray-600">Web + Chatbot RAG + Posicionamiento SEO</span>
+                </label>
+                <label class="cursor-pointer border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center text-center hover:border-blue-300 hover:shadow-md transition package-option" onclick="selectPackage('web_chat', this)">
+                    <input type="radio" name="package" value="web_chat" class="hidden">
+                    <span class="text-2xl mb-2">💻</span>
+                    <span class="font-bold text-lg">Web + Chatbot</span>
+                    <span class="text-sm text-gray-600">Sitio web profesional con asistente IA</span>
+                </label>
+                <label class="cursor-pointer border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center text-center hover:border-blue-300 hover:shadow-md transition package-option" onclick="selectPackage('chat_only', this)">
+                    <input type="radio" name="package" value="chat_only" class="hidden">
+                    <span class="text-2xl mb-2">🤖</span>
+                    <span class="font-bold text-lg">Solo Chatbot</span>
+                    <span class="text-sm text-gray-600">Widget inteligente para tu web actual</span>
+                </label>
+                <label class="cursor-pointer border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center text-center hover:border-blue-300 hover:shadow-md transition package-option" onclick="selectPackage('seo_only', this)">
+                    <input type="radio" name="package" value="seo_only" class="hidden">
+                    <span class="text-2xl mb-2">📈</span>
+                    <span class="font-bold text-lg">Solo Posicionamiento</span>
+                    <span class="text-sm text-gray-600">Auditoría, Meta Tags y Schema Markup</span>
+                </label>
+            </div>
+
+            <input type="text" id="industry" value="Consultoría Financiera" class="w-full p-3 border rounded" placeholder="Industria">
+            <input type="text" id="objective" value="Captar leads" class="w-full p-3 border rounded" placeholder="Objetivo">
+            <input type="text" id="audience" value="Empresarios" class="w-full p-3 border rounded" placeholder="Audiencia">
+            <input type="text" id="tone" value="Profesional" class="w-full p-3 border rounded" placeholder="Tono">
+            
+            <button type="submit" class="w-full bg-blue-600 text-white p-4 rounded-lg font-bold hover:bg-blue-700 transition">Generar Servicio</button>
+        </form>
+
+        <div id="loading" class="hidden text-center p-10"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div><p class="mt-4">Procesando...</p></div>
+        
+        <div id="success" class="hidden bg-green-50 p-6 rounded-xl border border-green-200 text-center">
+            <h2 class="text-xl font-bold text-green-800 mb-2">¡Servicio Configurado con Éxito!</h2>
+            <ul id="deliverables-list" class="text-left text-green-700 mb-4 space-y-1 list-disc list-inside"></ul>
+            <a id="preview-link" href="#" target="_blank" class="inline-block bg-green-600 text-white px-6 py-3 rounded font-bold hover:bg-green-700 transition">Ver Resultado / Panel</a>
+        </div>
+    </main>
+
+    <script>
+        function selectPackage(pkg, element) {
+            document.querySelectorAll('.package-option').forEach(el => {
+                el.classList.remove('border-blue-500', 'bg-blue-50');
+                el.classList.add('border-gray-200');
+            });
+            element.classList.remove('border-gray-200');
+            element.classList.add('border-blue-500', 'bg-blue-50');
+            element.querySelector('input').checked = true;
+        }
+
+        document.getElementById('generator-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            document.getElementById('generator-form').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+
+            const tenantId = document.getElementById('tenant-id').value;
+            const pkg = document.querySelector('input[name="package"]:checked').value;
+            const payload = {
+                industry: document.getElementById('industry').value,
+                objective: document.getElementById('objective').value,
+                audience: document.getElementById('audience').value,
+                tone: document.getElementById('tone').value,
+                package: pkg
+            };
+
+            try {
+                const response = await fetch('/api/generate/' + tenantId, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('success').classList.remove('hidden');
+                
+                const list = document.getElementById('deliverables-list');
+                list.innerHTML = data.deliverables.map(d => `<li>${d}</li>`).join('');
+                
+                document.getElementById('preview-link').href = window.location.origin + data.preview_url;
+            } catch (error) {
+                alert('Error: ' + error.message);
+                location.reload();
+            }
+        });
+    </script>
+</body>
+</html>

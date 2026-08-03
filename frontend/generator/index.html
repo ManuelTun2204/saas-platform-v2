@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador Web con IA | SaaS Platform V2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-4xl mx-auto px-4 py-6 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Generador Web con IA</h1>
+                <p class="text-sm text-gray-500">Crea tu sitio profesional en segundos</p>
+            </div>
+            <div class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">MVP V2</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-4xl mx-auto px-4 py-10 w-full">
+        
+        <!-- Formulario -->
+        <div id="form-container" class="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+            <form id="generator-form" class="space-y-6">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ID del Cliente (Tenant)</label>
+                        <input type="text" id="tenant-id" value="cliente-prueba-01" 
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                            placeholder="ej: empresa-xyz">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Industria o Nicho</label>
+                        <select id="industry" required 
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white">
+                            <option value="">Selecciona una industria...</option>
+                            <option value="Consultoría Financiera">Consultoría Financiera</option>
+                            <option value="Clínica Dental">Clínica Dental / Salud</option>
+                            <option value="Estudio de Diseño">Estudio de Diseño / Arquitectura</option>
+                            <option value="Restaurante Gourmet">Restaurante / Gastronomía</option>
+                            <option value="Agencia de Marketing">Agencia de Marketing Digital</option>
+                            <option value="Despacho Legal">Despacho Legal / Abogados</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Objetivo Principal del Sitio</label>
+                    <input type="text" id="objective" required 
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                        placeholder="ej: Captar leads de alto valor, mostrar portafolio, vender online...">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Audiencia Objetivo</label>
+                    <input type="text" id="audience" required 
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+                        placeholder="ej: Empresarios y dueños de PYMES, jóvenes de 18-25 años...">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tono de Voz de la Marca</label>
+                    <select id="tone" required 
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white">
+                        <option value="Profesional, confiable y exclusivo">Profesional, confiable y exclusivo</option>
+                        <option value="Joven, dinámico y cercano">Joven, dinámico y cercano</option>
+                        <option value="Minimalista, elegante y sofisticado">Minimalista, elegante y sofisticado</option>
+                        <option value="Divertido, creativo y audaz">Divertido, creativo y audaz</option>
+                    </select>
+                </div>
+
+                <button type="submit" id="submit-btn" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Generar Mi Sitio Web con IA
+                </button>
+            </form>
+        </div>
+
+        <!-- Estado de Carga -->
+        <div id="loading-container" class="hidden bg-white rounded-2xl shadow-lg p-12 border border-gray-100 text-center">
+            <div class="loader mx-auto mb-6"></div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">La IA está diseñando tu sitio web...</h3>
+            <p class="text-gray-500">Analizando tu industria, redactando el contenido y seleccionando las mejores imágenes. Esto tomará unos segundos.</p>
+        </div>
+
+        <!-- Estado de Error -->
+        <div id="error-container" class="hidden bg-red-50 rounded-2xl shadow-lg p-8 border border-red-200 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="text-lg font-semibold text-red-800 mb-2">Algo salió mal</h3>
+            <p id="error-message" class="text-red-600 mb-4">No se pudo generar el sitio web. Por favor, intenta de nuevo.</p>
+            <button onclick="resetForm()" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg transition">
+                Intentar de nuevo
+            </button>
+        </div>
+
+        <!-- Resultado Exitoso -->
+        <div id="success-container" class="hidden space-y-6">
+            <div class="bg-green-50 rounded-2xl shadow-lg p-6 border border-green-200 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="text-xl font-semibold text-green-800 mb-2">¡Sitio Web Generado con Éxito!</h3>
+                <p class="text-green-700 mb-4">Tu nueva página está lista y alojada localmente.</p>
+                <a id="preview-link" href="#" target="_blank" 
+                    class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition">
+                    Ver Sitio Web en Pantalla Completa ↗
+                </a>
+            </div>
+
+            <!-- Iframe de Vista Previa -->
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                <div class="bg-gray-100 px-4 py-3 border-b border-gray-200 flex items-center gap-2">
+                    <div class="flex gap-1.5">
+                        <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                    </div>
+                    <div class="flex-1 bg-white rounded-md px-3 py-1 text-xs text-gray-500 text-center mx-4" id="preview-url-display">
+                        http://localhost:8000/data/websites/...
+                    </div>
+                </div>
+                <iframe id="preview-iframe" class="w-full h-[600px] border-0" src="about:blank"></iframe>
+            </div>
+            
+            <div class="text-center">
+                <button onclick="resetForm()" class="text-blue-600 hover:text-blue-800 font-semibold underline">
+                    Generar otro sitio web
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-6 text-center text-sm">
+        <p>© 2026 SaaS Platform V2. Potenciado por OpenRouter AI & Jinja2.</p>
+    </footer>
+
+    <!-- Lógica JavaScript con DEBUG -->
+    <script>
+        const form = document.getElementById('generator-form');
+        const formContainer = document.getElementById('form-container');
+        const loadingContainer = document.getElementById('loading-container');
+        const errorContainer = document.getElementById('error-container');
+        const successContainer = document.getElementById('success-container');
+        const errorMessage = document.getElementById('error-message');
+        const previewIframe = document.getElementById('preview-iframe');
+        const previewLink = document.getElementById('preview-link');
+        const previewUrlDisplay = document.getElementById('preview-url-display');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            console.log('🚀 Iniciando generación de sitio web...');
+            
+            const tenantId = document.getElementById('tenant-id').value.trim() || 'cliente-' + Date.now();
+            const payload = {
+                industry: document.getElementById('industry').value,
+                objective: document.getElementById('objective').value,
+                audience: document.getElementById('audience').value,
+                tone: document.getElementById('tone').value
+            };
+
+            console.log('📦 Payload enviado:', payload);
+            console.log('🆔 Tenant ID:', tenantId);
+
+            formContainer.classList.add('hidden');
+            loadingContainer.classList.remove('hidden');
+
+            try {
+                const url = http://localhost:8000/api/websites/generate-with-ai/;
+                console.log('🌐 Llamando a:', url);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log('📡 Status de respuesta:', response.status);
+                
+                const data = await response.json();
+                console.log('📦 Respuesta completa del backend:', data);
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Error desconocido del servidor');
+                }
+
+                console.log('✅ Éxito! Mostrando resultado...');
+                loadingContainer.classList.add('hidden');
+                successContainer.classList.remove('hidden');
+                
+                const fullUrl = http://localhost:8000;
+                console.log('🔗 URL de vista previa:', fullUrl);
+                
+                previewIframe.src = fullUrl;
+                previewLink.href = fullUrl;
+                previewUrlDisplay.textContent = fullUrl;
+
+            } catch (error) {
+                console.error('❌ Error capturado:', error);
+                loadingContainer.classList.add('hidden');
+                errorContainer.classList.remove('hidden');
+                errorMessage.textContent = error.message;
+            }
+        });
+
+        function resetForm() {
+            console.log('🔄 Reseteando formulario...');
+            form.reset();
+            successContainer.classList.add('hidden');
+            errorContainer.classList.add('hidden');
+            formContainer.classList.remove('hidden');
+            previewIframe.src = 'about:blank';
+        }
+    </script>
+</body>
+</html>
