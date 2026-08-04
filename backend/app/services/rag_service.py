@@ -1,137 +1,188 @@
 ﻿import os
 import logging
-import re
 from pathlib import Path
 from typing import List, Dict, Optional
+from datetime import datetime
+import uuid
 
-# Imports de LangChain (ajusta las rutas de importación si tu proyecto las tiene diferente)
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+
+from app.services.storage_service import StorageService
+from app.services.llm_service import LLMService
 
 logger = logging.getLogger(__name__)
 
 class RAGService:
-    def __init__(self, tenant_config):
-        self.tenant = tenant_config
-        # Ajusta DATA_DIR según tu configuración (ej: os.getenv("DATA_DIR", "./data"))
-        self.tenant_dir = Path(os.getenv("DATA_DIR", "./data")) / tenant_config.tenant_id
-        self.vector_db_path = self.tenant_dir / "vector_db"
-        self.vector_db_path.mkdir(parents=True, exist_ok=True)
+    def __init__(self):
+        """Constructor global SIN parámetros - maneja múltiples tenants dinámicamente"""
+        self.storage = StorageService()
+        self.llm_service = LLMService()
         
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name=os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
-        )
+        # Inicializar embeddings una sola vez (es costoso)
+        try:
+            self.embeddings = HuggingFaceEmbeddings(
+                model_name="sentence-transformers/all-MiniLM-L6-v2",
+                model_kwargs={'device': 'cpu'},
+                encode_kwargs={'normalize_embeddings': True}
+            )
+            logger.info("✅ Embeddings inicializados correctamente")
+        except Exception as e:
+            logger.error(f"❌ Error inicializando embeddings: {e}")
+            self.embeddings = None
         
-        self.vectorstore = Chroma(
-            persist_directory=str(self.vector_db_path),
-            embedding_function=self.embeddings
-        )
-    
-    def load_documents(self, file_paths: List[str]):
-        """Carga documentos desde archivos"""
-        documents = []
-        for file_path in file_paths:
-            path = Path(file_path)
-            if not path.exists():
-                continue
-            
-            if path.suffix == '.pdf':
-                loader = PyPDFLoader(str(path))
-            elif path.suffix == '.txt':
-                loader = TextLoader(str(path), encoding='utf-8')
-            elif path.suffix == '.csv':
-                loader = CSVLoader(str(path), encoding='utf-8')
-            else:
-                continue
-            
-            documents.extend(loader.load())
-        return documents
-    
-    def process_and_store(self, documents):
-        """Procesa documentos en chunks y los almacena"""
-        # OPTIMIZACIÓN: Chunk size 600 y overlap 80 para no cortar oraciones y mantener contexto
+        # Cache de vectorstores por tenant
+        self._vectorstore_cache = {}
+
+    def _get_tenant_vectorstore(self, tenant_id: str):
+        """Obtiene o crea el vectorstore para un tenant específico"""
+        if tenant_id in self._vectorstore_cache:
+            return self._vectorstore_cache[tenant_id]
+        
+        if not self.embeddings:
+            raise Exception("Embeddings no inicializados")
+        
+        tenant_dir = Path("./data") / "tenants" / tenant_id
+        vector_db_path = tenant_dir / "vector_db"
+        vector_db_path.mkdir(parents=True, exist_ok=True)
+        
+        try:
+            vectorstore = Chroma(
+                persist_directory=str(vector_db_path),
+                embedding_function=self.embeddings,
+                collection_name=f"tenant_{tenant_id}"
+            )
+            self._vectorstore_cache[tenant_id] = vectorstore
+            return vectorstore
+        except Exception as e:
+            logger.error(f"Error creando vectorstore para {tenant_id}: {e}")
+            raise
+
+    async def process_document(self, tenant_id: str, file_path) -> int:
+        """Procesa un documento y lo indexa en la DB vectorial del tenant"""
+        path = Path(file_path)
+        if not path.exists():
+            raise Exception(f"Archivo no encontrado: {path}")
+        
+        # Cargar documento según extensión
+        if path.suffix.lower() == '.pdf':
+            loader = PyPDFLoader(str(path))
+        elif path.suffix.lower() == '.txt':
+            loader = TextLoader(str(path), encoding='utf-8')
+        elif path.suffix.lower() == '.csv':
+            loader = CSVLoader(str(path), encoding='utf-8')
+        else:
+            raise Exception(f"Extensión no soportada: {path.suffix}")
+        
+        documents = loader.load()
+        
+        # Dividir en chunks
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=int(os.getenv("CHUNK_SIZE", 600)),
-            chunk_overlap=int(os.getenv("CHUNK_OVERLAP", 80)),
+            chunk_size=600,
+            chunk_overlap=80,
             length_function=len,
         )
-        
         chunks = text_splitter.split_documents(documents)
         
-        if len(chunks) > 0:
-            self.vectorstore.add_documents(chunks)
-            self.vectorstore.persist()
+        # Indexar en vectorstore del tenant
+        vectorstore = self._get_tenant_vectorstore(tenant_id)
+        if chunks:
+            vectorstore.add_documents(chunks)
+            vectorstore.persist()
+            logger.info(f"✅ Indexados {len(chunks)} chunks para tenant {tenant_id}")
         
         return len(chunks)
-    
-    def create_qa_chain(self, llm, chat_history: Optional[List] = None):
-        """Crea cadena de conversación con memoria optimizada para velocidad y precisión"""
-        
-        # System prompt OPTIMIZADO: Estricto, directo y a prueba de alucinaciones
-        system_prompt = f"""Eres el asistente virtual oficial de {self.tenant.company_name}. 
-Tu objetivo es ser útil, preciso y extremadamente conciso.
 
-REGLAS ESTRICTAS DE COMPORTAMIENTO:
-1. Responde ÚNICAMENTE basándote en el "CONTEXTO DE LA EMPRESA" proporcionado abajo. No inventes información.
-2. Sé directo y conciso. Evita introducciones largas o relleno. Ve al grano (máximo 3-4 oraciones).
-3. Si el usuario hace una pregunta compleja o larga, identifica la intención principal y responde a esa necesidad específica.
-4. Si la respuesta NO está en el contexto, responde exactamente: "No cuento con esa información específica en este momento. ¿Te gustaría que un especialista te contacte para resolverlo?"
-5. Mantén un tono profesional, amable y orientado a la solución.
-6. Si el usuario muestra interés en contratar, pide precios o deja un correo, confirma el interés y sugiere agendar una cita o dejar sus datos de contacto.
-"""
-        
-        # Prompt para QA conversacional optimizado
-        question_prompt = PromptTemplate(
-            template=f"""{system_prompt}
+    async def query(self, tenant_id: str, question: str, session_id: str = "default") -> dict:
+        """Responde preguntas usando RAG + memoria de conversación"""
+        try:
+            vectorstore = self._get_tenant_vectorstore(tenant_id)
+            
+            # Buscar información relevante
+            retriever = vectorstore.as_retriever(
+                search_type="similarity",
+                search_kwargs={"k": 3}
+            )
+            
+            # Obtener contexto
+            docs = await retriever.ainvoke(question)
+            context = "\n\n".join([doc.page_content for doc in docs]) if docs else "No hay contexto disponible"
+            
+            # Obtener tenant info
+            tenant_info = self.storage.get_tenant(tenant_id)
+            company_name = tenant_info.get("company_name", "la empresa") if tenant_info else "la empresa"
+            system_prompt = tenant_info.get("system_prompt", f"Eres el asistente virtual de {company_name}") if tenant_info else f"Eres el asistente virtual de {company_name}"
+            
+            # Obtener historial de conversación
+            conversations = self.storage.get_conversations_by_tenant(tenant_id)
+            recent_convs = [c for c in conversations if c.get("session_id") == session_id][-6:]
+            
+            # Construir historial para el prompt
+            history_text = ""
+            if recent_convs:
+                history_text = "\n".join([
+                    f"Cliente: {c.get('question', '')}\nAsistente: {c.get('answer', '')}"
+                    for c in recent_convs
+                ])
+            
+            # Prompt final
+            full_prompt = f"""{system_prompt}
 
-CONTEXTO DE LA EMPRESA (USA SOLO ESTA INFORMACIÓN):
-{{context}}
+REGLAS:
+1. Responde ÚNICAMENTE basándote en el CONTEXTO proporcionado.
+2. Sé conciso (máximo 3-4 oraciones).
+3. Si no sabes la respuesta, di: "No cuento con esa información. ¿Te gustaría que un especialista te contacte?"
+4. Si el usuario muestra interés o da su email, sugiere agendar una cita.
 
-HISTORIAL DE CONVERSACIÓN RECIENTE:
-{{chat_history}}
+CONTEXTO DE LA EMPRESA:
+{context}
 
-PREGUNTA DEL CLIENTE: {{question}}
+{f'HISTORIAL RECIENTE:{chr(10)}{history_text}' if history_text else ''}
 
-RESPUESTA CONCISA Y PROFESIONAL:""",
-            input_variables=["context", "chat_history", "question"]
-        )
-        
-        # Retriever optimizado: k=3 es más rápido y suele ser más preciso que k=4 o 5
-        retriever = self.vectorstore.as_retriever(
-            search_type="similarity",
-            search_kwargs={"k": 3}
-        )
-        
-        # Memoria de conversación
-        memory = ConversationBufferMemory(
-            memory_key="chat_history",
-            input_key="question",
-            output_key="answer",
-            return_messages=True
-        )
-        
-        # Agregar historial si existe (limitado a 6 para no saturar el contexto y ganar velocidad)
-        if chat_history:
-            recent_history = chat_history[-6:] if len(chat_history) > 6 else chat_history
-            for human_msg, ai_msg in recent_history:
-                memory.save_context(
-                    {"question": human_msg},
-                    {"answer": ai_msg}
-                )
-        
-        # Cadena conversacional
-        qa_chain = ConversationalRetrievalChain.from_llm(
-            llm=llm,
-            retriever=retriever,
-            memory=memory,
-            return_source_documents=True,
-            combine_docs_chain_kwargs={"prompt": question_prompt},
-            verbose=False # Mantener en False para producción (ahorra logs y tiempo)
-        )
-        
-        return qa_chain
+PREGUNTA DEL CLIENTE: {question}
+
+RESPUESTA:"""
+            
+            # Generar respuesta con LLM
+            answer = await self.llm_service.generate_content(full_prompt, max_tokens=400, temperature=0.3)
+            
+            # Detectar si es un lead (contiene email)
+            import re
+            email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+            emails_found = re.findall(email_pattern, question)
+            is_lead = len(emails_found) > 0 or any(word in question.lower() for word in ['contratar', 'precio', 'costo', 'cotizar', 'comprar'])
+            
+            # Guardar lead si aplica
+            if is_lead and emails_found:
+                lead_data = {
+                    "tenant_id": tenant_id,
+                    "email": emails_found[0],
+                    "session_id": session_id,
+                    "captured_at": datetime.now().isoformat(),
+                    "source": "chatbot"
+                }
+                self.storage.save_lead(lead_data)
+            
+            # Guardar conversación
+            conv_data = {
+                "tenant_id": tenant_id,
+                "session_id": session_id,
+                "question": question,
+                "answer": answer,
+                "is_lead": is_lead,
+                "timestamp": datetime.now().isoformat()
+            }
+            self.storage.save_conversation(conv_data)
+            
+            return {"answer": answer, "is_lead": is_lead}
+            
+        except Exception as e:
+            logger.error(f"Error en query RAG: {e}", exc_info=True)
+            return {
+                "answer": "Lo siento, estoy teniendo problemas técnicos. ¿Podrías intentar de nuevo o dejar tu email para que te contactemos?",
+                "is_lead": False
+            }

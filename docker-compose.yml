@@ -2,16 +2,16 @@
 
 services:
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: saas-backend
     ports:
       - "8000:8000"
     environment:
-      OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_KEY=${SUPABASE_KEY}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_KEY: ${SUPABASE_KEY}
     volumes:
       - ./data:/app/data
     depends_on:
@@ -26,10 +26,10 @@ services:
     ports:
       - "3001:3000"
     environment:
-      - DATABASE_URL=postgresql://admin:supersecret@postgres:5432/typebot
-      - NEXTAUTH_URL=http://localhost:3001
-      - NEXTAUTH_SECRET=supersecret_nextauth
-      - NEXT_PUBLIC_VIEWER_URL=http://localhost:3002
+      DATABASE_URL: postgresql://admin:supersecret@postgres:5432/typebot
+      NEXTAUTH_URL: http://localhost:3001
+      NEXTAUTH_SECRET: supersecret_nextauth
+      NEXT_PUBLIC_VIEWER_URL: http://localhost:3002
     depends_on:
       - postgres
     restart: always
@@ -42,7 +42,7 @@ services:
     ports:
       - "3002:3000"
     environment:
-      - DATABASE_URL=postgresql://admin:supersecret@postgres:5432/typebot
+      DATABASE_URL: postgresql://admin:supersecret@postgres:5432/typebot
     depends_on:
       - postgres
     restart: always
@@ -55,8 +55,8 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - DATABASE_URL=postgresql://admin:supersecret@postgres:5432/postiz
-      - JWT_SECRET=supersecret_jwt
+      DATABASE_URL: postgresql://admin:supersecret@postgres:5432/postiz
+      JWT_SECRET: supersecret_jwt
     depends_on:
       - postgres
     restart: always
@@ -69,9 +69,9 @@ services:
     ports:
       - "5678:5678"
     environment:
-      - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=admin123
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: admin
+      N8N_BASIC_AUTH_PASSWORD: admin123
     volumes:
       - ./n8n_data:/home/node/.n8n
     restart: always
@@ -82,8 +82,8 @@ services:
     image: postgres:15-alpine
     container_name: saas-postgres
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=supersecret
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: supersecret
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
@@ -96,6 +96,3 @@ volumes:
 networks:
   saas-network:
     driver: bridge
-
-
-

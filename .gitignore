@@ -1,26 +1,77 @@
-﻿# Archivos sensibles (NUNCA subir estos)
+# ============================================
+# VARIABLES DE ENTORNO (NUNCA SUBIR)
+# ============================================
 .env
-*.key
-*.pem
+.env.local
+.env.production
+*.env
 
-# Dependencias y caché de Python/Node
-node_modules/
+# ============================================
+# PYTHON
+# ============================================
 __pycache__/
-*.pyc
-.venv/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 venv/
+env/
+ENV/
+.venv
 
-# Datos persistentes, bases de datos locales y vectores
-data/
+# ============================================
+# BASES DE DATOS VECTORIALES (ARCHIVOS GRANDES)
+# ============================================
+data/tenants/*/vector_db/
 *.sqlite3
-*.db
+*.bin
+*.hnsw
 
-# Logs
+# ============================================
+# DATOS GENERADOS POR EL SISTEMA
+# ============================================
+data/websites/
+data/storage/
+data/tenants/*/documents/
+n8n_data/
+postgres_data/
+
+# ============================================
+# LOGS Y TEMPORALES
+# ============================================
 *.log
 logs/
-
-# Archivos de sistema y editores de código
+*.tmp
+*.temp
 .DS_Store
 Thumbs.db
+
+# ============================================
+# IDE Y EDITORES
+# ============================================
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# ============================================
+# BACKUPS
+# ============================================
+*.bak
+*.backup
