@@ -93,3 +93,7 @@ class StorageService:
         conversations.append(conv_data)
         StorageService._write_json("conversations", conversations)
         return conv_data
+@staticmethod
+def get_all_conversations() -> List[Dict]:
+    """Obtiene todas las conversaciones de todos los tenants"""
+    return StorageService._read_json("conversations")

@@ -7,6 +7,8 @@ from pathlib import Path
 import json, logging, time, secrets
 from datetime import datetime
 from passlib.context import CryptContext
+from collections import defaultdict, Counter
+from datetime import datetime, timedelta
 
 from app.services.website_service import WebsiteService
 from app.services.rag_service import RAGService
@@ -423,3 +425,132 @@ async def generate_social_content(tenant_id: str):
     except Exception as e:
         logger.error(f"Error generando contenido social: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/analytics/{tenant_id}")
+async def get_analytics(tenant_id: str, days: int = 30):
+    """Dashboard de métricas para un tenant específico"""
+    try:
+        # Obtener conversaciones del tenant
+        conversations = rag_service.storage.get_conversations_by_tenant(tenant_id)
+        leads = rag_service.storage.get_leads_by_tenant(tenant_id)
+        
+        # Filtrar por período (últimos X días)
+        cutoff_date = datetime.now() - timedelta(days=days)
+        recent_convs = [c for c in conversations if datetime.fromisoformat(c.get("timestamp", c.get("captured_at", datetime.now().isoformat()))) >= cutoff_date]
+        recent_leads = [l for l in leads if datetime.fromisoformat(l.get("captured_at", datetime.now().isoformat())) >= cutoff_date]
+        
+        # Métricas principales
+        total_conversations = len(recent_convs)
+        total_leads = len(recent_leads)
+        conversion_rate = round((total_leads / total_conversations * 100), 1) if total_conversations > 0 else 0
+        
+        # Conversaciones por día (últimos 7 días)
+        daily_convs = defaultdict(int)
+        daily_leads = defaultdict(int)
+        for i in range(7):
+            day = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
+            daily_convs[day] = 0
+            daily_leads[day] = 0
+        
+        for conv in recent_convs:
+            try:
+                day = datetime.fromisoformat(conv.get("timestamp", conv.get("captured_at"))).strftime("%Y-%m-%d")
+                if day in daily_convs:
+                    daily_convs[day] += 1
+                    if conv.get("is_lead"):
+                        daily_leads[day] += 1
+            except:
+                pass
+        
+        # Preguntas más frecuentes
+        questions = [c.get("question", "").lower() for c in recent_convs if c.get("question")]
+        # Extraer palabras clave (simplificado)
+        keywords = []
+        for q in questions:
+            keywords.extend([w for w in q.split() if len(w) > 4 and w not in ["tienes", "puedo", "cuanto", "donde", "cuando", "como", "hacen", "precio", "sobre", "ustedes"]])
+        
+        top_keywords = Counter(keywords).most_common(5)
+        
+        # Últimos leads capturados
+        recent_leads_list = sorted(recent_leads, key=lambda x: x.get("captured_at", ""), reverse=True)[:5]
+        
+        return {
+            "status": "success",
+            "period": f"Últimos {days} días",
+            "metrics": {
+                "total_conversations": total_conversations,
+                "total_leads": total_leads,
+                "conversion_rate": conversion_rate,
+                "avg_daily_conversations": round(total_conversations / days, 1) if days > 0 else 0,
+                "lead_quality_score": "Alta" if conversion_rate > 5 else "Media" if conversion_rate > 2 else "Baja"
+            },
+            "daily_chart": {
+                "labels": list(daily_convs.keys())[::-1],
+                "conversations": list(daily_convs.values())[::-1],
+                "leads": list(daily_leads.values())[::-1]
+            },
+            "top_questions": [
+                {"word": word, "count": count} for word, count in top_keywords
+            ],
+            "recent_leads": recent_leads_list
+        }
+    except Exception as e:
+        logger.error(f"Error en analytics: {e}")
+        return {
+            "status": "error",
+            "metrics": {"total_conversations": 0, "total_leads": 0, "conversion_rate": 0},
+            "daily_chart": {"labels": [], "conversations": [], "leads": []},
+            "top_questions": [],
+            "recent_leads": []
+        }
+
+@app.get("/api/analytics/global")
+async def get_global_analytics():
+    """Métricas globales de TODAS las empresas (para ti como admin)"""
+    try:
+        all_convs = rag_service.storage.get_all_conversations() if hasattr(rag_service.storage, 'get_all_conversations') else []
+        all_leads = rag_service.storage.get_all_leads()
+        
+        # Contar tenants activos
+        tenants_file = DATA_DIR / "tenants.json"
+        active_tenants = 0
+        if tenants_file.exists():
+            with open(tenants_file, 'r', encoding='utf-8-sig') as f:
+                active_tenants = len(json.load(f))
+        
+        # Ingresos estimados (basado en paquetes)
+        revenue_estimate = 0
+        if tenants_file.exists():
+            with open(tenants_file, 'r', encoding='utf-8-sig') as f:
+                tenants = json.load(f)
+                package_prices = {"full": 499, "web_chat": 299, "chat_only": 99, "seo_only": 149}
+                for t in tenants:
+                    revenue_estimate += package_prices.get(t.get("package", "full"), 299)
+        
+        conversion_rate = round((len(all_leads) / len(all_convs) * 100), 1) if len(all_convs) > 0 else 0
+        
+        return {
+            "status": "success",
+            "metrics": {
+                "total_tenants": active_tenants,
+                "total_conversations": len(all_convs),
+                "total_leads": len(all_leads),
+                "conversion_rate": conversion_rate,
+                "monthly_revenue_estimate": revenue_estimate,
+                "yearly_revenue_estimate": revenue_estimate * 12
+            }
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "metrics": {
+                "total_tenants": 0,
+                "total_conversations": 0,
+                "total_leads": 0,
+                "conversion_rate": 0,
+                "monthly_revenue_estimate": 0,
+                "yearly_revenue_estimate": 0
+            }
+        }
+        
+        
