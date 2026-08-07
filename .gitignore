@@ -74,4 +74,4 @@ Thumbs.db
 # BACKUPS
 # ============================================
 *.bak
-*.backup
+*.backuptest_*.py

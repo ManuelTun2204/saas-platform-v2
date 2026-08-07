@@ -13,18 +13,234 @@ WEBSITES_DIR.mkdir(parents=True, exist_ok=True)
 
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
+# ============================================
+# BANCO DE IMÁGENES POR INDUSTRIA (Unsplash - GRATIS y HD)
+# ============================================
+INDUSTRY_IMAGES = {
+    "pasteleria": {
+        "hero": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1920&q=80",
+        "about": "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=800&q=80",
+        "gallery": [
+            "https://images.unsplash.com/photo-1558301211-0d8c8ddee6ec?w=600&q=80",
+            "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=600&q=80",
+            "https://images.unsplash.com/photo-1535141192574-577bf8821c5f?w=600&q=80",
+            "https://images.unsplash.com/photo-1562440499-64c9a111f713?w=600&q=80",
+            "https://images.unsplash.com/photo-1587668178277-295251f900ce?w=600&q=80",
+            "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=600&q=80",
+            "https://images.unsplash.com/photo-1542826435-b99d325e0c48?w=600&q=80",
+            "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=600&q=80"
+        ]
+    },
+    "reposteria": {
+        "hero": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1920&q=80",
+        "about": "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=800&q=80",
+        "gallery": [
+            "https://images.unsplash.com/photo-1558301211-0d8c8ddee6ec?w=600&q=80",
+            "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=600&q=80",
+            "https://images.unsplash.com/photo-1535141192574-577bf8821c5f?w=600&q=80",
+            "https://images.unsplash.com/photo-1562440499-64c9a111f713?w=600&q=80",
+            "https://images.unsplash.com/photo-1587668178277-295251f900ce?w=600&q=80",
+            "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=600&q=80",
+            "https://images.unsplash.com/photo-1542826435-b99d325e0c48?w=600&q=80",
+            "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=600&q=80"
+        ]
+    },
+    "restaurante": {
+        "hero": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1920&q=80",
+        "about": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80",
+        "gallery": [
+            "https://images.unsplash.com/photo-1504642723647-d623a4006d02?w=600&q=80",
+            "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&q=80",
+            "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&q=80",
+            "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80",
+            "https://images.unsplash.com/photo-1551218808-94e220e084d2?w=600&q=80",
+            "https://images.unsplash.com/photo-1559847844-5315695dadae?w=600&q=80",
+            "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80",
+            "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=600&q=80"
+        ]
+    },
+    "tecnologia": {
+        "hero": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1920&q=80",
+        "about": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80",
+        "gallery": [
+            "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&q=80",
+            "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&q=80",
+            "https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&q=80",
+            "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&q=80",
+            "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&q=80",
+            "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=600&q=80",
+            "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&q=80",
+            "https://images.unsplash.com/photo-1531233558888-9c4f3c5c4c5f?w=600&q=80"
+        ]
+    },
+    "consultoria": {
+        "hero": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1920&q=80",
+        "about": "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80",
+        "gallery": [
+            "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&q=80",
+            "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&q=80",
+            "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=600&q=80",
+            "https://images.unsplash.com/photo-1600880292089-90a7e086ee0c?w=600&q=80",
+            "https://images.unsplash.com/photo-1507672561168-30d1d1c079c6?w=600&q=80",
+            "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=600&q=80",
+            "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&q=80",
+            "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=80"
+        ]
+    },
+    "gimnasio": {
+        "hero": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80",
+        "about": "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=800&q=80",
+        "gallery": [
+            "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80",
+            "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=600&q=80",
+            "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=80",
+            "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=600&q=80",
+            "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600&q=80",
+            "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=600&q=80",
+            "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&q=80",
+            "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=600&q=80"
+        ]
+    },
+    "clinica": {
+        "hero": "https://images.unsplash.com/photo-1519494123728-cf00c82424b5?w=1920&q=80",
+        "about": "https://images.unsplash.com/photo-1631815583675-b20c6c30b455?w=800&q=80",
+        "gallery": [
+            "https://images.unsplash.com/photo-1519491050282-cf00c82424b5?w=600&q=80",
+            "https://images.unsplash.com/photo-1551076805-e1869033e5cc?w=600&q=80",
+            "https://images.unsplash.com/photo-1584982751601-97dcc096659c?w=600&q=80",
+            "https://images.unsplash.com/photo-1631815583675-b20c6c30b455?w=600&q=80",
+            "https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=600&q=80",
+            "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=600&q=80",
+            "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=600&q=80",
+            "https://images.unsplash.com/photo-1629909613654-28e377c36b09?w=600&q=80"
+        ]
+    },
+    "default": {
+        "hero": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&q=80",
+        "about": "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=800&q=80",
+        "gallery": [
+            "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80",
+            "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=600&q=80",
+            "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80",
+            "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&q=80",
+            "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=80",
+            "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&q=80",
+            "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=600&q=80",
+            "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&q=80"
+        ]
+    }
+}
+
+# ============================================
+# MAPEO DE ICONOS EMOJI → FONTAWESOME
+# ============================================
+ICON_MAPPING = {
+    "🎂": "fa-birthday-cake", "🍰": "fa-birthday-cake", "🧁": "fa-birthday-cake",
+    "⭐": "fa-star", "🌟": "fa-star", "✨": "fa-star",
+    "💼": "fa-briefcase", "🛠️": "fa-tools", "🔧": "fa-wrench",
+    "🎨": "fa-palette", "📱": "fa-mobile-alt", "💻": "fa-laptop",
+    "🏆": "fa-trophy", "🚀": "fa-rocket", "💡": "fa-lightbulb",
+    "📞": "fa-phone", "📧": "fa-envelope", "🏠": "fa-home",
+    "🎯": "fa-bullseye", "💰": "fa-dollar-sign", "❤️": "fa-heart",
+    "⚡": "fa-bolt", "🍞": "fa-bread-slice", "☕": "fa-coffee",
+    "🍫": "fa-cookie-bite", "🎉": "fa-glass-cheers", "👰": "fa-heart",
+    "🏋️": "fa-dumbbell", "💪": "fa-dumbbell", "🏥": "fa-heartbeat",
+    "🦷": "fa-tooth", "👁️": "fa-eye", "🚗": "fa-car", "✈️": "fa-plane"
+}
+
+
+def detect_industry_key(industry: str) -> str:
+    """Detecta la categoría de industria para asignar imágenes"""
+    industry_lower = industry.lower()
+    
+    # Normalizar acentos
+    industry_normalized = industry_lower.replace("í", "i").replace("é", "e").replace("á", "a")
+    
+    keywords_map = {
+        "pasteleria": ["pastel", "pasteleria", "reposteria", "cake", "bakery", "panaderia", "dulce", "cupcake"],
+        "restaurante": ["restaurante", "comida", "food", "cafe", "bar", "pizzeria", "taqueria"],
+        "tecnologia": ["tecnologia", "software", "tech", "it", "desarrollo", "app", "web"],
+        "consultoria": ["consultoria", "consultor", "asesoria", "coaching", "finanzas", "legal", "abogado"],
+        "gimnasio": ["gimnasio", "gym", "fitness", "deporte", "entrenamiento", "yoga"],
+        "clinica": ["clinica", "medico", "doctor", "salud", "dental", "dentista", "estetica", "spa"]
+    }
+    
+    for category, keywords in keywords_map.items():
+        if any(keyword in industry_normalized for keyword in keywords):
+            return category
+    
+    return "default"
+
+
+def map_icons(services: list) -> list:
+    """Convierte iconos emoji a FontAwesome"""
+    for service in services:
+        original_icon = service.get("icon", "⭐")
+        service["icon"] = ICON_MAPPING.get(original_icon, "fa-star")
+    return services
+
+
 class WebsiteService:
     def __init__(self):
         self.llm_service = LLMService()
 
+    def _save_tenant_info(self, tenant_id: str, package: str, deliverables: list):
+        """Guarda información del tenant en tenants.json"""
+        tenant_info = {
+            "id": tenant_id,
+            "package": package,
+            "deliverables": deliverables,
+            "created_at": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        tenants_file = DATA_DIR / "tenants.json"
+        tenants = []
+        if tenants_file.exists():
+            with open(tenants_file, 'r', encoding='utf-8-sig') as f:
+                try:
+                    tenants = json.load(f)
+                except:
+                    pass
+        tenants = [t for t in tenants if t.get("id") != tenant_id]
+        tenants.append(tenant_info)
+        with open(tenants_file, 'w', encoding='utf-8-sig') as f:
+            json.dump(tenants, f, indent=2, ensure_ascii=False)
+
+    def _render_site(self, template_name: str, site_data: dict, seo_enabled: bool, chatbot_enabled: bool) -> str:
+        """Renderiza el sitio web con imágenes dinámicas"""
+        dummy_request = Request(scope={"type": "http", "method": "GET", "headers": [], "path": "/"})
+        
+        # Detectar industria y asignar imágenes
+        industry_key = detect_industry_key(site_data.get("industry", ""))
+        images = INDUSTRY_IMAGES.get(industry_key, INDUSTRY_IMAGES["default"])
+        
+        # Enriquecer site_data con imágenes y configuración
+        site_data["seo_enabled"] = seo_enabled
+        site_data["chatbot_enabled"] = chatbot_enabled
+        site_data["hero_image"] = images["hero"]
+        site_data["about_image"] = images["about"]
+        site_data["gallery_images"] = images["gallery"]
+        
+        # Mapear iconos a FontAwesome
+        site_data["services"] = map_icons(site_data.get("services", []))
+        
+        # Renderizar template
+        return templates.get_template(template_name).render(request=dummy_request, **site_data)
+
     async def generate_modular_service(self, tenant_id: str, industry: str, objective: str, audience: str, tone: str, package: str, brand_hex: str = "#2563eb", brand_secondary: str = "#764ba2", visual_style: str = "modern", calendly_url: str = "", contact_email: str = "", contact_phone: str = "", contact_address: str = "") -> dict:
         logger.info(f"🚀 Procesando paquete: {package} para {tenant_id}")
-        
-        # Pedimos a la IA que también genere preguntas frecuentes para SEO
+
+        # Generar contenido con IA
         site_data = await self.llm_service.generate_website_json(industry, objective, audience, tone, visual_style)
         site_data["tenant_id"] = tenant_id
         site_data["cache_buster"] = int(time.time())
-        
+        site_data["industry"] = industry
+        site_data["brand_hex"] = brand_hex
+        site_data["brand_secondary"] = brand_secondary
+        site_data["calendly_url"] = calendly_url
+        site_data["contact_email"] = contact_email
+        site_data["contact_phone"] = contact_phone
+        site_data["contact_address"] = contact_address
+
         deliverables = []
         preview_url = "#"
 
@@ -32,10 +248,8 @@ class WebsiteService:
             if package == "full":
                 logger.info("Ejecutando: SERVICIO COMPLETO")
                 template_name = "services.html" if "servicio" in industry.lower() else "landing.html"
-                dummy_request = Request(scope={"type": "http", "method": "GET", "headers": [], "path": "/"})
                 
-                site_data["seo_enabled"] = True
-                html_content = templates.get_template(template_name).render(request=dummy_request, **site_data)
+                html_content = self._render_site(template_name, site_data, seo_enabled=True, chatbot_enabled=True)
                 
                 tenant_dir = WEBSITES_DIR / tenant_id
                 tenant_dir.mkdir(exist_ok=True)
@@ -43,15 +257,13 @@ class WebsiteService:
                     f.write(html_content)
                 
                 preview_url = f"/data/websites/{tenant_id}/index.html?v={site_data['cache_buster']}"
-                deliverables = ["Sitio Web Profesional", "Chatbot RAG Integrado", "Optimización SEO Completa (incl. FAQ)"]
+                deliverables = ["Sitio Web Profesional con Imágenes HD", "Chatbot RAG Integrado", "Optimización SEO Completa"]
 
             elif package == "web_chat":
                 logger.info("Ejecutando: WEB + CHATBOT")
                 template_name = "services.html" if "servicio" in industry.lower() else "landing.html"
-                dummy_request = Request(scope={"type": "http", "method": "GET", "headers": [], "path": "/"})
                 
-                site_data["seo_enabled"] = False
-                html_content = templates.get_template(template_name).render(request=dummy_request, **site_data)
+                html_content = self._render_site(template_name, site_data, seo_enabled=False, chatbot_enabled=True)
                 
                 tenant_dir = WEBSITES_DIR / tenant_id
                 tenant_dir.mkdir(exist_ok=True)
@@ -59,7 +271,7 @@ class WebsiteService:
                     f.write(html_content)
                 
                 preview_url = f"/data/websites/{tenant_id}/index.html?v={site_data['cache_buster']}"
-                deliverables = ["Sitio Web Profesional", "Chatbot RAG Integrado"]
+                deliverables = ["Sitio Web Profesional con Imágenes HD", "Chatbot RAG Integrado"]
 
             elif package == "chat_only":
                 logger.info("Ejecutando: SOLO CHATBOT")
@@ -91,35 +303,14 @@ class WebsiteService:
                 - Industria: {industry}
                 - Objetivo: {objective}
                 - Audiencia: {audience}
-                
-                Devuelve SOLO un objeto JSON válido (sin markdown) con esta estructura exacta:
+                Devuelve SOLO un objeto JSON válido (sin markdown) con esta estructura:
                 {{
-                    "meta_title": "Título SEO optimizado (máximo 60 caracteres, incluye palabra clave principal)",
-                    "meta_description": "Descripción persuasiva (máximo 155 caracteres, incluye llamada a la acción)",
-                    "primary_keyword": "Palabra clave principal (1-3 palabras)",
-                    "secondary_keywords": ["keyword 1", "keyword 2", "keyword 3", "keyword 4", "keyword 5"],
-                    "schema_json_ld": {{
-                        "@context": "https://schema.org",
-                        "@type": "LocalBusiness",
-                        "name": "{industry}",
-                        "description": "Descripción del negocio enfocada en {objective}",
-                        "address": {{
-                            "@type": "PostalAddress",
-                            "streetAddress": "Dirección completa",
-                            "addressLocality": "Ciudad",
-                            "addressRegion": "Estado",
-                            "postalCode": "Código postal",
-                            "addressCountry": "MX"
-                        }},
-                        "telephone": "+52-XXX-XXX-XXXX",
-                        "openingHours": "Mo-Fr 09:00-18:00",
-                        "priceRange": "$$"
-                    }},
-                    "seo_recommendations": [
-                        "Crea una sección de Preguntas Frecuentes (FAQ) en tu web respondiendo las 3 dudas principales de tus clientes sobre {industry}.",
-                        "Registra tu negocio en Google Business Profile y vincula este sitio web.",
-                        "Solicita a tus primeros 5 clientes satisfechos que dejen una reseña de 5 estrellas mencionando '{primary_keyword}'."
-                    ]
+                    "meta_title": "Título SEO (máx 60 chars)",
+                    "meta_description": "Descripción (máx 155 chars)",
+                    "primary_keyword": "keyword principal",
+                    "secondary_keywords": ["kw1", "kw2", "kw3"],
+                    "schema_json_ld": {{"@context": "https://schema.org", "@type": "LocalBusiness", "name": "{industry}"}},
+                    "seo_recommendations": ["Rec 1", "Rec 2", "Rec 3"]
                 }}
                 """
                 
@@ -131,23 +322,14 @@ class WebsiteService:
                     logger.warning(f"Error parseando SEO, usando fallback: {e}")
                     seo_data = {
                         "meta_title": f"{industry} | Soluciones Profesionales",
-                        "meta_description": f"Expertos en {industry}. {objective}. Contáctanos hoy para una consulta gratuita.",
+                        "meta_description": f"Expertos en {industry}. {objective}. Contáctanos hoy.",
                         "primary_keyword": industry.lower(),
-                        "secondary_keywords": [f"{industry} profesional", "mejor servicio", "consultoría especializada", "soluciones a medida", "experiencia garantizada"],
-                        "schema_json_ld": {
-                            "@context": "https://schema.org",
-                            "@type": "LocalBusiness",
-                            "name": industry,
-                            "description": f"Servicios profesionales de {industry}",
-                            "address": {"@type": "PostalAddress", "streetAddress": "Tu dirección aquí", "addressLocality": "Tu ciudad", "addressRegion": "Tu estado", "postalCode": "00000", "addressCountry": "MX"},
-                            "telephone": "+52-XXX-XXX-XXXX",
-                            "openingHours": "Mo-Fr 09:00-18:00",
-                            "priceRange": "$$"
-                        },
+                        "secondary_keywords": [f"{industry} profesional", "mejor servicio", "consultoría especializada"],
+                        "schema_json_ld": {"@context": "https://schema.org", "@type": "LocalBusiness", "name": industry},
                         "seo_recommendations": [
-                            "Crea una sección de Preguntas Frecuentes (FAQ) en tu web.",
+                            "Crea una sección de Preguntas Frecuentes (FAQ).",
                             "Registra tu negocio en Google Business Profile.",
-                            "Solicita reseñas a tus clientes mencionando tu servicio principal."
+                            "Solicita reseñas a tus clientes."
                         ]
                     }
                 
@@ -158,7 +340,7 @@ class WebsiteService:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reporte SEO Profesional | {industry}</title>
+    <title>Reporte SEO | {industry}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style> body {{ font-family: 'Inter', sans-serif; }} </style>
@@ -166,69 +348,27 @@ class WebsiteService:
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-8">
     <div class="max-w-5xl mx-auto">
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
-            <div class="flex items-center gap-4 mb-4">
-                <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center text-3xl">📈</div>
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Reporte SEO Profesional</h1>
-                    <p class="text-gray-600">Optimización completa para posicionamiento en Google</p>
-                </div>
-            </div>
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                <p class="text-sm text-blue-800"><strong>Industria:</strong> {industry} | <strong>Objetivo:</strong> {objective}</p>
-            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">📈 Reporte SEO Profesional</h1>
+            <p class="text-gray-600">Industria: {industry} | Objetivo: {objective}</p>
         </div>
-
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2"><span class="text-3xl">🏷️</span> Meta Tags Optimizados</h2>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Título SEO (aparece en azul en Google)</label>
-                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p class="text-blue-600 text-lg font-medium">{seo_data.get('meta_title', 'N/A')}</p>
-                        <p class="text-xs text-gray-500 mt-1">Máximo 60 caracteres | Actual: {len(seo_data.get('meta_title', ''))} caracteres</p>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Meta Description</label>
-                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p class="text-gray-700">{seo_data.get('meta_description', 'N/A')}</p>
-                        <p class="text-xs text-gray-500 mt-1">Máximo 155 caracteres | Actual: {len(seo_data.get('meta_description', ''))} caracteres</p>
-                    </div>
-                </div>
+            <h2 class="text-2xl font-bold mb-4">🏷️ Meta Tags Optimizados</h2>
+            <div class="bg-gray-50 p-4 rounded-lg mb-3">
+                <p class="text-sm font-semibold text-gray-700">Título SEO:</p>
+                <p class="text-blue-600 text-lg">{seo_data.get('meta_title', 'N/A')}</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-sm font-semibold text-gray-700">Meta Description:</p>
+                <p class="text-gray-700">{seo_data.get('meta_description', 'N/A')}</p>
             </div>
         </div>
-
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2"><span class="text-3xl">🎯</span> Palabras Clave Estratégicas</h2>
-            <div class="mb-4">
-                <span class="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-full font-semibold text-lg">{seo_data.get('primary_keyword', 'N/A')}</span>
-                <span class="text-sm text-gray-500 ml-2">(Palabra Clave Principal)</span>
-            </div>
-            <div class="flex flex-wrap gap-2">
-                {"".join([f'<span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm border border-gray-200">{kw}</span>' for kw in seo_data.get('secondary_keywords', [])])}
-            </div>
+            <h2 class="text-2xl font-bold mb-4">🔧 Schema Markup (JSON-LD)</h2>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-xs overflow-x-auto">{schema_string}</pre>
         </div>
-
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2"><span class="text-3xl">🔧</span> Schema Markup (JSON-LD)</h2>
-            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded mb-4">
-                <p class="text-sm text-yellow-800"><strong>¿Qué es esto?</strong> Código especial que le dice a Google exactamente qué es tu negocio. Al implementarlo, Google puede mostrar información enriquecida en las búsquedas: estrellas, horarios, dirección, etc., haciendo que destaques sobre tu competencia.</p>
-            </div>
-            <div class="relative">
-                <button onclick="navigator.clipboard.writeText(document.getElementById('schema-code').innerText).then(() => alert('✅ Copiado'))" class="absolute top-2 right-2 bg-gray-700 text-white text-xs px-3 py-1 rounded hover:bg-gray-600 transition">Copiar</button>
-                <pre id="schema-code" class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-xs overflow-x-auto">{schema_string}</pre>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2"><span class="text-3xl">💡</span> Recomendaciones de Contenido</h2>
-            <div class="space-y-3">
-                {"".join([f'<div class="flex gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200"><span class="text-2xl">✅</span><p class="text-gray-700 flex-1">{rec}</p></div>' for rec in seo_data.get('seo_recommendations', [])])}
-            </div>
-        </div>
-
-        <div class="text-center text-gray-600 text-sm">
-            <p>Reporte generado por SaaS Platform V2 | {time.strftime('%d/%m/%Y')}</p>
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-2xl font-bold mb-4">💡 Recomendaciones</h2>
+            {''.join([f'<div class="flex gap-3 p-4 bg-gray-50 rounded-lg mb-2"><span>✅</span><p>{rec}</p></div>' for rec in seo_data.get('seo_recommendations', [])])}
         </div>
     </div>
 </body>
@@ -242,23 +382,18 @@ class WebsiteService:
                 preview_url = f"/data/websites/{tenant_id}/seo-report.html"
                 deliverables = ["Auditoría SEO Completa", "Meta Tags Optimizados", "Schema Markup (JSON-LD)", "Recomendaciones de Contenido"]
 
-            tenant_info = {"id": tenant_id, "package": package, "deliverables": deliverables, "created_at": time.strftime("%Y-%m-%d %H:%M:%S")}
-            tenants_file = DATA_DIR / "tenants.json"
-            tenants = []
-            if tenants_file.exists():
-                with open(tenants_file, 'r', encoding='utf-8-sig') as f:
-                    try: tenants = json.load(f)
-                    except: pass
-            tenants = [t for t in tenants if t.get("id") != tenant_id]
-            tenants.append(tenant_info)
-            with open(tenants_file, 'w', encoding='utf-8-sig') as f:
-                json.dump(tenants, f, indent=2, ensure_ascii=False)
+            self._save_tenant_info(tenant_id, package, deliverables)
 
             logger.info(f"✅ PROCESO EXITOSO: Paquete '{package}' generado para '{tenant_id}'")
-            return {"status": "success", "tenant_id": tenant_id, "package": package, "deliverables": deliverables, "preview_url": preview_url, "site_data": site_data}
+            return {
+                "status": "success",
+                "tenant_id": tenant_id,
+                "package": package,
+                "deliverables": deliverables,
+                "preview_url": preview_url,
+                "site_data": site_data
+            }
 
         except Exception as e:
             logger.error(f"❌ FALLO CRÍTICO en paquete '{package}': {str(e)}", exc_info=True)
             raise Exception(f"Error interno generando el paquete {package}: {str(e)}")
-
-

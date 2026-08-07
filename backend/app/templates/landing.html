@@ -3,125 +3,505 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ hero_title | default('Mi Empresa') }} | Soluciones Premium</title>
+    <title>{{ company_name }} - {{ hero_title }}</title>
+    <meta name="description" content="{{ hero_subtitle }}">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* BOTÓN ARREGLADO: Azul sólido con texto blanco, imposible que sea invisible */
-        .btn-agendar {
-            background-color: #2563eb !important;
-            color: #ffffff !important;
-            font-weight: 700 !important;
-            border-radius: 9999px !important;
-            padding: 12px 32px !important;
-            text-decoration: none !important;
-            display: inline-block !important;
-            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3) !important;
-            transition: all 0.3s ease !important;
+        :root {
+            --brand-color: {{ brand_hex | default('#2563eb') }};
+            --brand-hover: color-mix(in srgb, var(--brand-color) 85%, black);
         }
-        .btn-agendar:hover {
-            background-color: #1d4ed8 !important;
-            transform: translateY(-2px) !important;
+        
+        * { scroll-behavior: smooth; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            overflow-x: hidden;
+        }
+        
+        .font-display { font-family: 'Playfair Display', serif; }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--brand-color) 0%, {{ brand_secondary | default('#764ba2') }} 100%);
+        }
+        
+        .text-brand { color: var(--brand-color); }
+        .bg-brand { background-color: var(--brand-color); }
+        .border-brand { border-color: var(--brand-color); }
+        
+        .hover-brand:hover { 
+            background-color: var(--brand-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .hero-overlay {
+            background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+        
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .navbar-scrolled {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-scrolled .nav-link { color: #1f2937 !important; }
+        .navbar-scrolled .nav-logo { color: #1f2937 !important; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .float-animation { animation: float 6s ease-in-out infinite; }
+        
+        .service-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--brand-color), {{ brand_secondary | default('#764ba2') }});
+            color: white;
+            margin-bottom: 1.5rem;
+        }
+        
+        .testimonial-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .testimonial-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .gallery-item {
+            overflow: hidden;
+            border-radius: 20px;
+            position: relative;
+        }
+        
+        .gallery-item img {
+            transition: transform 0.6s;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, var(--brand-color) 0%, {{ brand_secondary | default('#764ba2') }} 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--brand-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
     </style>
 </head>
-<body class="font-sans text-gray-800 antialiased bg-gray-50">
+<body class="bg-white">
 
-    <!-- NAVEGACIÓN -->
-    <nav class="fixed w-full z-50 top-0 bg-white/90 backdrop-blur-md shadow-sm">
-        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between px-6 py-4">
-            <span class="text-2xl font-extrabold text-blue-600">{{ hero_title.split(' ')[0] | default('MiEmpresa') }}</span>
-            <div class="flex gap-4 items-center">
-                <a href="#servicios" class="hidden md:block text-gray-700 hover:text-blue-600 font-semibold transition">Servicios</a>
-                <a href="#contacto" class="hidden md:block text-gray-700 hover:text-blue-600 font-semibold transition">Contacto</a>
-                {% if calendly_url %}
-                    <a href="{{ calendly_url }}" target="_blank" class="btn-agendar">📅 Agendar Cita</a>
-                {% else %}
-                    <a href="#contacto" class="btn-agendar">{{ cta_text | default('Contáctanos') }}</a>
-                {% endif %}
+    <!-- NAVBAR STICKY -->
+    <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#inicio" class="nav-logo text-2xl font-bold text-white transition-colors">
+                {{ company_name }}
+            </a>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#servicios" class="nav-link text-white hover:text-gray-200 font-medium transition-colors">Servicios</a>
+                <a href="#nosotros" class="nav-link text-white hover:text-gray-200 font-medium transition-colors">Nosotros</a>
+                <a href="#galeria" class="nav-link text-white hover:text-gray-200 font-medium transition-colors">Galería</a>
+                <a href="#contacto" class="nav-link bg-white text-gray-900 px-6 py-2 rounded-full font-semibold hover:bg-gray-100 transition-all">
+                    Contactar
+                </a>
             </div>
+            <button id="mobile-menu-btn" class="md:hidden text-white text-2xl">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white px-6 py-4 shadow-lg">
+            <a href="#servicios" class="block py-2 text-gray-700">Servicios</a>
+            <a href="#nosotros" class="block py-2 text-gray-700">Nosotros</a>
+            <a href="#galeria" class="block py-2 text-gray-700">Galería</a>
+            <a href="#contacto" class="block py-2 text-gray-700">Contacto</a>
         </div>
     </nav>
 
-    <!-- HERO SECTION -->
-    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden min-h-[85vh] flex items-center bg-gradient-to-br from-blue-50 to-indigo-50">
-        <div class="relative z-10 max-w-5xl mx-auto text-center px-6">
-            <span class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-4 py-1 rounded-full mb-6">✨ Soluciones de vanguardia para {{ industry | default('tu industria') }}</span>
-            <h1 class="text-5xl md:text-6xl font-extrabold text-gray-900 mb-8 leading-tight">{{ hero_title | default('Impulsa tu negocio') }}</h1>
-            <p class="text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">{{ hero_subtitle | default('Ofrecemos servicios premium diseñados meticulosamente para potenciar tu operación.') }}</p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                {% if calendly_url %}
-                    <a href="{{ calendly_url }}" target="_blank" class="btn-agendar text-lg px-10 py-4">Agendar Cita Gratuita</a>
-                {% else %}
-                    <a href="#contacto" class="btn-agendar text-lg px-10 py-4">{{ cta_text | default('Contáctanos') }}</a>
-                {% endif %}
-                <a href="#servicios" class="inline-block text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-semibold rounded-full px-8 py-4 text-lg transition-all shadow-sm">Conocer más</a>
+    <!-- HERO SECTION CON IMAGEN REAL -->
+    <section id="inicio" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0">
+            <img src="{{ hero_image | default('https://images.unsplash.com/photo-1567521464027-f127ff144326?w=1920&q=80') }}" 
+                 alt="Hero" class="w-full h-full object-cover">
+            <div class="hero-overlay absolute inset-0"></div>
+        </div>
+        
+        <div class="relative z-10 max-w-5xl mx-auto px-6 text-center text-white">
+            <div class="inline-block glass px-6 py-2 rounded-full mb-6 fade-in">
+                <span class="text-sm font-semibold tracking-wider uppercase">✨ {{ company_name }}</span>
             </div>
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight fade-in font-display">
+                {{ hero_title }}
+            </h1>
+            <p class="text-xl md:text-2xl mb-10 text-gray-200 max-w-3xl mx-auto fade-in">
+                {{ hero_subtitle }}
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center fade-in">
+                <a href="#contacto" class="bg-white text-gray-900 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 hover:scale-105 transition-all shadow-2xl">
+                    {{ hero_cta }} <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+                <a href="#servicios" class="glass text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:bg-opacity-20 transition-all">
+                    Ver Servicios
+                </a>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 text-white float-animation">
+            <i class="fas fa-chevron-down text-2xl"></i>
         </div>
     </section>
 
     <!-- SERVICIOS -->
-    <section id="servicios" class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-6 text-center">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">Nuestros Servicios Exclusivos</h2>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-12">Diseñados meticulosamente para potenciar tu operación.</p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <section id="servicios" class="py-24 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16 fade-in">
+                <span class="text-brand font-semibold uppercase tracking-wider">Nuestros Servicios</span>
+                <h2 class="text-4xl md:text-5xl font-bold mt-2 mb-4 font-display">Lo que ofrecemos</h2>
+                <div class="w-20 h-1 bg-brand mx-auto"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {% for service in services %}
-                <div class="p-8 bg-gray-50 rounded-2xl shadow-sm hover:shadow-xl transition border border-gray-100">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">{{ service.title }}</h3>
+                <div class="bg-white rounded-3xl p-8 card-hover fade-in">
+                    <div class="service-icon">
+                        <i class="fas {{ service.icon | default('fa-star') }}"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3">{{ service.title }}</h3>
                     <p class="text-gray-600 leading-relaxed">{{ service.description }}</p>
+                    <a href="#contacto" class="inline-flex items-center text-brand font-semibold mt-4 hover:gap-3 transition-all">
+                        Saber más <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
                 </div>
-                {% else %}
-                <div class="col-span-3 text-gray-500">No hay servicios disponibles en este momento.</div>
                 {% endfor %}
             </div>
         </div>
     </section>
 
-    <!-- CONTACTO -->
-    <section id="contacto" class="py-20 bg-gray-900 text-white">
-        <div class="max-w-5xl mx-auto px-6 text-center">
-            <h2 class="text-4xl font-bold mb-6">¿Listo para empezar?</h2>
-            <p class="text-gray-400 text-xl mb-10">Contáctanos o agenda una cita directamente.</p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center mb-12">
-                {% if contact_email %}
-                <div>
-                    <div class="text-4xl mb-4">📧</div>
-                    <h3 class="font-bold text-xl mb-2">Email</h3>
-                    <a href="mailto:{{ contact_email }}" class="text-blue-400 hover:underline">{{ contact_email }}</a>
+    <!-- SOBRE NOSOTROS -->
+    <section id="nosotros" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="fade-in">
+                    <span class="text-brand font-semibold uppercase tracking-wider">Sobre Nosotros</span>
+                    <h2 class="text-4xl md:text-5xl font-bold mt-2 mb-6 font-display">
+                        Conoce nuestra historia
+                    </h2>
+                    <p class="text-gray-600 text-lg leading-relaxed mb-6">
+                        {{ about_text }}
+                    </p>
+                    <div class="grid grid-cols-2 gap-4 mt-8">
+                        {% for benefit in benefits %}
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-brand flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-check text-white text-xs"></i>
+                            </div>
+                            <span class="text-gray-700 font-medium">{{ benefit }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
-                {% endif %}
-                {% if contact_phone %}
-                <div>
-                    <div class="text-4xl mb-4">📱</div>
-                    <h3 class="font-bold text-xl mb-2">WhatsApp</h3>
-                    <a href="https://wa.me/{{ contact_phone | replace(' ', '') | replace('+', '') | replace('-', '') }}" target="_blank" class="text-green-400 hover:underline">{{ contact_phone }}</a>
+                <div class="fade-in">
+                    <img src="{{ about_image | default('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80') }}" 
+                         alt="Nosotros" class="rounded-3xl shadow-2xl">
                 </div>
-                {% endif %}
-                {% if contact_address %}
-                <div>
-                    <div class="text-4xl mb-4">📍</div>
-                    <h3 class="font-bold text-xl mb-2">Ubicación</h3>
-                    <p class="text-gray-400">{{ contact_address }}</p>
-                </div>
-                {% endif %}
             </div>
-
-            {% if calendly_url %}
-                <a href="{{ calendly_url }}" target="_blank" class="btn-agendar text-lg px-12 py-4">Abrir Calendario y Agendar Cita</a>
-            {% endif %}
         </div>
     </section>
 
-    <footer class="bg-gray-950 text-gray-500 py-8 text-center text-sm border-t border-gray-800">
-        <p>&copy; 2026 {{ hero_title.split(' ')[0] | default('MiEmpresa') }}. Todos los derechos reservados.</p>
+    <!-- GALERÍA -->
+    <section id="galeria" class="py-24 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16 fade-in">
+                <span class="text-brand font-semibold uppercase tracking-wider">Galería</span>
+                <h2 class="text-4xl md:text-5xl font-bold mt-2 mb-4 font-display">Nuestro trabajo</h2>
+                <div class="w-20 h-1 bg-brand mx-auto"></div>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {% for img in gallery_images %}
+                <div class="gallery-item aspect-square fade-in">
+                    <img src="{{ img }}" alt="Galería">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIOS -->
+    {% if testimonials %}
+    <section class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16 fade-in">
+                <span class="text-brand font-semibold uppercase tracking-wider">Testimonios</span>
+                <h2 class="text-4xl md:text-5xl font-bold mt-2 mb-4 font-display">Lo que dicen nuestros clientes</h2>
+                <div class="w-20 h-1 bg-brand mx-auto"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for testimonial in testimonials %}
+                <div class="testimonial-card fade-in">
+                    <div class="flex text-yellow-400 mb-4">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-700 mb-6 italic leading-relaxed">"{{ testimonial.text }}"</p>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white font-bold">
+                            {{ testimonial.name[0] }}
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-900">{{ testimonial.name }}</p>
+                            <p class="text-sm text-gray-500">{{ testimonial.role }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- CTA SECTION -->
+    <section class="cta-section py-24">
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6 font-display fade-in">
+                ¿Listo para empezar?
+            </h2>
+            <p class="text-xl text-white text-opacity-90 mb-8 fade-in">
+                Contáctanos hoy y descubre cómo podemos ayudarte
+            </p>
+            <a href="#contacto" class="inline-block bg-white text-gray-900 px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition-all shadow-2xl fade-in">
+                Solicitar Información <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- FORMULARIO DE CONTACTO -->
+    <section id="contacto" class="py-24 bg-gray-50">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div class="fade-in">
+                    <span class="text-brand font-semibold uppercase tracking-wider">Contacto</span>
+                    <h2 class="text-4xl font-bold mt-2 mb-6 font-display">Hablemos de tu proyecto</h2>
+                    <p class="text-gray-600 text-lg mb-8">
+                        Estamos listos para atenderte. Completa el formulario o contáctanos directamente.
+                    </p>
+                    
+                    <div class="space-y-6">
+                        {% if contact_email %}
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Email</p>
+                                <p class="font-semibold">{{ contact_email }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if contact_phone %}
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Teléfono</p>
+                                <p class="font-semibold">{{ contact_phone }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if contact_address %}
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Dirección</p>
+                                <p class="font-semibold">{{ contact_address }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <form class="bg-white rounded-3xl p-8 shadow-xl fade-in" onsubmit="handleContactSubmit(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre completo</label>
+                            <input type="text" required class="w-full px-4 py-3 rounded-xl border border-gray-200">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                            <input type="email" required class="w-full px-4 py-3 rounded-xl border border-gray-200">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Teléfono</label>
+                            <input type="tel" class="w-full px-4 py-3 rounded-xl border border-gray-200">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Mensaje</label>
+                            <textarea rows="4" required class="w-full px-4 py-3 rounded-xl border border-gray-200"></textarea>
+                        </div>
+                        <button type="submit" class="w-full gradient-bg text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all">
+                            Enviar Mensaje <i class="fas fa-paper-plane ml-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h3 class="text-2xl font-bold mb-4">{{ company_name }}</h3>
+                    <p class="text-gray-400">{{ hero_subtitle }}</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Enlaces</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#inicio" class="hover:text-white">Inicio</a></li>
+                        <li><a href="#servicios" class="hover:text-white">Servicios</a></li>
+                        <li><a href="#nosotros" class="hover:text-white">Nosotros</a></li>
+                        <li><a href="#contacto" class="hover:text-white">Contacto</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Contacto</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        {% if contact_email %}<li>{{ contact_email }}</li>{% endif %}
+                        {% if contact_phone %}<li>{{ contact_phone }}</li>{% endif %}
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Síguenos</h4>
+                    <div class="flex gap-3">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand transition-all">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand transition-all">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand transition-all">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+                <p>&copy; 2026 {{ company_name }}. Todos los derechos reservados.</p>
+            </div>
+        </div>
     </footer>
 
-    <!-- WIDGET DEL CHATBOT -->
+    <!-- WIDGET CHATBOT -->
+    {% if chatbot_enabled %}
     <script>
-        var CHATBOT_TENANT_ID = '{{ tenant_id | default("default") }}';
+        var CHATBOT_TENANT_ID = '{{ tenant_id }}';
     </script>
     <script src="/static/widget/widget.js"></script>
+    {% endif %}
 
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('navbar-scrolled');
+            } else {
+                navbar.classList.remove('navbar-scrolled');
+            }
+        });
+
+        // Mobile menu
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        // Fade in animation
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        // Form handler
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            alert('¡Gracias por tu mensaje! Te contactaremos pronto.');
+            e.target.reset();
+        }
+    </script>
 </body>
 </html>

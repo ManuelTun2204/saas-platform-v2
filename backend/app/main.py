@@ -136,8 +136,26 @@ async def login(request: LoginRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+import re
 
 @app.post("/api/tenants")
+async def create_tenant(tenant: dict):
+    tenant_id = tenant.get("tenant_id", "").strip()
+    
+    # VALIDACIÓN: tenant_id debe ser válido para ChromaDB
+    if not tenant_id:
+        return {"status": "error", "detail": "tenant_id es requerido"}
+    
+    if len(tenant_id) < 3 or len(tenant_id) > 63:
+        return {"status": "error", "detail": "tenant_id debe tener entre 3 y 63 caracteres"}
+    
+    if not re.match(r'^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$', tenant_id):
+        return {
+            "status": "error", 
+            "detail": "tenant_id inválido. Solo usa letras, números, guiones (-) y guiones bajos (_). Sin espacios. Ejemplo: 'dulce-tentacion' o 'pasteleria_vip'"
+        }
+    
+    # ... resto del código existente
 async def create_tenant(request: TenantCreateRequest):
     try:
         tenants_file = DATA_DIR / "tenants.json"
@@ -552,5 +570,15 @@ async def get_global_analytics():
                 "yearly_revenue_estimate": 0
             }
         }
+ from app.services.export_service import ExportService
+
+# ============================================
+# EXPORTADOR DE SITIOS WEB
+# ============================================
+@app.post("/api/export/{tenant_id}")
+async def export_site(tenant_id: str):
+    """Exporta el sitio web completo en ZIP"""
+    result = ExportService.export_site(tenant_id)
+    return result       
         
         

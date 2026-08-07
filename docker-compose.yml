@@ -9,7 +9,10 @@ services:
     ports:
       - "8000:8000"
     environment:
+      environment:
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
     volumes:
       - ./data:/app/data
     restart: always

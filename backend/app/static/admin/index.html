@@ -4,189 +4,164 @@
     <meta charset="UTF-8">
     <title>SaaS Platform Pro | Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style> 
-        body { font-family: 'Inter', sans-serif; } 
-    </style>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
 <!-- LOGIN -->
 <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 p-6">
-    <div class="bg-white bg-opacity-90 backdrop-blur rounded-2xl p-8 w-full max-w-md shadow-2xl">
+    <div class="bg-white bg-opacity-90 rounded-2xl p-8 w-full max-w-md shadow-2xl">
         <h1 class="text-2xl font-bold text-gray-900 text-center mb-6">🚀 SaaS Platform Pro</h1>
         <form id="login-form" class="space-y-4">
             <input type="text" id="login-user" required class="w-full p-3 border rounded-lg" placeholder="Usuario">
             <input type="password" id="login-pass" required class="w-full p-3 border rounded-lg" placeholder="Contraseña">
-            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition">Iniciar Sesión</button>
+            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg">Iniciar Sesión</button>
         </form>
     </div>
 </div>
 
-<!-- APP PRINCIPAL -->
+<!-- APP -->
 <div id="app-main" class="hidden">
-    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <nav class="bg-white border-b sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-gray-900">🚀 SaaS Platform Pro</h1>
+            <h1 class="text-xl font-bold">🚀 SaaS Platform Pro</h1>
             <div class="flex gap-2">
-                <button onclick="showView('dashboard')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition">📊 Dashboard</button>
-                <button onclick="showView('companies')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition">🏢 Empresas</button>
-                <button onclick="logout()" class="px-4 py-2 rounded-lg text-sm font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition">Salir</button>
+                <button onclick="showView('dashboard')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-purple-600 text-white">📊 Dashboard</button>
+                <button onclick="showView('companies')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white">🏢 Empresas</button>
+                <button onclick="logout()" class="px-4 py-2 rounded-lg text-sm font-semibold bg-red-100 text-red-700">Salir</button>
             </div>
         </div>
     </nav>
 
     <main class="max-w-6xl mx-auto p-6">
-        
+
         <!-- DASHBOARD -->
         <div id="view-dashboard" class="view-content hidden">
-            <div class="mb-6">
-                <h2 class="text-3xl font-bold text-gray-900 mb-2">📊 Dashboard Global</h2>
-                <p class="text-gray-600">Métricas en tiempo real de todas tus empresas</p>
+            <h2 class="text-3xl font-bold mb-6">📊 Dashboard Global</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white"><p class="text-sm">Empresas</p><p id="metric-tenants" class="text-4xl font-bold">0</p></div>
+                <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white"><p class="text-sm">Conversaciones</p><p id="metric-conversations" class="text-4xl font-bold">0</p></div>
+                <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white"><p class="text-sm">Leads</p><p id="metric-leads" class="text-4xl font-bold">0</p></div>
+                <div class="bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-6 text-white"><p class="text-sm">Ingresos/mes</p><p id="metric-revenue" class="text-3xl font-bold">$0</p></div>
             </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-blue-100 text-sm font-semibold mb-1">Empresas Activas</p>
-                            <p id="metric-tenants" class="text-4xl font-bold">0</p>
-                        </div>
-                        <div class="text-4xl opacity-50">🏢</div>
-                    </div>
-                </div>
-                <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-purple-100 text-sm font-semibold mb-1">Conversaciones</p>
-                            <p id="metric-conversations" class="text-4xl font-bold">0</p>
-                        </div>
-                        <div class="text-4xl opacity-50">💬</div>
-                    </div>
-                </div>
-                <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-green-100 text-sm font-semibold mb-1">Leads Capturados</p>
-                            <p id="metric-leads" class="text-4xl font-bold">0</p>
-                        </div>
-                        <div class="text-4xl opacity-50">🎯</div>
-                    </div>
-                </div>
-                <div class="bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-6 text-white shadow-lg">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-pink-100 text-sm font-semibold mb-1">Ingresos/mes</p>
-                            <p id="metric-revenue" class="text-3xl font-bold">$0</p>
-                        </div>
-                        <div class="text-4xl opacity-50">💰</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-gray-900">📈 Tasa de Conversión Global</h3>
-                    <span id="global-conversion-rate" class="text-3xl font-bold text-green-600">0%</span>
-                </div>
-                <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
-                    <div id="conversion-bar" class="h-full bg-gradient-to-r from-green-500 to-emerald-600 transition-all duration-1000" style="width: 0%"></div>
-                </div>
-                <p class="text-sm text-gray-500 mt-2">De cada 100 conversaciones, <span id="conversion-text">0</span> se convierten en leads</p>
-            </div>
-            
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 class="text-xl font-bold text-gray-900 mb-6">🏆 Ranking de Empresas</h3>
-                <div id="companies-ranking" class="space-y-3">
-                    <div class="text-center text-gray-400 py-8">
-                        <div class="text-5xl mb-2">📊</div>
-                        <p>Cargando ranking...</p>
-                    </div>
-                </div>
-            </div>
+            <div id="companies-ranking" class="bg-white rounded-2xl p-6"></div>
         </div>
 
         <!-- EMPRESAS -->
         <div id="view-companies" class="view-content hidden">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-900">Mis Empresas</h2>
-                <button onclick="showView('create')" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition flex items-center gap-2">
-                    <span class="text-xl">➕</span> Nueva Empresa
-                </button>
+                <h2 class="text-2xl font-bold">Mis Empresas</h2>
+                <button onclick="showView('create')" class="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold">➕ Nueva Empresa</button>
             </div>
-            <div id="companies-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            <div id="companies-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- CREAR EMPRESA -->
+        <!-- CREAR -->
         <div id="view-create" class="view-content hidden">
-            <button onclick="showView('companies')" class="mb-4 text-blue-600 font-semibold hover:underline">← Volver</button>
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">🚀 Crear Nueva Empresa</h2>
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                <form id="create-form" class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">ID Único del Tenant *</label>
-                        <input type="text" id="tenant-id" required class="w-full p-3 border rounded-lg" placeholder="Ej: dulce-tentacion">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre de la Empresa *</label>
-                        <input type="text" id="company-name" required class="w-full p-3 border rounded-lg" placeholder="Ej: Dulce Tentación">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Industria *</label>
-                        <input type="text" id="industry" required class="w-full p-3 border rounded-lg" placeholder="Ej: pastelería">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Objetivo Principal *</label>
-                        <textarea id="objective" required rows="2" class="w-full p-3 border rounded-lg" placeholder="Ej: Generar pedidos"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Audiencia Objetivo *</label>
-                        <input type="text" id="audience" required class="w-full p-3 border rounded-lg" placeholder="Ej: Familias">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Paquete</label>
-                        <select id="package" class="w-full p-3 border rounded-lg">
-                            <option value="full">🚀 Full Service ($499/mes)</option>
-                            <option value="web_chat">💻 Web + Chat ($299/mes)</option>
-                            <option value="chat_only">🤖 Solo Chatbot ($99/mes)</option>
-                            <option value="seo_only">📈 Solo SEO ($149 único)</option>
-                        </select>
-                    </div>
-                    <button type="submit" id="generate-btn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold py-4 rounded-xl hover:shadow-2xl transition">
-                        ✨ Generar Servicio con IA
-                    </button>
-                    <div id="generate-status" class="text-center mt-4 text-sm font-semibold"></div>
-                </form>
+            <button onclick="showView('companies')" class="mb-4 text-blue-600">← Volver</button>
+            <h2 class="text-2xl font-bold mb-6">🚀 Crear Nueva Empresa</h2>
+            <div class="bg-white rounded-2xl p-8 space-y-4">
+                <input type="text" id="tenant-id" class="w-full p-3 border rounded-lg" placeholder="ID único (ej: dulce-demo)">
+                <input type="text" id="company-name" class="w-full p-3 border rounded-lg" placeholder="Nombre (ej: Dulce Tentación)">
+                <input type="text" id="industry" class="w-full p-3 border rounded-lg" placeholder="Industria (ej: pastelería)">
+                <textarea id="objective" rows="2" class="w-full p-3 border rounded-lg" placeholder="Objetivo (ej: vender pasteles)"></textarea>
+                <input type="text" id="audience" class="w-full p-3 border rounded-lg" placeholder="Audiencia (ej: familias)">
+                <select id="package" class="w-full p-3 border rounded-lg">
+                    <option value="full">🚀 Full Service</option>
+                    <option value="web_chat">💻 Web + Chat</option>
+                    <option value="chat_only">🤖 Solo Chatbot</option>
+                    <option value="seo_only">📈 Solo SEO</option>
+                </select>
+                <button onclick="createCompany()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl">✨ Generar con IA</button>
+                <div id="generate-status" class="text-center text-sm font-semibold"></div>
             </div>
         </div>
 
-        <!-- DETALLE EMPRESA -->
+        <!-- DETALLE -->
         <div id="view-company-detail" class="view-content hidden">
-            <button onclick="showView('companies')" class="mb-4 text-blue-600 font-semibold hover:underline">← Volver</button>
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h2 id="detail-name" class="text-2xl font-bold mb-1"></h2>
-                <p id="detail-industry" class="text-gray-600 mb-6"></p>
-                
-                <div class="border-b border-gray-200 mb-6 flex gap-6">
-                    <button onclick="showDetailTab('web')" id="tab-web" class="detail-tab pb-2 border-b-2 border-blue-600 text-blue-600 font-semibold">🌐 Web</button>
-                    <button onclick="showDetailTab('chatbot')" id="tab-chatbot" class="detail-tab pb-2 border-b-2 border-transparent text-gray-600 font-semibold">🤖 Chatbot</button>
-                    <button onclick="showDetailTab('seo')" id="tab-seo" class="detail-tab pb-2 border-b-2 border-transparent text-gray-600 font-semibold">📈 SEO</button>
-                </div>
+            <button onclick="showView('companies')" class="mb-4 text-blue-600">← Volver</button>
+            <h2 id="detail-name" class="text-2xl font-bold mb-6"></h2>
 
-                <div id="detail-tab-web" class="detail-tab-content">
-                    <a id="web-link" href="#" target="_blank" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">Ver Sitio Web ↗</a>
-                </div>
+            <div class="flex gap-4 border-b mb-6">
+                <button onclick="showDetailTab('web')" id="tab-web" class="detail-tab pb-2 border-b-2 border-blue-600 text-blue-600 font-semibold">🌐 Web</button>
+                <button onclick="showDetailTab('chatbot')" id="tab-chatbot" class="detail-tab pb-2 border-b-2 border-transparent text-gray-600 font-semibold">🤖 Chatbot</button>
+                <button onclick="showDetailTab('editor')" id="tab-editor" class="detail-tab pb-2 border-b-2 border-transparent text-gray-600 font-semibold">✏️ Editor</button>
+                <button onclick="showDetailTab('seo')" id="tab-seo" class="detail-tab pb-2 border-b-2 border-transparent text-gray-600 font-semibold">📈 SEO</button>
+            </div>
 
-                <div id="detail-tab-chatbot" class="detail-tab-content hidden">
-                    <h3 class="font-bold text-gray-900 mb-3">📁 Subir Documentos</h3>
-                    <input type="file" id="doc-upload" accept=".txt,.pdf" multiple class="w-full p-3 border rounded-lg mb-3">
-                    <button onclick="uploadDocs()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold">🚀 Subir y Procesar</button>
-                    <p id="upload-status" class="mt-3 text-sm font-semibold"></p>
+            <div id="detail-tab-web" class="detail-tab-content">
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mb-6">
+                    <p class="text-sm text-blue-800">💡 <strong>Tip:</strong> Tu sitio web está activo. Puedes descargarlo completo para entregarlo al cliente.</p>
                 </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <a id="web-link" href="#" target="_blank" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-xl font-semibold text-center hover:shadow-lg transition">
+                        <div class="text-3xl mb-2">🌐</div>
+                        <div>Ver Sitio Web</div>
+                        <div class="text-xs opacity-75 mt-1">Abrir en nueva pestaña</div>
+                    </a>
+                    <button onclick="exportSite()" id="export-btn" class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-4 rounded-xl font-semibold text-center hover:shadow-lg transition">
+                        <div class="text-3xl mb-2">📦</div>
+                        <div>Descargar Sitio Web</div>
+                        <div class="text-xs opacity-75 mt-1">ZIP completo + instrucciones</div>
+                    </button>
+                </div>
+                <div id="export-status" class="mt-4 text-center text-sm font-semibold"></div>
+            </div>
 
-                <div id="detail-tab-seo" class="detail-tab-content hidden">
-                    <a id="seo-link" href="#" target="_blank" class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700">Ver Reporte SEO ↗</a>
+            <div id="detail-tab-chatbot" class="detail-tab-content hidden">
+                <h3 class="font-bold mb-3">📁 Subir Plantillas (.txt)</h3>
+                <p class="text-sm text-gray-500 mb-3">Selecciona varios archivos con Ctrl+Clic: catálogo, políticas, FAQs</p>
+                <input type="file" id="doc-upload" accept=".txt,.pdf" multiple class="w-full p-3 border rounded-lg mb-3">
+                <div id="file-list" class="space-y-2 mb-3"></div>
+                <button onclick="uploadDocs()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold">🚀 Subir y Procesar</button>
+                <p id="upload-status" class="mt-3 text-sm font-semibold"></p>
+            </div>
+
+            <div id="detail-tab-editor" class="detail-tab-content hidden">
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded mb-4">
+                    <p class="text-sm text-yellow-800">✏️ <strong>Editor Visual:</strong> Cambia textos, fotos y colores sin regenerar con IA.</p>
                 </div>
+                <div class="bg-white rounded-2xl p-6 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="text-sm font-semibold">Nombre empresa</label><input type="text" id="edit-company" class="w-full p-2 border rounded"></div>
+                        <div><label class="text-sm font-semibold">Título principal</label><input type="text" id="edit-hero-title" class="w-full p-2 border rounded"></div>
+                    </div>
+                    <div><label class="text-sm font-semibold">Subtítulo</label><textarea id="edit-hero-subtitle" rows="2" class="w-full p-2 border rounded"></textarea></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="text-sm font-semibold">Texto del botón</label><input type="text" id="edit-hero-cta" class="w-full p-2 border rounded"></div>
+                        <div><label class="text-sm font-semibold">Foto principal (URL)</label><input type="text" id="edit-hero-image" class="w-full p-2 border rounded"></div>
+                    </div>
+                    <div><label class="text-sm font-semibold">Texto "Sobre Nosotros"</label><textarea id="edit-about-text" rows="3" class="w-full p-2 border rounded"></textarea></div>
+                    <div><label class="text-sm font-semibold">Foto "Sobre Nosotros" (URL)</label><input type="text" id="edit-about-image" class="w-full p-2 border rounded"></div>
+                    <div>
+                        <label class="text-sm font-semibold block mb-2">🖼️ Galería (8 fotos - URLs)</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <input type="text" id="edit-gallery-0" class="p-2 border rounded text-xs" placeholder="Foto 1">
+                            <input type="text" id="edit-gallery-1" class="p-2 border rounded text-xs" placeholder="Foto 2">
+                            <input type="text" id="edit-gallery-2" class="p-2 border rounded text-xs" placeholder="Foto 3">
+                            <input type="text" id="edit-gallery-3" class="p-2 border rounded text-xs" placeholder="Foto 4">
+                            <input type="text" id="edit-gallery-4" class="p-2 border rounded text-xs" placeholder="Foto 5">
+                            <input type="text" id="edit-gallery-5" class="p-2 border rounded text-xs" placeholder="Foto 6">
+                            <input type="text" id="edit-gallery-6" class="p-2 border rounded text-xs" placeholder="Foto 7">
+                            <input type="text" id="edit-gallery-7" class="p-2 border rounded text-xs" placeholder="Foto 8">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div><label class="text-sm font-semibold">Email contacto</label><input type="text" id="edit-email" class="w-full p-2 border rounded"></div>
+                        <div><label class="text-sm font-semibold">Teléfono</label><input type="text" id="edit-phone" class="w-full p-2 border rounded"></div>
+                        <div><label class="text-sm font-semibold">Dirección</label><input type="text" id="edit-address" class="w-full p-2 border rounded"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-sm font-semibold">Color principal</label><input type="color" id="edit-color" class="w-full h-10 border rounded cursor-pointer"></div>
+                        <div><label class="text-sm font-semibold">Color secundario</label><input type="color" id="edit-color2" class="w-full h-10 border rounded cursor-pointer"></div>
+                    </div>
+                    <button onclick="saveSiteEditor()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-4 rounded-xl">💾 Guardar y Regenerar Sitio</button>
+                    <div id="editor-status" class="text-center text-sm font-semibold"></div>
+                </div>
+            </div>
+
+            <div id="detail-tab-seo" class="detail-tab-content hidden">
+                <a id="seo-link" href="#" target="_blank" class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-semibold">Ver Reporte SEO ↗</a>
             </div>
         </div>
     </main>
@@ -194,34 +169,24 @@
 
 <script>
 let currentTenantId = '';
+let currentSiteData = null;
+let selectedFiles = [];
 
-// AUTH
 document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const user = document.getElementById('login-user').value;
-    const pass = document.getElementById('login-pass').value;
-    try {
-        const res = await fetch('/api/auth/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ username: user, password: pass }) });
-        const data = await res.json();
-        if (data.status === 'success') {
-            localStorage.setItem('user', JSON.stringify(data.user));
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('app-main').classList.remove('hidden');
-            loadCompanies();
-        }
-    } catch(e) { alert('Error: ' + e.message); }
-});
-
-window.addEventListener('load', () => {
-    if (localStorage.getItem('user')) {
+    const res = await fetch('/api/auth/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ username: document.getElementById('login-user').value, password: document.getElementById('login-pass').value }) });
+    const data = await res.json();
+    if (data.status === 'success') {
+        localStorage.setItem('user', '1');
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app-main').classList.remove('hidden');
-    }
+        showView('companies');
+    } else alert('Credenciales inválidas');
 });
 
+window.addEventListener('load', () => { if (localStorage.getItem('user')) { document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-main').classList.remove('hidden'); } });
 function logout() { localStorage.clear(); location.reload(); }
 
-// NAVEGACIÓN
 function showView(view) {
     document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
     document.getElementById('view-' + view).classList.remove('hidden');
@@ -229,153 +194,164 @@ function showView(view) {
     if (view === 'dashboard') loadDashboard();
 }
 
-// DASHBOARD
 async function loadDashboard() {
-    try {
-        const res = await fetch('/api/analytics/global');
-        const data = await res.json();
-        if (data.status === 'success') {
-            const m = data.metrics;
-            document.getElementById('metric-tenants').innerText = m.total_tenants;
-            document.getElementById('metric-conversations').innerText = m.total_conversations;
-            document.getElementById('metric-leads').innerText = m.total_leads;
-            document.getElementById('metric-revenue').innerText = '$' + m.monthly_revenue_estimate.toLocaleString();
-            document.getElementById('global-conversion-rate').innerText = m.conversion_rate + '%';
-            document.getElementById('conversion-bar').style.width = Math.min(m.conversion_rate, 100) + '%';
-            document.getElementById('conversion-text').innerText = m.conversion_rate;
-            loadCompaniesRanking();
-        }
-    } catch(e) { console.error('Error dashboard:', e); }
+    const res = await fetch('/api/analytics/global');
+    const data = await res.json();
+    if (data.status === 'success') {
+        const m = data.metrics;
+        document.getElementById('metric-tenants').innerText = m.total_tenants;
+        document.getElementById('metric-conversations').innerText = m.total_conversations;
+        document.getElementById('metric-leads').innerText = m.total_leads;
+        document.getElementById('metric-revenue').innerText = '$' + m.monthly_revenue_estimate.toLocaleString();
+    }
+    const tRes = await fetch('/api/tenants');
+    const tData = await tRes.json();
+    document.getElementById('companies-ranking').innerHTML = '<h3 class="font-bold mb-4">🏆 Empresas</h3>' + (tData.tenants || []).map(t => `<div class="p-3 border-b">${t.company_name} <span class="text-gray-500 text-sm">(${t.industry})</span></div>`).join('');
 }
 
-async function loadCompaniesRanking() {
-    try {
-        const res = await fetch('/api/tenants');
-        const data = await res.json();
-        const rankingDiv = document.getElementById('companies-ranking');
-        
-        if (!data.tenants || data.tenants.length === 0) {
-            rankingDiv.innerHTML = '<div class="text-center text-gray-400 py-8">No hay empresas</div>';
-            return;
-        }
-        
-        rankingDiv.innerHTML = data.tenants.map((t, idx) => {
-            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '#' + (idx + 1);
-            return `
-                <div class="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:shadow-md transition cursor-pointer" onclick="viewCompanyDetails('${t.tenant_id || t.id}')">
-                    <div class="flex items-center gap-4">
-                        <div class="text-3xl font-bold">${medal}</div>
-                        <div>
-                            <h4 class="font-bold">${t.company_name}</h4>
-                            <p class="text-sm text-gray-500">${t.industry}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    } catch(e) { console.error('Error ranking:', e); }
-}
-
-// EMPRESAS
 async function loadCompanies() {
-    try {
-        const res = await fetch('/api/tenants');
-        const data = await res.json();
-        const grid = document.getElementById('companies-grid');
-        if (!data.tenants || data.tenants.length === 0) {
-            grid.innerHTML = '<div class="col-span-full text-center py-12 bg-white rounded-2xl border-2 border-dashed"><p class="text-gray-500">No hay empresas. Crea la primera.</p></div>';
-            return;
-        }
-        grid.innerHTML = data.tenants.map(t => `
-            <div class="bg-white p-6 rounded-2xl shadow-sm border hover:shadow-lg transition cursor-pointer" onclick="viewCompanyDetails('${t.tenant_id || t.id}')">
-                <h3 class="font-bold text-lg">${t.company_name}</h3>
-                <p class="text-sm text-gray-500">${t.industry}</p>
-            </div>
-        `).join('');
-    } catch(e) { console.error('Error:', e); }
+    const res = await fetch('/api/tenants');
+    const data = await res.json();
+    const grid = document.getElementById('companies-grid');
+    if (!data.tenants || data.tenants.length === 0) { grid.innerHTML = '<p class="text-gray-500">No hay empresas.</p>'; return; }
+    grid.innerHTML = data.tenants.map(t => `
+        <div class="bg-white p-6 rounded-2xl shadow-sm border hover:shadow-lg cursor-pointer" onclick="viewCompanyDetails('${t.tenant_id || t.id}')">
+            <h3 class="font-bold text-lg">${t.company_name}</h3>
+            <p class="text-sm text-gray-500">${t.industry}</p>
+        </div>`).join('');
+}
+
+async function createCompany() {
+    const status = document.getElementById('generate-status');
+    status.innerText = '⏳ Generando con IA (30-60 seg)...';
+    const tenantId = document.getElementById('tenant-id').value;
+    await fetch('/api/tenants', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ tenant_id: tenantId, company_name: document.getElementById('company-name').value, industry: document.getElementById('industry').value, system_prompt: 'Asistente', main_objective: document.getElementById('objective').value, escalation_email: '' }) });
+    const genRes = await fetch('/api/generate/' + tenantId, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ industry: document.getElementById('industry').value, objective: document.getElementById('objective').value, audience: document.getElementById('audience').value, tone: 'amigable', package: document.getElementById('package').value }) });
+    const genData = await genRes.json();
+    if (genData.status === 'success') { status.innerHTML = '✅ ¡Listo!'; setTimeout(() => showView('companies'), 1500); }
+    else status.innerText = '❌ Error: ' + (genData.detail || 'desconocido');
 }
 
 async function viewCompanyDetails(tenantId) {
     currentTenantId = tenantId;
     showView('company-detail');
-    try {
-        const res = await fetch('/api/tenant/' + tenantId + '/details');
-        const data = await res.json();
-        document.getElementById('detail-name').innerText = data.tenant.company_name;
-        document.getElementById('detail-industry').innerText = data.tenant.industry;
-        document.getElementById('web-link').href = '/data/websites/' + tenantId + '/index.html';
-        document.getElementById('seo-link').href = '/data/websites/' + tenantId + '/seo-report.html';
-    } catch(e) { console.error('Error:', e); }
+    const res = await fetch('/api/tenant/' + tenantId + '/details');
+    const data = await res.json();
+    document.getElementById('detail-name').innerText = data.tenant.company_name;
+    document.getElementById('web-link').href = '/data/websites/' + tenantId + '/index.html';
+    document.getElementById('seo-link').href = '/data/websites/' + tenantId + '/seo-report.html';
 }
 
 function showDetailTab(tab) {
     document.querySelectorAll('.detail-tab-content').forEach(el => el.classList.add('hidden'));
     document.getElementById('detail-tab-' + tab).classList.remove('hidden');
-    document.querySelectorAll('.detail-tab').forEach(btn => {
-        btn.classList.remove('border-blue-600', 'text-blue-600');
-        btn.classList.add('border-transparent', 'text-gray-600');
-    });
+    document.querySelectorAll('.detail-tab').forEach(btn => { btn.classList.remove('border-blue-600', 'text-blue-600'); btn.classList.add('border-transparent', 'text-gray-600'); });
     document.getElementById('tab-' + tab).classList.add('border-blue-600', 'text-blue-600');
+    if (tab === 'editor') loadSiteEditor();
 }
 
-// CREAR EMPRESA
-document.getElementById('create-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const status = document.getElementById('generate-status');
-    status.innerText = '⏳ Generando...';
-    
-    try {
-        await fetch('/api/tenants', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                tenant_id: document.getElementById('tenant-id').value,
-                company_name: document.getElementById('company-name').value,
-                industry: document.getElementById('industry').value,
-                system_prompt: 'Asistente',
-                main_objective: document.getElementById('objective').value,
-                escalation_email: ''
-            })
-        });
-        
-        const genRes = await fetch('/api/generate/' + document.getElementById('tenant-id').value, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                industry: document.getElementById('industry').value,
-                objective: document.getElementById('objective').value,
-                audience: document.getElementById('audience').value,
-                tone: 'amigable',
-                package: document.getElementById('package').value
-            })
-        });
-        
-        const genData = await genRes.json();
-        if (genData.status === 'success') {
-            status.innerHTML = '✅ ¡Éxito! <a href="' + genData.preview_url + '" target="_blank" class="text-blue-600">Ver sitio</a>';
-            setTimeout(() => showView('companies'), 2000);
-        }
-    } catch(e) { status.innerText = '❌ Error: ' + e.message; }
+document.addEventListener('change', (e) => {
+    if (e.target.id === 'doc-upload') {
+        selectedFiles = Array.from(e.target.files);
+        document.getElementById('file-list').innerHTML = selectedFiles.map(f => `<div class="bg-blue-50 p-2 rounded text-sm">📄 ${f.name}</div>`).join('');
+    }
 });
 
-// UPLOAD
 async function uploadDocs() {
-    const files = document.getElementById('doc-upload').files;
     const status = document.getElementById('upload-status');
-    if (files.length === 0) { status.innerText = '⚠️ Selecciona archivos'; return; }
-    
+    if (selectedFiles.length === 0) { status.innerText = '⚠️ Selecciona archivos'; return; }
     status.innerText = '⏳ Procesando...';
-    let totalChunks = 0;
-    
-    for (let file of files) {
-        const formData = new FormData();
-        formData.append('file', file);
-        const res = await fetch('/api/documents/upload/' + currentTenantId, { method: 'POST', body: formData });
+    let total = 0;
+    for (let file of selectedFiles) {
+        const fd = new FormData(); fd.append('file', file);
+        const res = await fetch('/api/documents/upload/' + currentTenantId, { method: 'POST', body: fd });
         const data = await res.json();
-        if (data.status === 'success') totalChunks += data.chunks_indexed;
+        if (data.status === 'success') total += data.chunks_indexed;
     }
-    
-    status.innerText = '✅ ' + files.length + ' archivos procesados, ' + totalChunks + ' chunks indexados';
+    status.innerText = '✅ ' + selectedFiles.length + ' archivos procesados, ' + total + ' fragmentos indexados';
+}
+
+async function exportSite() {
+    const btn = document.getElementById('export-btn');
+    const status = document.getElementById('export-status');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="text-3xl mb-2">⏳</div><div>Generando ZIP...</div>';
+    status.innerText = 'Descargando imágenes y creando paquete...';
+    try {
+        const res = await fetch('/api/export/' + currentTenantId, { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'success') {
+            status.innerHTML = `✅ <strong>¡Listo!</strong> ${data.filename} (${data.size_mb} MB)`;
+            const link = document.createElement('a');
+            link.href = data.download_url;
+            link.download = data.filename;
+            link.click();
+            btn.innerHTML = '<div class="text-3xl mb-2">✅</div><div>Descargado</div>';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<div class="text-3xl mb-2">📦</div><div>Descargar Otra Vez</div><div class="text-xs opacity-75 mt-1">ZIP completo + instrucciones</div>';
+            }, 3000);
+        } else {
+            status.innerText = '❌ Error: ' + data.detail;
+            btn.disabled = false;
+            btn.innerHTML = '<div class="text-3xl mb-2">📦</div><div>Reintentar</div>';
+        }
+    } catch(e) {
+        status.innerText = '❌ Error: ' + e.message;
+        btn.disabled = false;
+        btn.innerHTML = '<div class="text-3xl mb-2">📦</div><div>Reintentar</div>';
+    }
+}
+
+async function loadSiteEditor() {
+    const status = document.getElementById('editor-status');
+    status.innerText = '⏳ Cargando datos...';
+    const res = await fetch('/api/site-editor/' + currentTenantId);
+    const data = await res.json();
+    if (data.status !== 'success') { status.innerText = '⚠️ ' + data.detail; return; }
+    currentSiteData = data.site_data;
+    const sd = currentSiteData;
+    document.getElementById('edit-company').value = sd.company_name || '';
+    document.getElementById('edit-hero-title').value = sd.hero_title || '';
+    document.getElementById('edit-hero-subtitle').value = sd.hero_subtitle || '';
+    document.getElementById('edit-hero-cta').value = sd.hero_cta || '';
+    document.getElementById('edit-hero-image').value = sd.hero_image || '';
+    document.getElementById('edit-about-image').value = sd.about_image || '';
+    document.getElementById('edit-about-text').value = sd.about_text || '';
+    document.getElementById('edit-email').value = sd.contact_email || '';
+    document.getElementById('edit-phone').value = sd.contact_phone || '';
+    document.getElementById('edit-address').value = sd.contact_address || '';
+    document.getElementById('edit-color').value = sd.brand_hex || '#2563eb';
+    document.getElementById('edit-color2').value = sd.brand_secondary || '#764ba2';
+    const gallery = sd.gallery_images || [];
+    for (let i = 0; i < 8; i++) { const el = document.getElementById('edit-gallery-' + i); if (el) el.value = gallery[i] || ''; }
+    status.innerText = '✅ Datos cargados.';
+}
+
+async function saveSiteEditor() {
+    if (!currentSiteData) { alert('Primero carga los datos'); return; }
+    const sd = currentSiteData;
+    sd.company_name = document.getElementById('edit-company').value;
+    sd.hero_title = document.getElementById('edit-hero-title').value;
+    sd.hero_subtitle = document.getElementById('edit-hero-subtitle').value;
+    sd.hero_cta = document.getElementById('edit-hero-cta').value;
+    sd.hero_image = document.getElementById('edit-hero-image').value;
+    sd.about_image = document.getElementById('edit-about-image').value;
+    sd.about_text = document.getElementById('edit-about-text').value;
+    sd.contact_email = document.getElementById('edit-email').value;
+    sd.contact_phone = document.getElementById('edit-phone').value;
+    sd.contact_address = document.getElementById('edit-address').value;
+    sd.brand_hex = document.getElementById('edit-color').value;
+    sd.brand_secondary = document.getElementById('edit-color2').value;
+    const gallery = [];
+    for (let i = 0; i < 8; i++) { const v = document.getElementById('edit-gallery-' + i).value; if (v) gallery.push(v); }
+    sd.gallery_images = gallery;
+    const status = document.getElementById('editor-status');
+    status.innerText = '⏳ Regenerando...';
+    const res = await fetch('/api/site-editor/' + currentTenantId, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(sd) });
+    const data = await res.json();
+    if (data.status === 'success') status.innerHTML = '✅ ¡Actualizado! <a href="' + data.preview_url + '" target="_blank" class="text-blue-600 underline">Ver sitio ↗</a>';
+    else status.innerText = '❌ Error: ' + data.detail;
 }
 </script>
 </body>
