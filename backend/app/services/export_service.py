@@ -43,7 +43,7 @@ class ExportService:
             if not site_data_file.exists():
                 return {"status": "error", "detail": "Datos del sitio no encontrados"}
 
-            with open(site_data_file, 'r', encoding='utf-8') as f:
+            with open(site_data_file, 'r', encoding='utf-8-sig') as f:
                 site_data = json.load(f)
 
             company_name = site_data.get("company_name", tenant_id)

@@ -3,505 +3,578 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ company_name }} - {{ hero_title }}</title>
+    {% if seo_enabled %}
+    <title>{{ company_name }} | {{ industry | title }}</title>
     <meta name="description" content="{{ hero_subtitle }}">
+    <meta name="keywords" content="{{ industry }}, {{ company_name }}, servicios profesionales">
+    {% else %}
+    <title>{{ company_name }}</title>
+    {% endif %}
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand': '{{ brand_hex }}',
+                        'brand-secondary': '{{ brand_secondary }}',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
     <style>
-        :root {
-            --brand-color: {{ brand_hex | default('#2563eb') }};
-            --brand-hover: color-mix(in srgb, var(--brand-color) 85%, black);
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-text {
+            background: linear-gradient(135deg, {{ brand_hex }} 0%, {{ brand_secondary }} 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        
-        * { scroll-behavior: smooth; }
-        
-        body { 
-            font-family: 'Inter', sans-serif; 
-            overflow-x: hidden;
+        .btn-brand {
+            background: linear-gradient(135deg, {{ brand_hex }} 0%, {{ brand_secondary }} 100%);
+            transition: all 0.3s ease;
         }
-        
-        .font-display { font-family: 'Playfair Display', serif; }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, var(--brand-color) 0%, {{ brand_secondary | default('#764ba2') }} 100%);
-        }
-        
-        .text-brand { color: var(--brand-color); }
-        .bg-brand { background-color: var(--brand-color); }
-        .border-brand { border-color: var(--brand-color); }
-        
-        .hover-brand:hover { 
-            background-color: var(--brand-hover);
+        .btn-brand:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        
-        .hero-overlay {
-            background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
-        }
-        
-        .glass {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
         .card-hover {
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.3s ease;
         }
-        
         .card-hover:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-        }
-        
-        .fade-in {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s ease-out;
-        }
-        
-        .fade-in.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        .navbar-scrolled {
-            background: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        
-        .navbar-scrolled .nav-link { color: #1f2937 !important; }
-        .navbar-scrolled .nav-logo { color: #1f2937 !important; }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-        
-        .float-animation { animation: float 6s ease-in-out infinite; }
-        
-        .service-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            background: linear-gradient(135deg, var(--brand-color), {{ brand_secondary | default('#764ba2') }});
-            color: white;
-            margin-bottom: 1.5rem;
-        }
-        
-        .testimonial-card {
-            background: white;
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-        }
-        
-        .testimonial-card:hover {
-            transform: scale(1.02);
+            transform: translateY(-8px);
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
-        
-        .gallery-item {
+        .pricing-popular {
+            background: linear-gradient(135deg, {{ brand_hex }} 0%, {{ brand_secondary }} 100%);
+            transform: scale(1.05);
+        }
+        .faq-answer {
+            max-height: 0;
             overflow: hidden;
-            border-radius: 20px;
-            position: relative;
+            transition: max-height 0.3s ease, padding 0.3s ease;
         }
-        
-        .gallery-item img {
-            transition: transform 0.6s;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding-top: 1rem;
         }
-        
-        .gallery-item:hover img {
-            transform: scale(1.1);
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
         }
-        
-        .cta-section {
-            background: linear-gradient(135deg, var(--brand-color) 0%, {{ brand_secondary | default('#764ba2') }} 100%);
-            position: relative;
-            overflow: hidden;
+        .faq-icon {
+            transition: transform 0.3s ease;
         }
-        
-        .cta-section::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 600px;
-            height: 600px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-in;
         }
-        
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--brand-color);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stat-number {
+            background: linear-gradient(135deg, {{ brand_hex }} 0%, {{ brand_secondary }} 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .testimonial-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         }
     </style>
 </head>
-<body class="bg-white">
+<body class="bg-white text-gray-900">
 
-    <!-- NAVBAR STICKY -->
-    <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="#inicio" class="nav-logo text-2xl font-bold text-white transition-colors">
-                {{ company_name }}
-            </a>
-            <div class="hidden md:flex items-center gap-8">
-                <a href="#servicios" class="nav-link text-white hover:text-gray-200 font-medium transition-colors">Servicios</a>
-                <a href="#nosotros" class="nav-link text-white hover:text-gray-200 font-medium transition-colors">Nosotros</a>
-                <a href="#galeria" class="nav-link text-white hover:text-gray-200 font-medium transition-colors">Galería</a>
-                <a href="#contacto" class="nav-link bg-white text-gray-900 px-6 py-2 rounded-full font-semibold hover:bg-gray-100 transition-all">
-                    Contactar
-                </a>
+<!-- NAVBAR -->
+<nav class="fixed w-full bg-white/90 backdrop-blur-md shadow-sm z-50 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <div class="flex-shrink-0">
+                <span class="text-2xl font-bold gradient-text">{{ company_name }}</span>
             </div>
-            <button id="mobile-menu-btn" class="md:hidden text-white text-2xl">
-                <i class="fas fa-bars"></i>
+            <div class="hidden md:flex space-x-8">
+                <a href="#inicio" class="text-gray-700 hover:text-brand font-medium">Inicio</a>
+                <a href="#servicios" class="text-gray-700 hover:text-brand font-medium">Servicios</a>
+                <a href="#nosotros" class="text-gray-700 hover:text-brand font-medium">Nosotros</a>
+                <a href="#precios" class="text-gray-700 hover:text-brand font-medium">Precios</a>
+                <a href="#equipo" class="text-gray-700 hover:text-brand font-medium">Equipo</a>
+                <a href="#contacto" class="text-gray-700 hover:text-brand font-medium">Contacto</a>
+            </div>
+            <a href="#contacto" class="hidden md:inline-block btn-brand text-white px-6 py-2 rounded-full font-semibold">{{ hero_cta }}</a>
+            <button id="mobile-menu-btn" class="md:hidden">
+                <i class="fas fa-bars text-2xl"></i>
             </button>
         </div>
-        <div id="mobile-menu" class="hidden md:hidden bg-white px-6 py-4 shadow-lg">
-            <a href="#servicios" class="block py-2 text-gray-700">Servicios</a>
-            <a href="#nosotros" class="block py-2 text-gray-700">Nosotros</a>
-            <a href="#galeria" class="block py-2 text-gray-700">Galería</a>
-            <a href="#contacto" class="block py-2 text-gray-700">Contacto</a>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+        <div class="px-4 py-3 space-y-2">
+            <a href="#inicio" class="block text-gray-700 py-2">Inicio</a>
+            <a href="#servicios" class="block text-gray-700 py-2">Servicios</a>
+            <a href="#nosotros" class="block text-gray-700 py-2">Nosotros</a>
+            <a href="#precios" class="block text-gray-700 py-2">Precios</a>
+            <a href="#equipo" class="block text-gray-700 py-2">Equipo</a>
+            <a href="#contacto" class="block text-gray-700 py-2">Contacto</a>
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <!-- HERO SECTION CON IMAGEN REAL -->
-    <section id="inicio" class="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div class="absolute inset-0">
-            <img src="{{ hero_image | default('https://images.unsplash.com/photo-1567521464027-f127ff144326?w=1920&q=80') }}" 
-                 alt="Hero" class="w-full h-full object-cover">
-            <div class="hero-overlay absolute inset-0"></div>
-        </div>
-        
-        <div class="relative z-10 max-w-5xl mx-auto px-6 text-center text-white">
-            <div class="inline-block glass px-6 py-2 rounded-full mb-6 fade-in">
-                <span class="text-sm font-semibold tracking-wider uppercase">✨ {{ company_name }}</span>
+<!-- HERO -->
+<section id="inicio" class="pt-32 pb-20 bg-gradient-to-br from-gray-50 to-white relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div class="animate-fade-in">
+                <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                    <span class="gradient-text">{{ hero_title }}</span>
+                </h1>
+                <p class="text-xl text-gray-600 mb-8">{{ hero_subtitle }}</p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="#contacto" class="btn-brand text-white px-8 py-4 rounded-full font-semibold text-center">{{ hero_cta }}</a>
+                    <a href="#servicios" class="border-2 border-brand text-brand px-8 py-4 rounded-full font-semibold text-center hover:bg-brand hover:text-white transition">Ver Servicios</a>
+                </div>
             </div>
-            <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight fade-in font-display">
-                {{ hero_title }}
-            </h1>
-            <p class="text-xl md:text-2xl mb-10 text-gray-200 max-w-3xl mx-auto fade-in">
-                {{ hero_subtitle }}
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center fade-in">
-                <a href="#contacto" class="bg-white text-gray-900 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 hover:scale-105 transition-all shadow-2xl">
-                    {{ hero_cta }} <i class="fas fa-arrow-right ml-2"></i>
-                </a>
-                <a href="#servicios" class="glass text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:bg-opacity-20 transition-all">
-                    Ver Servicios
-                </a>
-            </div>
-        </div>
-        
-        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 text-white float-animation">
-            <i class="fas fa-chevron-down text-2xl"></i>
-        </div>
-    </section>
-
-    <!-- SERVICIOS -->
-    <section id="servicios" class="py-24 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16 fade-in">
-                <span class="text-brand font-semibold uppercase tracking-wider">Nuestros Servicios</span>
-                <h2 class="text-4xl md:text-5xl font-bold mt-2 mb-4 font-display">Lo que ofrecemos</h2>
-                <div class="w-20 h-1 bg-brand mx-auto"></div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {% for service in services %}
-                <div class="bg-white rounded-3xl p-8 card-hover fade-in">
-                    <div class="service-icon">
-                        <i class="fas {{ service.icon | default('fa-star') }}"></i>
+            <div class="relative">
+                <img src="{{ hero_image }}" alt="{{ company_name }}" class="rounded-2xl shadow-2xl w-full h-96 object-cover">
+                <div class="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl hidden md:block">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <i class="fas fa-check text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-900">100% Garantizado</p>
+                            <p class="text-sm text-gray-500">Calidad premium</p>
+                        </div>
                     </div>
-                    <h3 class="text-2xl font-bold mb-3">{{ service.title }}</h3>
-                    <p class="text-gray-600 leading-relaxed">{{ service.description }}</p>
-                    <a href="#contacto" class="inline-flex items-center text-brand font-semibold mt-4 hover:gap-3 transition-all">
-                        Saber más <i class="fas fa-arrow-right ml-2"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- STATS -->
+{% if stats %}
+<section class="py-16 bg-gradient-to-r from-brand to-brand-secondary text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {% for stat in stats %}
+            <div class="p-6">
+                <div class="text-4xl mb-2">{{ stat.icon }}</div>
+                <div class="text-4xl md:text-5xl font-bold mb-2" data-count="{{ stat.number }}">0</div>
+                <div class="text-sm md:text-base opacity-90">{{ stat.label }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- SERVICIOS -->
+{% if services %}
+<section id="servicios" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold mb-4">Nuestros <span class="gradient-text">Servicios</span></h2>
+            <p class="text-xl text-gray-600">Soluciones profesionales diseñadas para ti</p>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for service in services %}
+            <div class="card-hover bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
+                <div class="w-16 h-16 bg-gradient-to-br from-brand to-brand-secondary rounded-2xl flex items-center justify-center mb-6">
+                    <i class="fas {{ service.icon }} text-white text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">{{ service.title }}</h3>
+                <p class="text-gray-600">{{ service.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- NOSOTROS -->
+<section id="nosotros" class="py-20 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+                <img src="{{ about_image }}" alt="Sobre nosotros" class="rounded-2xl shadow-xl w-full h-96 object-cover">
+            </div>
+            <div>
+                <h2 class="text-4xl font-bold mb-6">Sobre <span class="gradient-text">Nosotros</span></h2>
+                <p class="text-lg text-gray-700 mb-8 leading-relaxed">{{ about_text }}</p>
+                {% if benefits %}
+                <div class="space-y-3">
+                    {% for benefit in benefits %}
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 bg-brand rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-check text-white text-xs"></i>
+                        </div>
+                        <span class="text-gray-700">{{ benefit }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- TESTIMONIOS -->
+{% if testimonials %}
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold mb-4">Lo que dicen nuestros <span class="gradient-text">clientes</span></h2>
+            <p class="text-xl text-gray-600">Historias reales de éxito</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+            {% for testimonial in testimonials %}
+            <div class="testimonial-card p-8 rounded-2xl shadow-lg border border-gray-100">
+                <div class="flex mb-4">
+                    {% for i in range(testimonial.rating | int) %}
+                    <i class="fas fa-star text-yellow-400"></i>
+                    {% endfor %}
+                </div>
+                <p class="text-gray-700 mb-6 italic">"{{ testimonial.text }}"</p>
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-16 bg-gradient-to-br from-brand to-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-lg">
+                        {{ testimonial.name[0] }}
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-900">{{ testimonial.name }}</p>
+                        <p class="text-sm text-gray-500">{{ testimonial.role }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- PRECIOS -->
+{% if pricing %}
+<section id="precios" class="py-20 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold mb-4">Planes y <span class="gradient-text">Precios</span></h2>
+            <p class="text-xl text-gray-600">Elige el plan perfecto para ti</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8 items-center">
+            {% for plan in pricing %}
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden {% if plan.popular %}pricing-popular text-white{% else %}border border-gray-200{% endif %}">
+                {% if plan.popular %}
+                <div class="bg-white/20 text-white text-center py-2 text-sm font-semibold">
+                    ⭐ MÁS POPULAR
+                </div>
+                {% endif %}
+                <div class="p-8">
+                    <h3 class="text-2xl font-bold mb-2 {% if not plan.popular %}text-gray-900{% endif %}">{{ plan.name }}</h3>
+                    <div class="mb-6">
+                        <span class="text-5xl font-bold {% if not plan.popular %}gradient-text{% endif %}">{{ plan.price }}</span>
+                        <span class="{% if not plan.popular %}text-gray-500{% else %}opacity-80{% endif %}">{{ plan.period }}</span>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        {% for feature in plan.features %}
+                        <li class="flex items-center gap-3">
+                            <i class="fas fa-check {% if plan.popular %}text-white{% else %}text-green-500{% endif %}"></i>
+                            <span class="{% if not plan.popular %}text-gray-700{% endif %}">{{ feature }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <a href="#contacto" class="block text-center py-3 rounded-full font-semibold transition {% if plan.popular %}bg-white text-brand hover:bg-gray-100{% else %}btn-brand text-white{% endif %}">
+                        Elegir Plan
                     </a>
                 </div>
-                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- EQUIPO -->
+{% if team %}
+<section id="equipo" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold mb-4">Nuestro <span class="gradient-text">Equipo</span></h2>
+            <p class="text-xl text-gray-600">Profesionales comprometidos con tu éxito</p>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {% for member in team %}
+            <div class="card-hover bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100">
+                <div class="h-48 bg-gradient-to-br from-brand to-brand-secondary flex items-center justify-center">
+                    <span class="text-6xl font-bold text-white">{{ member.name.split()[0][0] }}{{ member.name.split()[-1][0] if member.name.split()|length > 1 else '' }}</span>
+                </div>
+                <div class="p-6 text-center">
+                    <h3 class="text-xl font-bold mb-1">{{ member.name }}</h3>
+                    <p class="text-brand font-semibold mb-3">{{ member.role }}</p>
+                    <p class="text-gray-600 text-sm">{{ member.bio }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- GALERÍA -->
+{% if gallery_images %}
+<section class="py-20 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold mb-4">Nuestra <span class="gradient-text">Galería</span></h2>
+            <p class="text-xl text-gray-600">Conoce nuestro trabajo</p>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {% for img in gallery_images %}
+            <div class="overflow-hidden rounded-xl shadow-md hover:shadow-xl transition">
+                <img src="{{ img }}" alt="Galería {{ loop.index }}" class="w-full h-48 object-cover hover:scale-110 transition duration-500">
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- FAQs -->
+{% if faqs %}
+<section class="py-20 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold mb-4">Preguntas <span class="gradient-text">Frecuentes</span></h2>
+            <p class="text-xl text-gray-600">Resolvemos tus dudas</p>
+        </div>
+        <div class="space-y-4">
+            {% for faq in faqs %}
+            <div class="faq-item bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                <button onclick="toggleFaq(this)" class="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-100 transition">
+                    <span class="font-semibold text-left text-gray-900">{{ faq.question }}</span>
+                    <i class="fas fa-plus faq-icon text-brand text-xl"></i>
+                </button>
+                <div class="faq-answer px-6 pb-4">
+                    <p class="text-gray-600">{{ faq.answer }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- CONTACTO -->
+<section id="contacto" class="py-20 bg-gradient-to-br from-brand to-brand-secondary text-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-4xl font-bold mb-4">¿Listo para empezar?</h2>
+        <p class="text-xl mb-8 opacity-90">Contáctanos hoy y descubre cómo podemos ayudarte</p>
+        
+        {% if contact_email or contact_phone or contact_address %}
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            {% if contact_email %}
+            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                <i class="fas fa-envelope text-3xl mb-3"></i>
+                <p class="font-semibold mb-1">Email</p>
+                <p class="opacity-90">{{ contact_email }}</p>
+            </div>
+            {% endif %}
+            {% if contact_phone %}
+            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                <i class="fas fa-phone text-3xl mb-3"></i>
+                <p class="font-semibold mb-1">Teléfono</p>
+                <p class="opacity-90">{{ contact_phone }}</p>
+            </div>
+            {% endif %}
+            {% if contact_address %}
+            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                <i class="fas fa-map-marker-alt text-3xl mb-3"></i>
+                <p class="font-semibold mb-1">Dirección</p>
+                <p class="opacity-90">{{ contact_address }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <a href="#inicio" class="inline-block bg-white text-brand px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition">{{ hero_cta }}</a>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-gray-900 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+                <h3 class="text-xl font-bold mb-4 gradient-text">{{ company_name }}</h3>
+                <p class="text-gray-400">{{ hero_subtitle[:100] }}...</p>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-4">Enlaces</h4>
+                <ul class="space-y-2 text-gray-400">
+                    <li><a href="#inicio" class="hover:text-white">Inicio</a></li>
+                    <li><a href="#servicios" class="hover:text-white">Servicios</a></li>
+                    <li><a href="#nosotros" class="hover:text-white">Nosotros</a></li>
+                    <li><a href="#contacto" class="hover:text-white">Contacto</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-4">Servicios</h4>
+                <ul class="space-y-2 text-gray-400">
+                    {% for service in services[:4] %}
+                    <li>{{ service.title }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-4">Contacto</h4>
+                <ul class="space-y-2 text-gray-400">
+                    {% if contact_email %}<li><i class="fas fa-envelope mr-2"></i>{{ contact_email }}</li>{% endif %}
+                    {% if contact_phone %}<li><i class="fas fa-phone mr-2"></i>{{ contact_phone }}</li>{% endif %}
+                    {% if contact_address %}<li><i class="fas fa-map-marker-alt mr-2"></i>{{ contact_address }}</li>{% endif %}
+                </ul>
             </div>
         </div>
-    </section>
-
-    <!-- SOBRE NOSOTROS -->
-    <section id="nosotros" class="py-24 bg-white">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div class="fade-in">
-                    <span class="text-brand font-semibold uppercase tracking-wider">Sobre Nosotros</span>
-                    <h2 class="text-4xl md:text-5xl font-bold mt-2 mb-6 font-display">
-                        Conoce nuestra historia
-                    </h2>
-                    <p class="text-gray-600 text-lg leading-relaxed mb-6">
-                        {{ about_text }}
-                    </p>
-                    <div class="grid grid-cols-2 gap-4 mt-8">
-                        {% for benefit in benefits %}
-                        <div class="flex items-start gap-3">
-                            <div class="w-6 h-6 rounded-full bg-brand flex items-center justify-center flex-shrink-0 mt-1">
-                                <i class="fas fa-check text-white text-xs"></i>
-                            </div>
-                            <span class="text-gray-700 font-medium">{{ benefit }}</span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="fade-in">
-                    <img src="{{ about_image | default('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80') }}" 
-                         alt="Nosotros" class="rounded-3xl shadow-2xl">
-                </div>
-            </div>
+        <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+            <p>&copy; 2026 {{ company_name }}. Todos los derechos reservados.</p>
         </div>
-    </section>
+    </div>
+</footer>
 
-    <!-- GALERÍA -->
-    <section id="galeria" class="py-24 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16 fade-in">
-                <span class="text-brand font-semibold uppercase tracking-wider">Galería</span>
-                <h2 class="text-4xl md:text-5xl font-bold mt-2 mb-4 font-display">Nuestro trabajo</h2>
-                <div class="w-20 h-1 bg-brand mx-auto"></div>
+{% if chatbot_enabled %}
+<!-- CHATBOT -->
+<div id="chatbot-widget" class="fixed bottom-6 right-6 z-50">
+    <button onclick="toggleChat()" class="w-16 h-16 btn-brand rounded-full shadow-2xl flex items-center justify-center text-white text-2xl">
+        <i class="fas fa-comments"></i>
+    </button>
+</div>
+
+<div id="chatbot-window" class="hidden fixed bottom-24 right-6 w-96 h-[500px] bg-white rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden border border-gray-200">
+    <div class="bg-gradient-to-r from-brand to-brand-secondary p-4 text-white">
+        <div class="flex justify-between items-center">
+            <div>
+                <h3 class="font-bold">Asistente {{ company_name }}</h3>
+                <p class="text-xs opacity-80">En línea</p>
             </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {% for img in gallery_images %}
-                <div class="gallery-item aspect-square fade-in">
-                    <img src="{{ img }}" alt="Galería">
-                </div>
-                {% endfor %}
-            </div>
+            <button onclick="toggleChat()" class="text-white hover:opacity-80">
+                <i class="fas fa-times text-xl"></i>
+            </button>
         </div>
-    </section>
-
-    <!-- TESTIMONIOS -->
-    {% if testimonials %}
-    <section class="py-24 bg-white">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16 fade-in">
-                <span class="text-brand font-semibold uppercase tracking-wider">Testimonios</span>
-                <h2 class="text-4xl md:text-5xl font-bold mt-2 mb-4 font-display">Lo que dicen nuestros clientes</h2>
-                <div class="w-20 h-1 bg-brand mx-auto"></div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {% for testimonial in testimonials %}
-                <div class="testimonial-card fade-in">
-                    <div class="flex text-yellow-400 mb-4">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <p class="text-gray-700 mb-6 italic leading-relaxed">"{{ testimonial.text }}"</p>
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white font-bold">
-                            {{ testimonial.name[0] }}
-                        </div>
-                        <div>
-                            <p class="font-bold text-gray-900">{{ testimonial.name }}</p>
-                            <p class="text-sm text-gray-500">{{ testimonial.role }}</p>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
+    </div>
+    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+        <div class="bg-white rounded-2xl rounded-tl-none p-3 shadow-sm max-w-[80%]">
+            <p class="text-sm">¡Hola! 👋 ¿En qué puedo ayudarte hoy?</p>
         </div>
-    </section>
-    {% endif %}
-
-    <!-- CTA SECTION -->
-    <section class="cta-section py-24">
-        <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
-            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6 font-display fade-in">
-                ¿Listo para empezar?
-            </h2>
-            <p class="text-xl text-white text-opacity-90 mb-8 fade-in">
-                Contáctanos hoy y descubre cómo podemos ayudarte
-            </p>
-            <a href="#contacto" class="inline-block bg-white text-gray-900 px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition-all shadow-2xl fade-in">
-                Solicitar Información <i class="fas fa-arrow-right ml-2"></i>
-            </a>
+    </div>
+    <div class="p-3 border-t bg-white">
+        <div class="flex gap-2">
+            <input type="text" id="chat-input" placeholder="Escribe tu mensaje..." 
+                   class="flex-1 border rounded-full px-4 py-2 focus:outline-none focus:border-brand"
+                   onkeypress="if(event.key==='Enter') sendMessage()">
+            <button onclick="sendMessage()" class="btn-brand text-white w-10 h-10 rounded-full flex items-center justify-center">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
-    </section>
+    </div>
+</div>
 
-    <!-- FORMULARIO DE CONTACTO -->
-    <section id="contacto" class="py-24 bg-gray-50">
-        <div class="max-w-5xl mx-auto px-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                <div class="fade-in">
-                    <span class="text-brand font-semibold uppercase tracking-wider">Contacto</span>
-                    <h2 class="text-4xl font-bold mt-2 mb-6 font-display">Hablemos de tu proyecto</h2>
-                    <p class="text-gray-600 text-lg mb-8">
-                        Estamos listos para atenderte. Completa el formulario o contáctanos directamente.
-                    </p>
-                    
-                    <div class="space-y-6">
-                        {% if contact_email %}
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white">
-                                <i class="fas fa-envelope"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-500">Email</p>
-                                <p class="font-semibold">{{ contact_email }}</p>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        {% if contact_phone %}
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white">
-                                <i class="fas fa-phone"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-500">Teléfono</p>
-                                <p class="font-semibold">{{ contact_phone }}</p>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        {% if contact_address %}
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white">
-                                <i class="fas fa-map-marker-alt"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-500">Dirección</p>
-                                <p class="font-semibold">{{ contact_address }}</p>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <form class="bg-white rounded-3xl p-8 shadow-xl fade-in" onsubmit="handleContactSubmit(event)">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre completo</label>
-                            <input type="text" required class="w-full px-4 py-3 rounded-xl border border-gray-200">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                            <input type="email" required class="w-full px-4 py-3 rounded-xl border border-gray-200">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Teléfono</label>
-                            <input type="tel" class="w-full px-4 py-3 rounded-xl border border-gray-200">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Mensaje</label>
-                            <textarea rows="4" required class="w-full px-4 py-3 rounded-xl border border-gray-200"></textarea>
-                        </div>
-                        <button type="submit" class="w-full gradient-bg text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all">
-                            Enviar Mensaje <i class="fas fa-paper-plane ml-2"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </section>
+<script>
+    const TENANT_ID = '{{ tenant_id }}';
+    
+    function toggleChat() {
+        document.getElementById('chatbot-window').classList.toggle('hidden');
+    }
+    
+    async function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
+        if (!message) return;
+        
+        const messagesDiv = document.getElementById('chat-messages');
+        messagesDiv.innerHTML += `<div class="bg-brand text-white rounded-2xl rounded-tr-none p-3 shadow-sm max-w-[80%] ml-auto"><p class="text-sm">${message}</p></div>`;
+        input.value = '';
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        
+        messagesDiv.innerHTML += `<div id="typing" class="bg-white rounded-2xl rounded-tl-none p-3 shadow-sm max-w-[80%]"><p class="text-sm text-gray-400">Escribiendo...</p></div>`;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        
+        try {
+            const res = await fetch(`/api/chat/${TENANT_ID}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ question: message, session_id: 'session_' + Date.now() })
+            });
+            const data = await res.json();
+            document.getElementById('typing').remove();
+            messagesDiv.innerHTML += `<div class="bg-white rounded-2xl rounded-tl-none p-3 shadow-sm max-w-[80%]"><p class="text-sm">${data.answer || 'Lo siento, ocurrió un error.'}</p></div>`;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        } catch(e) {
+            document.getElementById('typing').remove();
+            messagesDiv.innerHTML += `<div class="bg-red-50 text-red-600 rounded-2xl rounded-tl-none p-3 shadow-sm max-w-[80%]"><p class="text-sm">Error de conexión</p></div>`;
+        }
+    }
+</script>
+{% endif %}
 
-    <!-- FOOTER -->
-    <footer class="bg-gray-900 text-white py-12">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                <div>
-                    <h3 class="text-2xl font-bold mb-4">{{ company_name }}</h3>
-                    <p class="text-gray-400">{{ hero_subtitle }}</p>
-                </div>
-                <div>
-                    <h4 class="font-bold mb-4">Enlaces</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="#inicio" class="hover:text-white">Inicio</a></li>
-                        <li><a href="#servicios" class="hover:text-white">Servicios</a></li>
-                        <li><a href="#nosotros" class="hover:text-white">Nosotros</a></li>
-                        <li><a href="#contacto" class="hover:text-white">Contacto</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold mb-4">Contacto</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        {% if contact_email %}<li>{{ contact_email }}</li>{% endif %}
-                        {% if contact_phone %}<li>{{ contact_phone }}</li>{% endif %}
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold mb-4">Síguenos</h4>
-                    <div class="flex gap-3">
-                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand transition-all">
-                            <i class="fab fa-facebook-f"></i>
-                        </a>
-                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand transition-all">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand transition-all">
-                            <i class="fab fa-linkedin-in"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
-                <p>&copy; 2026 {{ company_name }}. Todos los derechos reservados.</p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- WIDGET CHATBOT -->
-    {% if chatbot_enabled %}
-    <script>
-        var CHATBOT_TENANT_ID = '{{ tenant_id }}';
-    </script>
-    <script src="/static/widget/widget.js"></script>
-    {% endif %}
-
-    <script>
-        // Navbar scroll effect
-        window.addEventListener('scroll', () => {
-            const navbar = document.getElementById('navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('navbar-scrolled');
-            } else {
-                navbar.classList.remove('navbar-scrolled');
+<!-- FAQ TOGGLE -->
+<script>
+    function toggleFaq(btn) {
+        const item = btn.parentElement;
+        item.classList.toggle('active');
+    }
+    
+    // Mobile menu
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+    
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                document.getElementById('mobile-menu')?.classList.add('hidden');
             }
         });
-
-        // Mobile menu
-        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+    
+    // Animación de contadores de stats
+    function animateCounter(el) {
+        const target = parseInt(el.dataset.count);
+        const duration = 2000;
+        const step = target / (duration / 16);
+        let current = 0;
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+                el.textContent = target.toLocaleString();
+                clearInterval(timer);
+            } else {
+                el.textContent = Math.floor(current).toLocaleString();
+            }
+        }, 16);
+    }
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const counters = entry.target.querySelectorAll('[data-count]');
+                counters.forEach(animateCounter);
+                observer.unobserve(entry.target);
+            }
         });
+    }, { threshold: 0.5 });
+    
+    document.querySelectorAll('[data-count]').forEach(el => {
+        observer.observe(el.closest('section') || el.parentElement);
+    });
+</script>
 
-        // Fade in animation
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, { threshold: 0.1 });
-
-        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-
-        // Form handler
-        function handleContactSubmit(e) {
-            e.preventDefault();
-            alert('¡Gracias por tu mensaje! Te contactaremos pronto.');
-            e.target.reset();
-        }
-    </script>
 </body>
 </html>
