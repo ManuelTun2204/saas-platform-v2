@@ -1,6 +1,7 @@
 ﻿import json
 import os
 import logging
+import tempfile
 from pathlib import Path
 from typing import List, Dict, Optional
 
@@ -34,12 +35,26 @@ class StorageService:
     @staticmethod
     def _write_json(collection: str, data: List[Dict]):
         file_path = StorageService._get_file_path(collection)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = None
         try:
-            # CRÍTICO: utf-8-sig para evitar problemas en Windows
-            with open(file_path, 'w', encoding='utf-8-sig') as f:
+            # Escritura atómica: primero a un archivo temporal y luego se reemplaza,
+            # evita archivos corruptos si dos workers escriben a la vez.
+            fd, tmp_path = tempfile.mkstemp(dir=str(file_path.parent), prefix=f".{collection}.", suffix=".tmp")
+            with os.fdopen(fd, 'w', encoding='utf-8-sig') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_path, file_path)
+            tmp_path = None
         except IOError as e:
             logger.error(f"Error escribiendo {collection}: {e}")
+        finally:
+            if tmp_path and os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except OSError:
+                    pass
     
     # ===== TENANTS =====
     @staticmethod

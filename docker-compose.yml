@@ -1,6 +1,4 @@
-﻿version: '3.8'
-
-services:
+﻿services:
   backend:
     build:
       context: ./backend
@@ -14,6 +12,7 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      PUBLIC_URL: ${PUBLIC_URL}
     volumes:
       - ./data:/app/data
     restart: always

@@ -50,7 +50,7 @@
         </div>
     </section>
     <footer><div class="container"><p>&copy; 2026 {{ company_name }}. Todos los derechos reservados.</p></div></footer>
-    <script src="http://localhost/chatbot-platform/frontend/chatbot-widget/widget.js"></script>
-    <script>initChatbot({ tenantId: "{{ tenant_id }}", apiHost: "http://localhost:8000", primaryColor: "{{ primary_color }}", welcomeMessage: "{{ welcome_message }}" });</script>
+    <script> var CHATBOT_TENANT_ID = '{{ tenant_id }}'; </script>
+    <script src="/static/widget/widget.js"></script>
 </body>
 </html>

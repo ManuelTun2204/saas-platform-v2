@@ -70,7 +70,7 @@ class EmailService:
                         
                         <p><strong>💡 Recomendación:</strong> Contacta al cliente lo antes posible. Los leads que reciben respuesta en menos de 1 hora tienen 7x más probabilidad de conversión.</p>
                         
-                        <a href="http://localhost:8000" class="cta">Ver Panel de Administración</a>
+                        <a href="{os.getenv('PUBLIC_URL', 'http://localhost:8000').rstrip('/')}" class="cta">Ver Panel de Administración</a>
                     </div>
                     <div class="footer">
                         <p>Notificación automática de SaaS Platform V2</p>

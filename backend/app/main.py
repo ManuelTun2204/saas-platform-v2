@@ -588,7 +588,7 @@ async def chat_endpoint(tenant_id: str, request: ChatRequest, http_request: Requ
         user_email = request.email
         
         # Obtener respuesta del RAG
-        answer = rag_service.query(tenant_id, question)
+        answer = await rag_service.query(tenant_id, question)
         
         # Detectar si el usuario proporcionó un email
         import re
@@ -625,14 +625,23 @@ async def chat_endpoint(tenant_id: str, request: ChatRequest, http_request: Requ
                 
                 # Enviar notificación por email
                 try:
-                    email_service.send_lead_notification(lead_data)
+                    tenant_info = next((t for t in json.loads((DATA_DIR / "tenants.json").read_text(encoding="utf-8-sig")) if t.get("tenant_id") == tenant_id or t.get("id") == tenant_id), None)
+                    company_name = tenant_info.get("company_name", tenant_id) if tenant_info else tenant_id
+                    await email_service.send_lead_notification(
+                        tenant_id=tenant_id,
+                        company_name=company_name,
+                        lead_email=user_email,
+                        question=question,
+                        answer=answer
+                    )
                     logger.info(f"✅ Email de lead enviado: {user_email}")
                 except Exception as email_error:
                     logger.warning(f"No se pudo enviar email: {email_error}")
         
         return {
             "status": "success",
-            "answer": answer,
+            "answer": answer["answer"] if isinstance(answer, dict) else answer,
+            "is_lead": answer["is_lead"] if isinstance(answer, dict) else False,
             "session_id": session_id
         }
     except Exception as e:

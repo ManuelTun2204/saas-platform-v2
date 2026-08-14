@@ -8,6 +8,14 @@
 
     var sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
+    var widgetApiBase = (function() {
+        var script = document.currentScript;
+        if (script && script.src) {
+            try { return new URL(script.src).origin; } catch (e) {}
+        }
+        return '';
+    })();
+
     var widgetHTML = `
         <div id="chatbot-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
             <div id="chatbot-toggle" style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
@@ -99,7 +107,7 @@
         sendBtn.textContent = '...';
 
         try {
-            var response = await fetch('/api/chat/' + CHATBOT_CONFIG.tenantId, {
+            var response = await fetch(widgetApiBase + '/api/chat/' + CHATBOT_CONFIG.tenantId, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

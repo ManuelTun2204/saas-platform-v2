@@ -10,6 +10,7 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 DATA_DIR = BASE_DIR.parent / "data"
 WEBSITES_DIR = DATA_DIR / "websites"
 WEBSITES_DIR.mkdir(parents=True, exist_ok=True)
+PUBLIC_URL = os.getenv("PUBLIC_URL", "http://localhost:8000").rstrip("/")
 
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 # ============================================
@@ -599,7 +600,7 @@ class WebsiteService:
                 preview_url = f"/data/websites/{tenant_id}/index.html?v={site_data['cache_buster']}"
                 deliverables = ["Sitio Web Profesional", "Chatbot RAG"]
             elif package == "chat_only":
-                widget_code = f'<script>var CHATBOT_TENANT_ID = "{tenant_id}";</script><script src="http://localhost:8000/static/widget/widget.js"></script>'
+                widget_code = f'<script>var CHATBOT_TENANT_ID = "{tenant_id}";</script><script src="{PUBLIC_URL}/static/widget/widget.js"></script>'
                 chat_html = f"""<!DOCTYPE html><html><head><title>Chatbot</title><script src="https://cdn.tailwindcss.com"></script></head>
                 <body class="bg-gray-50 p-10"><div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
                 <h1 class="text-2xl font-bold mb-4">Tu Chatbot esta listo</h1>

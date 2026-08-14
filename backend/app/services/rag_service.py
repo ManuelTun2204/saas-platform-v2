@@ -17,6 +17,8 @@ from app.services.llm_service import LLMService
 
 logger = logging.getLogger(__name__)
 
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
+
 class RAGService:
     def __init__(self):
         """Constructor global SIN parámetros - maneja múltiples tenants dinámicamente"""
@@ -46,7 +48,7 @@ class RAGService:
         if not self.embeddings:
             raise Exception("Embeddings no inicializados")
         
-        tenant_dir = Path("./data") / "tenants" / tenant_id
+        tenant_dir = DATA_DIR / "tenants" / tenant_id
         vector_db_path = tenant_dir / "vector_db"
         vector_db_path.mkdir(parents=True, exist_ok=True)
         
