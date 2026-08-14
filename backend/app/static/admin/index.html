@@ -214,12 +214,15 @@ async function refreshAccessToken() {
     try {
         var res = await fetch('/api/auth/refresh', {
             method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + refreshToken }
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken })
         });
         if (res.ok) {
             var data = await res.json();
             accessToken = data.access_token;
+            refreshToken = data.refresh_token;
             localStorage.setItem('access_token', accessToken);
+            localStorage.setItem('refresh_token', refreshToken);
             return true;
         }
         return false;

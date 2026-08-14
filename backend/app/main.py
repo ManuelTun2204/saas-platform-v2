@@ -92,6 +92,9 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
 class RegisterRequest(BaseModel):
     username: str
     password: str
@@ -164,13 +167,45 @@ async def login(request: LoginRequest):
 
 
 @app.post("/api/auth/refresh")
-async def refresh_token(credentials: dict = Depends(auth_service.get_current_user)):
-    """Refrescar access token"""
+async def refresh_token(request: RefreshRequest):
+    """Refrescar access token usando refresh token"""
     try:
+        payload = auth_service.decode_token(request.refresh_token)
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Token inválido")
+        
+        username = payload.get("username") or payload.get("sub")
+        
+        # Validar que el usuario siga existiendo
+        users_file = DATA_DIR / "users.json"
+        users = []
+        if users_file.exists():
+            with open(users_file, 'r', encoding='utf-8-sig') as f:
+                users = json.load(f)
+        user = next((u for u in users if u.get("username") == username), None)
+        if not user:
+            raise HTTPException(status_code=401, detail="Usuario no encontrado")
+        
+        user_data = {
+            "sub": user.get("username"),
+            "username": user.get("username"),
+            "role": user.get("role", "user")
+        }
+        access_token = auth_service.create_access_token(data=user_data)
+        refresh_token = auth_service.create_refresh_token(data=user_data)
+        
         return {
             "status": "success",
-            "user": credentials
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "user": {
+                "username": user.get("username"),
+                "role": user.get("role", "user")
+            }
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error refrescando token: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -203,7 +238,7 @@ async def register(request: RegisterRequest, current_user: dict = Depends(auth_s
         
         new_user = {
             "username": request.username,
-            "password_hash": auth_service.get_password_hash(request.password),
+            "password_hash": auth_service.hash_password(request.password),
             "role": request.role,
             "created_at": datetime.now().isoformat()
         }

@@ -49,13 +49,14 @@ class StorageService:
     @staticmethod
     def get_tenant(tenant_id: str) -> Optional[Dict]:
         tenants = StorageService.get_all_tenants()
-        return next((t for t in tenants if t["id"] == tenant_id), None)
+        return next((t for t in tenants if t.get("tenant_id") == tenant_id or t.get("id") == tenant_id), None)
     
     @staticmethod
     def create_tenant(tenant_data: Dict) -> Dict:
         tenants = StorageService.get_all_tenants()
-        if any(t["id"] == tenant_data["id"] for t in tenants):
-            raise ValueError(f"Tenant {tenant_data['id']} ya existe")
+        tenant_key = tenant_data.get("tenant_id", tenant_data.get("id"))
+        if tenant_key and any(t.get("tenant_id") == tenant_key or t.get("id") == tenant_key for t in tenants):
+            raise ValueError(f"Tenant {tenant_key} ya existe")
         tenants.append(tenant_data)
         StorageService._write_json("tenants", tenants)
         return tenant_data
@@ -93,7 +94,8 @@ class StorageService:
         conversations.append(conv_data)
         StorageService._write_json("conversations", conversations)
         return conv_data
-@staticmethod
-def get_all_conversations() -> List[Dict]:
-    """Obtiene todas las conversaciones de todos los tenants"""
-    return StorageService._read_json("conversations")
+    
+    @staticmethod
+    def get_all_conversations() -> List[Dict]:
+        """Obtiene todas las conversaciones de todos los tenants"""
+        return StorageService._read_json("conversations")
