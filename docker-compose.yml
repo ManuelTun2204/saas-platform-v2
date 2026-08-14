@@ -13,9 +13,33 @@
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       PUBLIC_URL: ${PUBLIC_URL}
+      DATABASE_URL: ${DATABASE_URL}
     volumes:
       - ./data:/app/data
     restart: always
+    networks:
+      - saas-network
+
+  # Base de datos Postgres (Fase 3 - migracion de JSON). 
+  # No se inicia por defecto: usar `docker compose --profile postgres up -d`
+  db:
+    image: postgres:16-alpine
+    container_name: saas-db
+    profiles: ["postgres"]
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-saas}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-saas}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-saas} -d ${DB_NAME:-saas}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - saas-network
 
