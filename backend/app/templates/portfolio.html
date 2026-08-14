@@ -203,7 +203,12 @@
     </footer>
 
     {% if chatbot_enabled %}
-    <script> var CHATBOT_TENANT_ID = '{{ tenant_id }}'; </script>
+    <script>
+        var CHATBOT_TENANT_ID = '{{ tenant_id }}';
+        var CHATBOT_TITLE = 'Asistente {{ company_name }}';
+        var CHATBOT_PRIMARY_COLOR = '{{ brand_hex }}';
+        var CHATBOT_SECONDARY_COLOR = '{{ brand_secondary }}';
+    </script>
     <script src="/static/widget/widget.js"></script>
     {% endif %}
     

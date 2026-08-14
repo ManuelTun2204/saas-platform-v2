@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.templating import Jinja2Templates
 # Importar servicios
 from app.services.llm_service import LLMService
 from app.services.rag_service import RAGService
@@ -14,6 +15,7 @@ from app.services.email_service import EmailService
 from app.services.website_service import WebsiteService
 from app.services.export_service import ExportService
 from app.services.auth_service import auth_service
+from app.services.payment_service import payment_service, PRICES
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +42,8 @@ rag_service = RAGService()
 email_service = EmailService()
 website_service = WebsiteService()
 export_service = ExportService()
+
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 # App FastAPI
 app = FastAPI(title="SaaS Platform Pro API", version="1.0.0")
@@ -104,6 +108,25 @@ class ChatRequest(BaseModel):
     question: str
     session_id: str = ""
     email: str = ""
+
+class CheckoutRequest(BaseModel):
+    tenant_id: str
+    company_name: str
+    industry: str
+    system_prompt: str = "Asistente"
+    main_objective: str = ""
+    escalation_email: str = ""
+    objective: str = ""
+    audience: str = ""
+    tone: str = "amigable"
+    package: str = "full"
+    visual_style: str = "moderno"
+    page_type: str = "landing"
+    provider: str = "demo"
+    calendly_url: str = ""
+    contact_email: str = ""
+    contact_phone: str = ""
+    contact_address: str = ""
 
 # ============================================
 # ENDPOINTS DE AUTENTICACIÓN JWT
@@ -411,43 +434,43 @@ async def health():
 # ENDPOINTS DE TENANTS (PROTEGIDOS)
 # ============================================
 
+def _create_tenant_record(tenant_data: dict) -> dict:
+    """Crea un tenant en tenants.json validando el ID. Lanza HTTPException si falla."""
+    import re
+    tenant_id = (tenant_data.get("tenant_id") or "").strip()
+    if not tenant_id:
+        raise HTTPException(status_code=400, detail="tenant_id es requerido")
+    if len(tenant_id) < 3 or len(tenant_id) > 63:
+        raise HTTPException(status_code=400, detail="tenant_id debe tener entre 3 y 63 caracteres")
+    if not re.match(r'^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$', tenant_id):
+        raise HTTPException(
+            status_code=400,
+            detail="tenant_id inválido. Solo letras, números, guiones (-) y guiones bajos (_). Sin espacios. Ej: 'dulce-demo'"
+        )
+    tenants_file = DATA_DIR / "tenants.json"
+    tenants = []
+    if tenants_file.exists():
+        with open(tenants_file, 'r', encoding='utf-8-sig') as f:
+            try:
+                tenants = json.load(f)
+            except Exception:
+                pass
+    if any(t.get("tenant_id") == tenant_id or t.get("id") == tenant_id for t in tenants):
+        raise HTTPException(status_code=400, detail="El ID del Tenant ya existe")
+    new_tenant = dict(tenant_data)
+    new_tenant["tenant_id"] = tenant_id
+    new_tenant["created_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    new_tenant["payment_status"] = "pending"
+    tenants.append(new_tenant)
+    with open(tenants_file, 'w', encoding='utf-8-sig') as f:
+        json.dump(tenants, f, indent=2, ensure_ascii=False)
+    return new_tenant
+
 @app.post("/api/tenants")
 async def create_tenant(request: TenantCreateRequest, current_user: dict = Depends(auth_service.get_current_user)):
     """Crear nuevo tenant (requiere autenticación)"""
     try:
-        tenant_id = request.tenant_id.strip()
-        
-        # Validación de tenant_id
-        import re
-        if not tenant_id:
-            raise HTTPException(status_code=400, detail="tenant_id es requerido")
-        
-        if len(tenant_id) < 3 or len(tenant_id) > 63:
-            raise HTTPException(status_code=400, detail="tenant_id debe tener entre 3 y 63 caracteres")
-        
-        if not re.match(r'^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$', tenant_id):
-            raise HTTPException(
-                status_code=400, 
-                detail="tenant_id inválido. Solo letras, números, guiones (-) y guiones bajos (_). Sin espacios. Ej: 'dulce-demo'"
-            )
-        
-        tenants_file = DATA_DIR / "tenants.json"
-        tenants = []
-        if tenants_file.exists():
-            with open(tenants_file, 'r', encoding='utf-8-sig') as f:
-                try: tenants = json.load(f)
-                except: pass
-        
-        if any(t.get("tenant_id") == tenant_id or t.get("id") == tenant_id for t in tenants):
-            raise HTTPException(status_code=400, detail="El ID del Tenant ya existe")
-            
-        new_tenant = request.dict()
-        new_tenant["created_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-        tenants.append(new_tenant)
-        
-        with open(tenants_file, 'w', encoding='utf-8-sig') as f:
-            json.dump(tenants, f, indent=2, ensure_ascii=False)
-            
+        _create_tenant_record(request.dict())
         return {"status": "success", "message": "Tenant creado exitosamente"}
     except HTTPException:
         raise
@@ -697,6 +720,108 @@ async def export_site(tenant_id: str, current_user: dict = Depends(auth_service.
 
 
 # ============================================
+# ENDPOINTS DE PAGOS
+# ============================================
+
+@app.get("/api/payments/config")
+async def payments_config():
+    """Configuración de pagos: pasarelas disponibles y precios de paquetes"""
+    return {
+        "status": "success",
+        "currency": "USD",
+        "providers": payment_service.get_available_providers(),
+        "packages": payment_service.get_packages(),
+    }
+
+
+@app.post("/api/payments/checkout")
+async def create_payment_checkout(request: CheckoutRequest, current_user: dict = Depends(auth_service.get_current_user)):
+    """Crear tenant + orden + redirección al checkout de la pasarela"""
+    try:
+        provider = request.provider
+        valid_providers = [p["id"] for p in payment_service.get_available_providers()]
+        if provider not in valid_providers:
+            raise HTTPException(status_code=400, detail=f"Metodo de pago no disponible. Opciones: {', '.join(valid_providers)}")
+
+        tenant_data = {
+            "tenant_id": request.tenant_id,
+            "company_name": request.company_name,
+            "industry": request.industry,
+            "system_prompt": request.system_prompt,
+            "main_objective": request.main_objective,
+            "escalation_email": request.escalation_email,
+        }
+        _create_tenant_record(tenant_data)
+
+        site_config = {
+            "industry": request.industry,
+            "objective": request.objective,
+            "audience": request.audience,
+            "tone": request.tone,
+            "brand_hex": "#2563eb",
+            "brand_secondary": "#764ba2",
+            "visual_style": request.visual_style,
+            "page_type": request.page_type,
+            "calendly_url": request.calendly_url,
+            "contact_email": request.contact_email,
+            "contact_phone": request.contact_phone,
+            "contact_address": request.contact_address,
+        }
+        order = payment_service.create_order(request.tenant_id, request.package, provider, site_config)
+        checkout_url = await payment_service.create_checkout(order)
+        return {
+            "status": "success",
+            "order_id": order["order_id"],
+            "checkout_url": checkout_url,
+            "amount": order["amount"],
+            "currency": order["currency"],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creando checkout: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/payments/status/{order_id}")
+async def get_payment_status(order_id: str, http_request: Request):
+    """Consulta el estado de una orden (publico para el checkout, con rate limit)"""
+    client_ip = http_request.client.host if http_request.client else "unknown"
+    if not _check_rate_limit(f"paystatus:{order_id}:{client_ip}", limit=60, window_seconds=60):
+        raise HTTPException(status_code=429, detail="Demasiadas solicitudes.")
+    try:
+        return await payment_service.get_order_status(order_id)
+    except Exception as e:
+        logger.error(f"Error consultando estado de pago: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/payments/finalize/{order_id}")
+async def finalize_payment(order_id: str, http_request: Request):
+    """Genera la entrega cuando la orden esta pagada (publico para el checkout, idempotente)"""
+    client_ip = http_request.client.host if http_request.client else "unknown"
+    if not _check_rate_limit(f"payfinalize:{order_id}:{client_ip}", limit=10, window_seconds=60):
+        raise HTTPException(status_code=429, detail="Demasiadas solicitudes.")
+    try:
+        return await payment_service.finalize(order_id)
+    except Exception as e:
+        logger.error(f"Error finalizando orden: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/checkout-return", response_class=HTMLResponse)
+async def checkout_return_page(request: Request):
+    """Pagina que confirma el pago y dispara la generacion"""
+    return templates.TemplateResponse("checkout_return.html", {"request": request, "message": "Verificando pago"})
+
+
+@app.get("/checkout-cancel", response_class=HTMLResponse)
+async def checkout_cancel_page(request: Request):
+    """Pagina de pago cancelado"""
+    return templates.TemplateResponse("checkout_cancel.html", {"request": request, "message": "Pago cancelado"})
+
+
+# ============================================
 # ENDPOINTS DE ANALYTICS
 # ============================================
 
@@ -753,7 +878,7 @@ async def get_global_analytics(current_user: dict = Depends(auth_service.get_cur
         packages_count = {k: v for k, v in packages_count.items() if v > 0}
 
         # === INGRESOS ESTIMADOS (precios de paquetes) ===
-        package_prices = {"full": 399, "web_chat": 249, "chat_only": 99, "seo_only": 99}
+        package_prices = PRICES
         total_revenue = sum(
             count * package_prices.get(pkg, 0) for pkg, count in packages_count.items()
         )

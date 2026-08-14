@@ -135,25 +135,30 @@
 <div class="text-3xl mb-2 text-blue-600"><i class="fa-solid fa-rocket"></i></div>
 <p class="font-bold">Full Service</p>
 <p class="text-xs text-gray-500 mb-1">Web + Chatbot + SEO</p>
-<p class="text-lg font-extrabold text-blue-600">$399</p>
+<p class="text-lg font-extrabold text-blue-600 package-price" data-package="full">$399</p>
 </div>
 <div class="package-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:shadow-lg transition" data-package="web_chat" onclick="selectPackage(this)">
 <div class="text-3xl mb-2 text-green-600"><i class="fa-solid fa-globe"></i></div>
 <p class="font-bold">Web + Chat</p>
 <p class="text-xs text-gray-500 mb-1">Sitio profesional + Chatbot</p>
-<p class="text-lg font-extrabold text-blue-600">$249</p>
+<p class="text-lg font-extrabold text-blue-600 package-price" data-package="web_chat">$249</p>
 </div>
 <div class="package-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:shadow-lg transition" data-package="chat_only" onclick="selectPackage(this)">
 <div class="text-3xl mb-2 text-purple-600"><i class="fa-solid fa-comments"></i></div>
 <p class="font-bold">Solo Chatbot</p>
 <p class="text-xs text-gray-500 mb-1">Widget para tu web actual</p>
-<p class="text-lg font-extrabold text-blue-600">$99</p>
+<p class="text-lg font-extrabold text-blue-600 package-price" data-package="chat_only">$99</p>
 </div>
+</div>
+<div id="payment-section">
+<label class="block text-sm font-semibold mb-2 mt-4">Metodo de Pago</label>
+<div id="provider-options" class="flex flex-wrap gap-3"></div>
+<p id="provider-note" class="text-xs text-gray-400 mt-2"></p>
 </div>
 <div id="chat-only-note" class="hidden mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
 <i class="fa-solid fa-circle-info mr-1"></i> Solo se generara el codigo del widget. Agregalo a tu pagina actual y el chatbot quedara activo. Usa la informacion de arriba para el contexto del chatbot.
 </div>
-<button onclick="createCompany()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl">Generar con IA</button>
+<button onclick="createCompany()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl">Pagar y Generar con IA</button>
 <div id="generate-status" class="text-center text-sm font-semibold"></div>
 </div>
 </div>
@@ -269,6 +274,9 @@
 var currentTenantId = '';
 var selectedTheme = 'moderno';
 var selectedPackage = 'full';
+var selectedProvider = 'demo';
+var paymentProviders = [];
+var paymentPackages = [];
 var accessToken = '';
 var refreshToken = '';
 var currentUser = null;
@@ -387,6 +395,7 @@ window.addEventListener('load', function() {
             selectedPackage = firstPackage.dataset.package;
         }
     }, 500);
+    loadPaymentConfig();
 });
 
 function updateNavbarByRole() {
@@ -448,6 +457,74 @@ function selectPackage(element) {
     } else {
         webOpts.classList.remove('hidden');
         chatNote.classList.add('hidden');
+    }
+}
+
+async function loadPaymentConfig() {
+    try {
+        var res = await fetch('/api/payments/config');
+        var data = await res.json();
+        if (data.status === 'success') {
+            paymentProviders = data.providers || [];
+            paymentPackages = data.packages || [];
+            renderPaymentPrices();
+            renderProviders();
+        }
+    } catch (e) {
+        console.error('Error cargando config de pagos:', e);
+    }
+}
+
+function renderPaymentPrices() {
+    for (var i = 0; i < paymentPackages.length; i++) {
+        var p = paymentPackages[i];
+        var els = document.querySelectorAll('.package-price[data-package="' + p.id + '"]');
+        for (var j = 0; j < els.length; j++) {
+            els[j].innerText = '$' + p.price;
+        }
+    }
+}
+
+function renderProviders() {
+    var container = document.getElementById('provider-options');
+    if (!paymentProviders.length) return;
+    container.innerHTML = '';
+    var icons = {
+        stripe: '<i class="fa-brands fa-stripe-s"></i>',
+        mercadopago: '<i class="fa-solid fa-money-bill-transfer"></i>',
+        paypal: '<i class="fa-brands fa-paypal"></i>',
+        demo: '<i class="fa-solid fa-flask"></i>'
+    };
+    for (var i = 0; i < paymentProviders.length; i++) {
+        (function(p) {
+            var chip = document.createElement('div');
+            chip.className = 'provider-option cursor-pointer border-2 border-gray-200 rounded-xl px-4 py-3 text-center flex-1 transition';
+            chip.dataset.provider = p.id;
+            chip.innerHTML = '<div class="text-2xl mb-1 text-gray-700">' + (icons[p.id] || '<i class="fa-solid fa-credit-card"></i>') + '</div><p class="text-sm font-semibold">' + p.name + '</p>' + (p.test ? '<p class="text-[10px] text-amber-600">Modo prueba</p>' : '<p class="text-[10px] text-green-600">Produccion</p>');
+            chip.onclick = function() { selectProvider(this); };
+            container.appendChild(chip);
+        })(paymentProviders[i]);
+    }
+    var first = container.querySelector('.provider-option');
+    if (first) selectProvider(first);
+}
+
+function selectProvider(element) {
+    var all = document.querySelectorAll('.provider-option');
+    for (var i = 0; i < all.length; i++) {
+        all[i].classList.remove('border-blue-600', 'bg-blue-50', 'ring-2', 'ring-blue-300');
+        all[i].classList.add('border-gray-200');
+    }
+    element.classList.remove('border-gray-200');
+    element.classList.add('border-blue-600', 'bg-blue-50', 'ring-2', 'ring-blue-300');
+    selectedProvider = element.dataset.provider;
+    var note = document.getElementById('provider-note');
+    if (selectedProvider === 'demo') {
+        note.innerText = 'Modo demo: el pago se simula y la entrega se genera al instante.';
+        note.className = 'text-xs text-amber-600 mt-2';
+    } else {
+        note.innerText = 'Seras redirigido a la pasarela para completar el pago.';
+        note.className = 'text-xs text-gray-400 mt-2';
     }
 }
 
@@ -798,7 +875,7 @@ async function deleteTenant(event, tenantId, name) {
 
 async function createCompany() {
     var status = document.getElementById('generate-status');
-    status.innerText = 'Generando con IA (30-60 seg)...';
+    status.innerText = 'Creando orden y redirigiendo al pago...';
     status.className = 'text-center text-sm font-semibold text-blue-600';
     var tenantId = document.getElementById('tenant-id').value;
     if (!tenantId) {
@@ -807,7 +884,7 @@ async function createCompany() {
         return;
     }
     try {
-        await apiRequest('/api/tenants', {
+        var res = await apiRequest('/api/payments/checkout', {
             method: 'POST',
             body: JSON.stringify({
                 tenant_id: tenantId,
@@ -815,33 +892,27 @@ async function createCompany() {
                 industry: document.getElementById('industry').value,
                 system_prompt: 'Asistente',
                 main_objective: document.getElementById('objective').value,
-                escalation_email: ''
-            })
-        });
-        var genRes = await apiRequest('/api/generate/' + tenantId, {
-            method: 'POST',
-            body: JSON.stringify({
-                industry: document.getElementById('industry').value,
+                escalation_email: '',
                 objective: document.getElementById('objective').value,
                 audience: document.getElementById('audience').value,
                 tone: 'amigable',
                 package: selectedPackage,
                 visual_style: selectedTheme,
                 page_type: document.getElementById('page-type').value,
+                provider: selectedProvider,
                 calendly_url: document.getElementById('calendly-url').value,
                 contact_email: document.getElementById('contact-email').value,
                 contact_phone: document.getElementById('contact-phone').value,
                 contact_address: document.getElementById('contact-address').value
             })
         });
-        var genData = await genRes.json();
-        if (genData.status === 'success') {
-            var linkLabel = (selectedPackage === 'chat_only') ? 'Ver codigo del widget' : 'Ver sitio';
-            status.innerHTML = 'Listo! <a href="' + genData.preview_url + '" target="_blank" class="text-blue-600 underline">' + linkLabel + '</a>';
-            status.className = 'text-center text-sm font-semibold text-green-600';
-            setTimeout(function() { showView('companies'); }, 2500);
+        var data = await res.json();
+        if (data.status === 'success') {
+            status.innerText = 'Redirigiendo a la pasarela de pago...';
+            status.className = 'text-center text-sm font-semibold text-blue-600';
+            window.location.href = data.checkout_url;
         } else {
-            status.innerText = 'Error: ' + (genData.detail || 'desconocido');
+            status.innerText = 'Error: ' + (data.detail || 'desconocido');
             status.className = 'text-center text-sm font-semibold text-red-600';
         }
     } catch (e) {

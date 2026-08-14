@@ -27,6 +27,13 @@ Copia `.env.example` a `.env` y completa las claves:
 | `JWT_SECRET_KEY` | Firma de tokens JWT (obligatoria; si falta, se genera una aleatoria que invalida sesiones al reiniciar) |
 | `ALLOWED_ORIGINS` | Orígenes permitidos para CORS (separados por coma; `*` = todos) |
 | `PUBLIC_URL` | URL pública de la app; se usa en emails y en el código de embed del widget |
+| `PAYMENT_PROVIDERS` | Pasarelas habilitadas: `all` o `stripe,mercadopago,paypal` |
+| `STRIPE_SECRET_KEY` | Clave de Stripe (test: `sk_test_...`). Vacía = pasarela desactivada |
+| `MP_ACCESS_TOKEN` | Token de Mercado Pago (sandbox: `TEST-...`). Vacía = pasarela desactivada |
+| `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET` | Credenciales de PayPal (sandbox). Vacías = pasarela desactivada |
+| `PRICE_FULL` / `PRICE_WEB_CHAT` / `PRICE_CHAT_ONLY` | Precios en USD de los paquetes (defaults: 399 / 249 / 99) |
+
+> **Pagos:** si no configuras ninguna pasarela, el sistema usa **modo demo** (pago simulado): el checkout se completa al instante y la entrega se genera, ideal para probar todo el flujo sin cuentas.
 
 `.env` está gitignoreado y nunca se sube al repositorio.
 
@@ -94,9 +101,29 @@ Autenticación: header `Authorization: Bearer <access_token>`.
 | `/api/export/{tenant_id}` | POST | Autenticado | Exportar sitio a ZIP |
 | `/api/site-editor/{tenant_id}` | GET/POST | Autenticado | Leer/actualizar datos del sitio |
 | `/api/analytics/global` | GET | Autenticado | Métricas y gráficas del dashboard |
+| `/api/payments/config` | GET | Público | Pasarelas disponibles + precios de paquetes |
+| `/api/payments/checkout` | POST | Autenticado | Crear tenant + orden + redirigir a la pasarela |
+| `/api/payments/status/{order_id}` | GET | Público* | Estado de una orden (rate limit) |
+| `/api/payments/finalize/{order_id}` | POST | Público* | Generar la entrega cuando la orden está pagada (idempotente) |
 | `/health` | GET | Público | Health check |
 
-\* el refresh valida que el token sea de tipo `refresh`; el chat valida que el usuario (vía email) exista en el vectorstore del tenant.
+\* el refresh valida que el token sea de tipo `refresh`; el chat valida que el usuario (vía email) exista en el vectorstore del tenant; `status`/`finalize` son públicos con rate limit porque el cliente los usa desde la página de retorno del checkout.
+
+## Pagos integrados
+
+Flujo (funciona en localhost con el **modo demo** y en producción con pasarelas reales):
+
+1. El cliente elige paquete y método de pago en el panel → `POST /api/payments/checkout`.
+2. Se crea el tenant (estado `pending`) + la orden en `data/storage/orders.json` y se redirige a la pasarela (Stripe Checkout, Mercado Pago o PayPal).
+3. Al regresar, `/checkout-return` consulta `GET /api/payments/status/{order_id}` (polling cada 2s).
+4. Al confirmarse el pago, `POST /api/payments/finalize/{order_id}` genera la entrega (web/chatbot/SEO) y marca el tenant como `paid`.
+
+- **Stripe**: usa Checkout Sessions y se verifica consultando la sesión (sin webhooks → funciona en localhost).
+- **Mercado Pago**: crea una preferencia con `external_reference = order_id` y se verifica buscando el pago aprobado.
+- **PayPal**: crea una orden `CAPTURE` y se captura al confirmar.
+- **Demo**: si no hay claves configuradas, el pago se simula y la entrega se genera al instante.
+
+Para activar una pasarela real solo hay que poner las claves en `.env` y reconstruir: `docker compose up -d --build backend`.
 
 ## Widget de chatbot
 
@@ -124,6 +151,7 @@ El widget detecta automáticamente el origen desde el que se carga, por lo que f
 
 - [x] **Fase 1** — MVP (generación de sitios, chatbot, leads, panel)
 - [x] **Fase 2** — Seguridad y JWT real (refresh funcional, roles, revocación, rate limit, CORS)
+- [x] **Fase 2.5** — Panel premium (tarjetas de paquetes, detalle de empresa, editor de sitio, widget premium) y **pagos integrados** (Stripe / Mercado Pago / PayPal + modo demo)
 - [~] **Fase 3** — Postgres (servicio listo en compose, migración de almacenamiento pendiente), HTTPS (pendiente), backups automáticos (hechos)
 
 ## Backups

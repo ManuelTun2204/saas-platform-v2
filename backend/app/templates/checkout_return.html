@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verificando pago</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
+<div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-10 text-center">
+<div id="loading-view">
+<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-5">
+<svg class="animate-spin text-blue-600 w-8 h-8" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
+</div>
+<h1 class="text-2xl font-bold text-gray-900 mb-2">Verificando tu pago...</h1>
+<p class="text-gray-500" id="loading-text">Estamos confirmando el pago de tu pedido.</p>
+</div>
+<div id="success-view" class="hidden">
+<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-5">
+<svg class="text-green-600 w-8 h-8" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+</div>
+<h1 class="text-2xl font-bold text-gray-900 mb-2">¡Pago confirmado!</h1>
+<p class="text-gray-500 mb-2" id="success-package"></p>
+<p class="text-sm text-gray-400 mb-6" id="success-order"></p>
+<a id="success-link" href="#" target="_blank" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-xl">Ver mi entrega</a>
+<a href="/" class="block mt-3 text-sm text-gray-500 hover:text-blue-600">Volver al panel</a>
+</div>
+<div id="error-view" class="hidden">
+<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-5">
+<svg class="text-red-600 w-8 h-8" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+</div>
+<h1 class="text-2xl font-bold text-gray-900 mb-2">El pago no se confirmo</h1>
+<p class="text-gray-500 mb-6" id="error-text">Hubo un problema con tu pago.</p>
+<a href="/" class="inline-block bg-gray-800 text-white font-semibold px-8 py-3 rounded-xl">Volver al panel</a>
+</div>
+</div>
+<script>
+var orderId = new URLSearchParams(window.location.search).get('order_id');
+var attempts = 0;
+var maxAttempts = 60;
+
+async function pollStatus() {
+    if (!orderId) { showError('Falta el identificador de la orden.'); return; }
+    try {
+        var res = await fetch('/api/payments/status/' + encodeURIComponent(orderId));
+        var data = await res.json();
+        if (data.status === 'paid') {
+            await finalize();
+            return;
+        }
+        if (data.status === 'cancelled' || data.status === 'not_found') {
+            showError(data.detail || 'La orden fue cancelada.');
+            return;
+        }
+    } catch (e) { /* reintenta */ }
+    attempts++;
+    if (attempts >= maxAttempts) { showError('Tiempo agotado. Puedes verificar tu pedido en el panel.'); return; }
+    setTimeout(pollStatus, 2000);
+}
+
+async function finalize() {
+    var text = document.getElementById('loading-text');
+    text.innerText = 'Generando tu sitio web... esto puede tardar hasta un minuto.';
+    try {
+        var res = await fetch('/api/payments/finalize/' + encodeURIComponent(orderId), { method: 'POST' });
+        var data = await res.json();
+        if (data.status === 'success') {
+            document.getElementById('loading-view').classList.add('hidden');
+            document.getElementById('success-view').classList.remove('hidden');
+            document.getElementById('success-package').innerText = 'Tu entrega esta lista.';
+            document.getElementById('success-order').innerText = 'Orden: ' + orderId;
+            document.getElementById('success-link').href = data.preview_url;
+        } else {
+            showError(data.detail || 'Error generando la entrega.');
+        }
+    } catch (e) {
+        showError('Error generando la entrega: ' + e.message);
+    }
+}
+
+function showError(msg) {
+    document.getElementById('loading-view').classList.add('hidden');
+    document.getElementById('error-view').classList.remove('hidden');
+    document.getElementById('error-text').innerText = msg;
+}
+
+pollStatus();
+</script>
+</body>
+</html>
