@@ -15,8 +15,8 @@
 <div class="bg-white p-8 rounded-2xl shadow-2xl w-96">
 <h1 class="text-3xl font-bold text-center mb-6 text-blue-600">SaaS Platform Pro</h1>
 <form id="login-form" class="space-y-4">
-<input type="text" id="login-user" class="w-full p-3 border rounded-lg" placeholder="Usuario" value="admin">
-<input type="password" id="login-pass" class="w-full p-3 border rounded-lg" placeholder="Password" value="admin123">
+<input type="text" id="login-user" class="w-full p-3 border rounded-lg" placeholder="Usuario" autocomplete="username">
+<input type="password" id="login-pass" class="w-full p-3 border rounded-lg" placeholder="Contrasena" autocomplete="current-password">
 <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold">Iniciar Sesion</button>
 </form>
 <div id="login-error" class="text-red-600 text-sm mt-2 text-center hidden"></div>
@@ -96,6 +96,7 @@
 <input type="text" id="industry" class="w-full p-3 border rounded-lg" placeholder="Industria (ej: cafeteria)">
 <textarea id="objective" rows="2" class="w-full p-3 border rounded-lg" placeholder="Objetivo"></textarea>
 <input type="text" id="audience" class="w-full p-3 border rounded-lg" placeholder="Audiencia">
+<div id="web-options">
 <select id="page-type" class="w-full p-3 border rounded-lg">
 <option value="landing">Landing Page</option>
 <option value="services">Servicios</option>
@@ -118,25 +119,115 @@
 </div>
 </div>
 </div>
-<select id="package" class="w-full p-3 border rounded-lg">
-<option value="full">Full Service</option>
-<option value="web_chat">Web + Chat</option>
-</select>
+<div>
+<label class="block text-sm font-semibold mb-2">Informacion de Contacto</label>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<input type="email" id="contact-email" class="w-full p-3 border rounded-lg" placeholder="Email de contacto">
+<input type="text" id="contact-phone" class="w-full p-3 border rounded-lg" placeholder="Telefono / WhatsApp">
+<input type="text" id="contact-address" class="w-full p-3 border rounded-lg md:col-span-2" placeholder="Direccion / Ubicacion">
+<input type="url" id="calendly-url" class="w-full p-3 border rounded-lg md:col-span-2" placeholder="Link de Calendly (agenda de citas) - opcional">
+</div>
+</div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+<div class="package-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:shadow-lg transition" data-package="full" onclick="selectPackage(this)">
+<div class="text-3xl mb-2 text-blue-600"><i class="fa-solid fa-rocket"></i></div>
+<p class="font-bold">Full Service</p>
+<p class="text-xs text-gray-500 mb-1">Web + Chatbot + SEO</p>
+<p class="text-lg font-extrabold text-blue-600">$399</p>
+</div>
+<div class="package-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:shadow-lg transition" data-package="web_chat" onclick="selectPackage(this)">
+<div class="text-3xl mb-2 text-green-600"><i class="fa-solid fa-globe"></i></div>
+<p class="font-bold">Web + Chat</p>
+<p class="text-xs text-gray-500 mb-1">Sitio profesional + Chatbot</p>
+<p class="text-lg font-extrabold text-blue-600">$249</p>
+</div>
+<div class="package-option cursor-pointer border-2 border-gray-200 rounded-xl p-4 text-center hover:shadow-lg transition" data-package="chat_only" onclick="selectPackage(this)">
+<div class="text-3xl mb-2 text-purple-600"><i class="fa-solid fa-comments"></i></div>
+<p class="font-bold">Solo Chatbot</p>
+<p class="text-xs text-gray-500 mb-1">Widget para tu web actual</p>
+<p class="text-lg font-extrabold text-blue-600">$99</p>
+</div>
+</div>
+<div id="chat-only-note" class="hidden mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+<i class="fa-solid fa-circle-info mr-1"></i> Solo se generara el codigo del widget. Agregalo a tu pagina actual y el chatbot quedara activo. Usa la informacion de arriba para el contexto del chatbot.
+</div>
 <button onclick="createCompany()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl">Generar con IA</button>
 <div id="generate-status" class="text-center text-sm font-semibold"></div>
 </div>
 </div>
 
 <!-- VISTA DETALLE EMPRESA -->
-<div id="view-company-detail" class="view-content hidden max-w-4xl mx-auto px-4 py-8">
-<button onclick="showView('companies')" class="mb-4 text-blue-600 hover:underline">Volver a Empresas</button>
-<h2 class="text-2xl font-bold mb-6" id="detail-name">Empresa</h2>
-<div class="bg-white p-6 rounded-xl shadow-sm space-y-4">
-<a id="web-link" target="_blank" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">Ver Sitio Web</a>
-<a id="seo-link" target="_blank" class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 ml-2">Ver Reporte SEO</a>
-<div class="mt-4 p-4 bg-gray-50 rounded-lg">
-<h3 class="font-bold mb-2">Informacion de la Empresa</h3>
-<p class="text-gray-600">Haz click en los botones de arriba para ver el sitio o el reporte SEO.</p>
+<div id="view-company-detail" class="view-content hidden max-w-7xl mx-auto px-4 py-8">
+<button onclick="showView('companies')" class="mb-4 text-blue-600 hover:underline">&larr; Volver a Empresas</button>
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-2xl font-bold" id="detail-name">Empresa</h2>
+<span id="detail-package" class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800"></span>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-1 space-y-4">
+<div class="bg-white p-6 rounded-xl shadow-sm border space-y-2">
+<h3 class="font-bold mb-2">Informacion</h3>
+<p class="text-sm text-gray-600" id="detail-industry"></p>
+<p class="text-sm text-gray-400" id="detail-id"></p>
+<p class="text-sm text-gray-400" id="detail-created"></p>
+<p class="text-sm text-gray-500" id="detail-deliverables"></p>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-sm border space-y-3">
+<h3 class="font-bold mb-1">Acciones</h3>
+<a id="web-link" target="_blank" class="block w-full text-center bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700">Ver Sitio Web</a>
+<a id="seo-link" target="_blank" class="block w-full text-center bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700">Ver Reporte SEO</a>
+<button id="export-btn" onclick="exportSite()" class="block w-full bg-amber-600 text-white px-4 py-3 rounded-lg hover:bg-amber-700">Exportar ZIP</button>
+<button id="editor-btn" onclick="openEditor()" class="block w-full bg-gray-800 text-white px-4 py-3 rounded-lg hover:bg-gray-900">Editar Sitio</button>
+</div>
+<div id="widget-section" class="bg-white p-6 rounded-xl shadow-sm border space-y-3">
+<h3 class="font-bold">Codigo del Chatbot</h3>
+<p class="text-xs text-gray-500">Pega este codigo en tu sitio para activar el chatbot.</p>
+<textarea id="widget-code" readonly class="w-full h-24 p-2 bg-gray-50 border rounded-lg font-mono text-xs"></textarea>
+<button onclick="copyWidgetCode()" class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">Copiar Codigo</button>
+</div>
+</div>
+<div class="lg:col-span-2 space-y-4">
+<div class="bg-white p-4 rounded-xl shadow-sm border">
+<h3 class="font-bold mb-3">Vista Previa</h3>
+<iframe id="site-preview" class="w-full h-[520px] border rounded-lg bg-white"></iframe>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-sm border">
+<h3 class="font-bold mb-2">Entrenar Chatbot</h3>
+<p class="text-sm text-gray-600 mb-3">Sube documentos (.txt) con informacion de la empresa para que el chatbot responda con datos reales.</p>
+<div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+<input type="file" id="doc-file" accept=".txt,.pdf" class="text-sm">
+<button onclick="uploadDoc()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">Subir Documento</button>
+</div>
+<div id="doc-status" class="mt-2 text-sm"></div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- MODAL EDITOR -->
+<div id="editor-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+<div class="bg-white rounded-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-xl font-bold">Editar Sitio</h3>
+<button onclick="closeEditor()" class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div><label class="block text-sm font-semibold mb-1">Nombre de la Empresa</label><input type="text" id="ed-company-name" class="w-full p-3 border rounded-lg"></div>
+<div><label class="block text-sm font-semibold mb-1">Color Principal</label><input type="color" id="ed-brand-hex" class="w-full h-12 border rounded-lg"></div>
+<div><label class="block text-sm font-semibold mb-1">Color Secundario</label><input type="color" id="ed-brand-secondary" class="w-full h-12 border rounded-lg"></div>
+<div><label class="block text-sm font-semibold mb-1">Email de Contacto</label><input type="email" id="ed-contact-email" class="w-full p-3 border rounded-lg"></div>
+<div><label class="block text-sm font-semibold mb-1">Telefono / WhatsApp</label><input type="text" id="ed-contact-phone" class="w-full p-3 border rounded-lg"></div>
+<div><label class="block text-sm font-semibold mb-1">Direccion</label><input type="text" id="ed-contact-address" class="w-full p-3 border rounded-lg"></div>
+</div>
+<div class="mt-4"><label class="block text-sm font-semibold mb-1">Titulo Principal (Hero)</label><input type="text" id="ed-hero-title" class="w-full p-3 border rounded-lg"></div>
+<div class="mt-4"><label class="block text-sm font-semibold mb-1">Subtitulo (Hero)</label><textarea id="ed-hero-subtitle" rows="2" class="w-full p-3 border rounded-lg"></textarea></div>
+<div class="mt-4"><label class="block text-sm font-semibold mb-1">Texto Sobre Nosotros</label><textarea id="ed-about-text" rows="4" class="w-full p-3 border rounded-lg"></textarea></div>
+<div id="editor-status" class="mt-3 text-sm"></div>
+<div class="mt-5 flex justify-end gap-3">
+<button onclick="closeEditor()" class="px-6 py-3 border rounded-lg hover:bg-gray-50">Cancelar</button>
+<button onclick="saveEditor()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar y Regenerar</button>
 </div>
 </div>
 </div>
@@ -177,6 +268,7 @@
 <script>
 var currentTenantId = '';
 var selectedTheme = 'moderno';
+var selectedPackage = 'full';
 var accessToken = '';
 var refreshToken = '';
 var currentUser = null;
@@ -192,6 +284,9 @@ function getAuthHeaders() {
 async function apiRequest(url, options) {
     options = options || {};
     var headers = Object.assign({}, getAuthHeaders(), options.headers || {});
+    if (options.body instanceof FormData) {
+        delete headers['Content-Type'];
+    }
     try {
         var response = await fetch(url, Object.assign({}, options, { headers: headers }));
         if (response.status === 401 && accessToken) {
@@ -286,6 +381,11 @@ window.addEventListener('load', function() {
             firstTheme.classList.add('border-blue-600', 'bg-blue-50');
             selectedTheme = firstTheme.dataset.theme;
         }
+        var firstPackage = document.querySelector('.package-option');
+        if (firstPackage) {
+            firstPackage.classList.add('border-blue-600', 'bg-blue-50', 'ring-2', 'ring-blue-300');
+            selectedPackage = firstPackage.dataset.package;
+        }
     }, 500);
 });
 
@@ -329,6 +429,26 @@ function selectTheme(element) {
     element.classList.remove('border-gray-200');
     element.classList.add('border-blue-600', 'bg-blue-50');
     selectedTheme = element.dataset.theme;
+}
+
+function selectPackage(element) {
+    var allPackages = document.querySelectorAll('.package-option');
+    for (var i = 0; i < allPackages.length; i++) {
+        allPackages[i].classList.remove('border-blue-600', 'bg-blue-50', 'ring-2', 'ring-blue-300');
+        allPackages[i].classList.add('border-gray-200');
+    }
+    element.classList.remove('border-gray-200');
+    element.classList.add('border-blue-600', 'bg-blue-50', 'ring-2', 'ring-blue-300');
+    selectedPackage = element.dataset.package;
+    var webOpts = document.getElementById('web-options');
+    var chatNote = document.getElementById('chat-only-note');
+    if (selectedPackage === 'chat_only') {
+        webOpts.classList.add('hidden');
+        chatNote.classList.remove('hidden');
+    } else {
+        webOpts.classList.remove('hidden');
+        chatNote.classList.add('hidden');
+    }
 }
 
 async function loadDashboard() {
@@ -466,10 +586,20 @@ async function loadCompanies() {
             var tenantId = t.tenant_id || t.id;
             var name = t.company_name || tenantId;
             var industry = t.industry || 'Sin industria';
+            var pkgName = t.package || '';
+            var pkgMap = { full: 'Full Service', web_chat: 'Web + Chat', chat_only: 'Solo Chatbot', seo_only: 'SEO Only' };
+            var pkgColor = { full: 'bg-blue-100 text-blue-800', web_chat: 'bg-green-100 text-green-800', chat_only: 'bg-purple-100 text-purple-800', seo_only: 'bg-amber-100 text-amber-800' };
+            var pkgBadge = pkgName ? '<span class="px-2 py-0.5 rounded-full text-xs ' + (pkgColor[pkgName] || 'bg-gray-100 text-gray-700') + '">' + (pkgMap[pkgName] || pkgName) + '</span>' : '';
             html += '<div class="bg-white p-6 rounded-2xl shadow-sm border hover:shadow-lg cursor-pointer" onclick="viewCompanyDetails(\'' + tenantId + '\', \'' + name.replace(/'/g, "\\'") + '\')">';
-            html += '<h3 class="font-bold text-lg mb-1">' + name + '</h3>';
+            html += '<div class="flex justify-between items-start mb-2">';
+            html += '<h3 class="font-bold text-lg">' + name + '</h3>';
+            html += '<button onclick="deleteTenant(event, \'' + tenantId + '\', \'' + name.replace(/'/g, "\\'") + '\')" class="text-gray-300 hover:text-red-600 text-lg" title="Eliminar">&times;</button>';
+            html += '</div>';
             html += '<p class="text-sm text-gray-500 mb-2">' + industry + '</p>';
+            html += '<div class="flex items-center justify-between">';
             html += '<p class="text-xs text-gray-400">ID: ' + tenantId + '</p>';
+            html += pkgBadge;
+            html += '</div>';
             html += '</div>';
         }
         grid.innerHTML = html;
@@ -481,9 +611,189 @@ async function loadCompanies() {
 async function viewCompanyDetails(tenantId, name) {
     currentTenantId = tenantId;
     document.getElementById('detail-name').innerText = name || tenantId;
+    document.getElementById('detail-id').innerText = 'ID: ' + tenantId;
+    document.getElementById('detail-package').innerText = '';
+    document.getElementById('detail-industry').innerText = '';
+    document.getElementById('detail-created').innerText = '';
+    document.getElementById('detail-deliverables').innerText = '';
+    document.getElementById('widget-section').classList.add('hidden');
+    document.getElementById('seo-link').style.display = 'none';
+    document.getElementById('export-btn').style.display = 'none';
+    document.getElementById('editor-btn').style.display = 'none';
+    var previewEl = document.getElementById('site-preview');
+    var iframeSrc = '/data/websites/' + tenantId + '/index.html';
+    try {
+        var res = await apiRequest('/api/tenant/' + tenantId + '/details');
+        var data = await res.json();
+        if (data.status === 'success') {
+            var t = data.tenant;
+            document.getElementById('detail-industry').innerText = 'Industria: ' + (t.industry || 'Sin especificar');
+            document.getElementById('detail-created').innerText = 'Creado: ' + (t.created_at || '');
+            if (t.deliverables && t.deliverables.length) {
+                document.getElementById('detail-deliverables').innerText = 'Entregables: ' + t.deliverables.join(', ');
+            }
+            if (t.package) {
+                var pkgMap = { full: 'Full Service', web_chat: 'Web + Chat', chat_only: 'Solo Chatbot', seo_only: 'SEO Only' };
+                var pkgColor = { full: 'bg-blue-100 text-blue-800', web_chat: 'bg-green-100 text-green-800', chat_only: 'bg-purple-100 text-purple-800', seo_only: 'bg-amber-100 text-amber-800' };
+                document.getElementById('detail-package').innerText = pkgMap[t.package] || t.package;
+                document.getElementById('detail-package').className = 'px-3 py-1 rounded-full text-xs font-semibold ' + (pkgColor[t.package] || 'bg-gray-100 text-gray-800');
+                var hasWeb = (t.package === 'full' || t.package === 'web_chat');
+                var hasChat = (t.package !== 'seo_only');
+                var hasSeo = (t.package === 'full' || t.package === 'seo_only');
+                if (hasChat) {
+                    var code = '<script>var CHATBOT_TENANT_ID = "' + tenantId + '";</' + 'script>\n<script src="' + window.location.origin + '/static/widget/widget.js"></' + 'script>';
+                    document.getElementById('widget-code').value = code;
+                    document.getElementById('widget-section').classList.remove('hidden');
+                }
+                if (hasSeo) {
+                    document.getElementById('seo-link').style.display = '';
+                }
+                if (hasWeb) {
+                    document.getElementById('export-btn').style.display = '';
+                    document.getElementById('editor-btn').style.display = '';
+                } else {
+                    iframeSrc = '/data/websites/' + tenantId + '/chatbot-install.html';
+                }
+            }
+        }
+    } catch (e) {
+        console.error('Error cargando detalle:', e);
+    }
     document.getElementById('web-link').href = '/data/websites/' + tenantId + '/index.html';
     document.getElementById('seo-link').href = '/data/websites/' + tenantId + '/seo-report.html';
+    previewEl.src = iframeSrc + '?v=' + Date.now();
     showView('company-detail');
+}
+
+function copyWidgetCode() {
+    var codeEl = document.getElementById('widget-code');
+    codeEl.select();
+    codeEl.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(codeEl.value).then(function() {
+        alert('Codigo copiado al portapapeles');
+    }).catch(function() {
+        alert('Codigo copiado. Pega el contenido del cuadro en tu sitio.');
+    });
+}
+
+async function exportSite() {
+    try {
+        var res = await apiRequest('/api/export/' + currentTenantId, { method: 'POST' });
+        var data = await res.json();
+        if (data.status === 'success') {
+            window.open(data.download_url, '_blank');
+        } else {
+            alert('Error: ' + (data.detail || 'desconocido'));
+        }
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+async function uploadDoc() {
+    var fileInput = document.getElementById('doc-file');
+    var statusEl = document.getElementById('doc-status');
+    if (!fileInput.files || fileInput.files.length === 0) {
+        statusEl.innerText = 'Selecciona un archivo .txt o .pdf';
+        statusEl.className = 'mt-2 text-sm text-red-600';
+        return;
+    }
+    var formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    statusEl.innerText = 'Subiendo y procesando...';
+    statusEl.className = 'mt-2 text-sm text-blue-600';
+    try {
+        var res = await apiRequest('/api/documents/upload/' + currentTenantId, { method: 'POST', body: formData });
+        var data = await res.json();
+        if (data.status === 'success') {
+            statusEl.innerHTML = 'Documento indexado: <b>' + data.chunks_indexed + '</b> fragmentos. El chatbot ya puede responder con esta informacion.';
+            statusEl.className = 'mt-2 text-sm text-green-600';
+        } else {
+            statusEl.innerText = 'Error: ' + (data.detail || 'desconocido');
+            statusEl.className = 'mt-2 text-sm text-red-600';
+        }
+    } catch (e) {
+        statusEl.innerText = 'Error: ' + e.message;
+        statusEl.className = 'mt-2 text-sm text-red-600';
+    }
+}
+
+async function openEditor() {
+    document.getElementById('editor-status').innerText = '';
+    try {
+        var res = await apiRequest('/api/site-editor/' + currentTenantId);
+        var data = await res.json();
+        if (data.status === 'success') {
+            var d = data.data;
+            document.getElementById('ed-company-name').value = d.company_name || '';
+            document.getElementById('ed-brand-hex').value = d.brand_hex || '#2563eb';
+            document.getElementById('ed-brand-secondary').value = d.brand_secondary || '#764ba2';
+            document.getElementById('ed-contact-email').value = d.contact_email || '';
+            document.getElementById('ed-contact-phone').value = d.contact_phone || '';
+            document.getElementById('ed-contact-address').value = d.contact_address || '';
+            document.getElementById('ed-hero-title').value = d.hero_title || '';
+            document.getElementById('ed-hero-subtitle').value = d.hero_subtitle || '';
+            document.getElementById('ed-about-text').value = d.about_text || '';
+            document.getElementById('editor-modal').classList.remove('hidden');
+        } else {
+            alert('No se pudo cargar el sitio para editar.');
+        }
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+function closeEditor() {
+    document.getElementById('editor-modal').classList.add('hidden');
+}
+
+async function saveEditor() {
+    var statusEl = document.getElementById('editor-status');
+    statusEl.innerText = 'Guardando y regenerando...';
+    statusEl.className = 'text-sm text-blue-600';
+    var payload = {
+        company_name: document.getElementById('ed-company-name').value,
+        brand_hex: document.getElementById('ed-brand-hex').value,
+        brand_secondary: document.getElementById('ed-brand-secondary').value,
+        contact_email: document.getElementById('ed-contact-email').value,
+        contact_phone: document.getElementById('ed-contact-phone').value,
+        contact_address: document.getElementById('ed-contact-address').value,
+        hero_title: document.getElementById('ed-hero-title').value,
+        hero_subtitle: document.getElementById('ed-hero-subtitle').value,
+        about_text: document.getElementById('ed-about-text').value
+    };
+    try {
+        var res = await apiRequest('/api/site-editor/' + currentTenantId, { method: 'POST', body: JSON.stringify(payload) });
+        var data = await res.json();
+        if (data.status === 'success') {
+            statusEl.innerText = 'Sitio actualizado. Recargando vista previa...';
+            statusEl.className = 'text-sm text-green-600';
+            document.getElementById('site-preview').src = data.preview_url + '?v=' + Date.now();
+            setTimeout(closeEditor, 1200);
+        } else {
+            statusEl.innerText = 'Error: ' + (data.detail || 'desconocido');
+            statusEl.className = 'text-sm text-red-600';
+        }
+    } catch (e) {
+        statusEl.innerText = 'Error: ' + e.message;
+        statusEl.className = 'text-sm text-red-600';
+    }
+}
+
+async function deleteTenant(event, tenantId, name) {
+    event.stopPropagation();
+    if (!confirm('Eliminar la empresa "' + name + '"? Esta accion borra el sitio, documentos y datos del chatbot. No se puede deshacer.')) return;
+    try {
+        var res = await apiRequest('/api/tenants/' + encodeURIComponent(tenantId), { method: 'DELETE' });
+        var data = await res.json();
+        if (data.status === 'success') {
+            loadCompanies();
+        } else {
+            alert('Error: ' + (data.detail || 'desconocido'));
+        }
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
 }
 
 async function createCompany() {
@@ -515,14 +825,19 @@ async function createCompany() {
                 objective: document.getElementById('objective').value,
                 audience: document.getElementById('audience').value,
                 tone: 'amigable',
-                package: document.getElementById('package').value,
+                package: selectedPackage,
                 visual_style: selectedTheme,
-                page_type: document.getElementById('page-type').value
+                page_type: document.getElementById('page-type').value,
+                calendly_url: document.getElementById('calendly-url').value,
+                contact_email: document.getElementById('contact-email').value,
+                contact_phone: document.getElementById('contact-phone').value,
+                contact_address: document.getElementById('contact-address').value
             })
         });
         var genData = await genRes.json();
         if (genData.status === 'success') {
-            status.innerHTML = 'Listo! <a href="' + genData.preview_url + '" target="_blank" class="text-blue-600 underline">Ver sitio</a>';
+            var linkLabel = (selectedPackage === 'chat_only') ? 'Ver codigo del widget' : 'Ver sitio';
+            status.innerHTML = 'Listo! <a href="' + genData.preview_url + '" target="_blank" class="text-blue-600 underline">' + linkLabel + '</a>';
             status.className = 'text-center text-sm font-semibold text-green-600';
             setTimeout(function() { showView('companies'); }, 2500);
         } else {

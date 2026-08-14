@@ -202,8 +202,10 @@
         <p>&copy; 2026 {{ hero_title.split(' ')[0] }}. Todos los derechos reservados.</p>
     </footer>
 
+    {% if chatbot_enabled %}
     <script> var CHATBOT_TENANT_ID = '{{ tenant_id }}'; </script>
     <script src="/static/widget/widget.js"></script>
+    {% endif %}
     
     <!-- SCRIPT PARA ARREGLAR EL CONTRASTE DEL BOTÓN AUTOMÁTICAMENTE -->
     <script>

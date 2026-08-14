@@ -489,7 +489,10 @@ class WebsiteService:
 
     async def generate_modular_service(self, tenant_id: str, industry: str, objective: str, audience: str, tone: str, package: str, brand_hex: str = "#2563eb", brand_secondary: str = "#764ba2", visual_style: str = "modern", page_type: str = "landing", calendly_url: str = "", contact_email: str = "", contact_phone: str = "", contact_address: str = "") -> dict:
         logger.info(f"Procesando paquete: {package} para {tenant_id}")
-        site_data = await self.llm_service.generate_website_json(industry, objective, audience, tone, visual_style)
+        if package == "chat_only":
+            site_data = {"company_name": tenant_id, "hero_subtitle": f"Chatbot IA para {industry}"}
+        else:
+            site_data = await self.llm_service.generate_website_json(industry, objective, audience, tone, visual_style)
         site_data["tenant_id"] = tenant_id
         site_data["cache_buster"] = int(time.time())
         site_data["industry"] = industry
@@ -601,17 +604,70 @@ class WebsiteService:
                 deliverables = ["Sitio Web Profesional", "Chatbot RAG"]
             elif package == "chat_only":
                 widget_code = f'<script>var CHATBOT_TENANT_ID = "{tenant_id}";</script><script src="{PUBLIC_URL}/static/widget/widget.js"></script>'
-                chat_html = f"""<!DOCTYPE html><html><head><title>Chatbot</title><script src="https://cdn.tailwindcss.com"></script></head>
-                <body class="bg-gray-50 p-10"><div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
-                <h1 class="text-2xl font-bold mb-4">Tu Chatbot esta listo</h1>
-                <textarea class="w-full h-32 p-3 bg-gray-100 border rounded font-mono text-sm" readonly>{widget_code}</textarea>
-                </div></body></html>"""
+                company_label = site_data.get("company_name", tenant_id)
+                chat_html = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Listo | {company_label}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen p-6">
+    <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white mb-4 shadow-lg">
+                <i class="fa-solid fa-comments text-2xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900">Tu Chatbot esta listo</h1>
+            <p class="text-gray-500 mt-2">{company_label} | ID: <code class="bg-gray-100 px-2 py-0.5 rounded">{tenant_id}</code></p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">1</span> Copia el codigo</h2>
+            <div class="relative">
+                <textarea id="codigo" readonly class="w-full h-28 p-4 bg-gray-900 text-green-300 font-mono text-sm rounded-xl border border-gray-700">{widget_code}</textarea>
+                <button onclick="copiar()" class="absolute top-3 right-3 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg font-semibold">Copiar</button>
+            </div>
+            <div id="copiado" class="hidden mt-2 text-green-600 text-sm font-semibold"><i class="fa-solid fa-check mr-1"></i>Codigo copiado al portapapeles</div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">2</span> Pega el codigo en tu pagina</h2>
+            <p class="text-gray-600">Pega el codigo justo antes de la etiqueta <code class="bg-gray-100 px-2 py-0.5 rounded text-red-600">&lt;/body&gt;</code> en el HTML de tu sitio web. Guarda y publica los cambios.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">3</span> Listo</h2>
+            <p class="text-gray-600">El boton flotante del chatbot aparecera en la esquina inferior derecha de tu pagina. Pruebalo en la vista previa de la derecha.</p>
+        </div>
+
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white shadow-xl">
+            <h2 class="text-xl font-bold mb-2">Vista previa en vivo</h2>
+            <p class="text-blue-100 mb-4">Abre el chat en la esquina inferior derecha para probar tu asistente ahora mismo.</p>
+        </div>
+    </div>
+    <script>
+    function copiar() {{
+        var t = document.getElementById('codigo');
+        t.select();
+        t.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(t.value);
+        var aviso = document.getElementById('copiado');
+        aviso.classList.remove('hidden');
+        setTimeout(function() {{ aviso.classList.add('hidden'); }}, 2500);
+    }}
+    </script>
+    {widget_code}
+</body>
+</html>"""
                 tenant_dir = WEBSITES_DIR / tenant_id
                 tenant_dir.mkdir(exist_ok=True)
                 with open(tenant_dir / "chatbot-install.html", "w", encoding="utf-8-sig") as f:
                     f.write(chat_html)
                 preview_url = f"/data/websites/{tenant_id}/chatbot-install.html"
-                deliverables = ["Codigo del Widget de Chatbot"]
+                deliverables = ["Codigo del Widget de Chatbot", "Pagina de instalacion + vista previa"]
             elif package == "seo_only":
                 seo_data = {
                     "meta_title": f"{industry} | Soluciones Profesionales",

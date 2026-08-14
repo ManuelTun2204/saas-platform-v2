@@ -743,13 +743,20 @@ async def get_global_analytics(current_user: dict = Depends(auth_service.get_cur
             industries_count[ind] = industries_count.get(ind, 0) + 1
         
         # === GRÁFICA 2: Distribución de paquetes ===
-        # (Si tienes campo de paquete en tenants, úsalo. Si no, omitimos)
         packages_count = {"full": 0, "web_chat": 0, "chat_only": 0, "seo_only": 0}
-        # Por ahora datos simulados basados en total
-        if total_tenants > 0:
-            packages_count["full"] = int(total_tenants * 0.6)
-            packages_count["web_chat"] = int(total_tenants * 0.3)
-            packages_count["chat_only"] = int(total_tenants * 0.1)
+        for t in tenants:
+            pkg = t.get("package", "sin_paquete")
+            if pkg in packages_count:
+                packages_count[pkg] += 1
+            else:
+                packages_count.setdefault(pkg, 1)
+        packages_count = {k: v for k, v in packages_count.items() if v > 0}
+
+        # === INGRESOS ESTIMADOS (precios de paquetes) ===
+        package_prices = {"full": 399, "web_chat": 249, "chat_only": 99, "seo_only": 99}
+        total_revenue = sum(
+            count * package_prices.get(pkg, 0) for pkg, count in packages_count.items()
+        )
         
         # === GRÁFICA 3: Leads por día (últimos 7 días) ===
         from datetime import datetime, timedelta
@@ -801,7 +808,7 @@ async def get_global_analytics(current_user: dict = Depends(auth_service.get_cur
                 "total_tenants": total_tenants,
                 "total_conversations": total_conversations,
                 "total_leads": total_leads,
-                "monthly_revenue_estimate": total_tenants * 199
+                "monthly_revenue_estimate": total_revenue
             },
             "charts": {
                 "industries": industries_count,
@@ -878,11 +885,7 @@ async def save_site_editor_data(tenant_id: str, data: dict, current_user: dict =
             json.dump(site_data, f, indent=2, ensure_ascii=False)
         
         # Regenerar el sitio HTML
-        from app.services.website_service import WebsiteService
-        website_service = WebsiteService()
-        
-        # Llamar a la función de regeneración
-        await website_service.regenerate_site_from_data(tenant_id, site_data)
+        website_service.regenerate_site(tenant_id, site_data)
         
         logger.info(f"Sitio {tenant_id} actualizado via editor")
         
