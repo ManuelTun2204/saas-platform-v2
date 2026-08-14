@@ -1,12 +1,12 @@
-﻿import os, json, logging, time, shutil
+﻿import os, json, logging, time, shutil, collections
 from pathlib import Path
 from datetime import datetime
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Security
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Security, Request
 from fastapi.security import HTTPBearer
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 # Importar servicios
 from app.services.llm_service import LLMService
 from app.services.rag_service import RAGService
@@ -16,6 +16,18 @@ from app.services.export_service import ExportService
 from app.services.auth_service import auth_service
 
 logger = logging.getLogger(__name__)
+
+_RATE_BUCKETS = {}
+
+def _check_rate_limit(key: str, limit: int, window_seconds: int) -> bool:
+    now = time.time()
+    bucket = _RATE_BUCKETS.setdefault(key, collections.deque())
+    while bucket and bucket[0] < now - window_seconds:
+        bucket.popleft()
+    if len(bucket) >= limit:
+        return False
+    bucket.append(now)
+    return True
 
 # Rutas de datos
 BASE_DIR = Path(__file__).parent
@@ -33,17 +45,21 @@ export_service = ExportService()
 app = FastAPI(title="SaaS Platform Pro API", version="1.0.0")
 
 # CORS
+ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Servir archivos estáticos
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-app.mount("/data", StaticFiles(directory=str(DATA_DIR)), name="data")
+(DATA_DIR / "websites").mkdir(exist_ok=True)
+(DATA_DIR / "exports").mkdir(exist_ok=True)
+app.mount("/data/websites", StaticFiles(directory=str(DATA_DIR / "websites")), name="websites")
+app.mount("/data/exports", StaticFiles(directory=str(DATA_DIR / "exports")), name="exports")
 
 # ============================================
 # MODELOS DE PYDANTIC
@@ -325,14 +341,10 @@ async def delete_user(username: str, current_user: dict = Depends(auth_service.g
     except Exception as e:
         logger.error(f"Error eliminando usuario: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    
-from fastapi.responses import FileResponse
 
 # ============================================
 # ENDPOINT PRINCIPAL (SIRVE EL PANEL ADMIN)
 # ============================================
-
-from fastapi.responses import HTMLResponse
 
 @app.get("/")
 async def serve_admin_panel():
@@ -490,45 +502,52 @@ async def generate_service(tenant_id: str, request: WebsiteGenerationRequest, cu
 # ============================================
 
 @app.post("/api/documents/upload/{tenant_id}")
-async def upload_document(tenant_id: str, file: UploadFile = File(...)):
+async def upload_document(tenant_id: str, file: UploadFile = File(...), current_user: dict = Depends(auth_service.get_current_user)):
     """Subir documento para el chatbot RAG"""
     try:
-        if not file.filename.endswith(('.txt', '.pdf')):
+        safe_name = os.path.basename(file.filename or "")
+        if not safe_name.lower().endswith(('.txt', '.pdf')):
             raise HTTPException(status_code=400, detail="Solo se permiten archivos .txt y .pdf")
         
         content = await file.read()
+        if len(content) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="El archivo excede el limite de 10 MB")
         
         # Guardar el archivo
         tenant_docs_dir = DATA_DIR / "tenants" / tenant_id / "documents"
         tenant_docs_dir.mkdir(parents=True, exist_ok=True)
         
-        file_path = tenant_docs_dir / file.filename
+        file_path = tenant_docs_dir / safe_name
         with open(file_path, 'wb') as f:
             f.write(content)
         
         # Procesar el documento con RAG
-        text_content = content.decode('utf-8') if file.filename.endswith('.txt') else ""
-        
-        if file.filename.endswith('.txt'):
-            chunks_indexed = rag_service.index_document(tenant_id, text_content, file.filename)
+        if safe_name.lower().endswith('.txt'):
+            chunks_indexed = await rag_service.process_document(tenant_id, str(file_path))
         else:
             # Para PDF, por ahora solo guardamos
             chunks_indexed = 0
         
         return {
             "status": "success",
-            "filename": file.filename,
+            "filename": safe_name,
             "chunks_indexed": chunks_indexed
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error subiendo documento: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/chat/{tenant_id}")
-async def chat_endpoint(tenant_id: str, request: ChatRequest):
+async def chat_endpoint(tenant_id: str, request: ChatRequest, http_request: Request):
     """Endpoint para el chatbot"""
     try:
+        client_ip = http_request.client.host if http_request.client else "unknown"
+        if not _check_rate_limit(f"chat:{tenant_id}:{client_ip}", limit=20, window_seconds=60):
+            raise HTTPException(status_code=429, detail="Demasiadas solicitudes. Intenta nuevamente en un momento.")
+        
         question = request.question
         session_id = request.session_id or "default"
         user_email = request.email
@@ -594,7 +613,7 @@ async def chat_endpoint(tenant_id: str, request: ChatRequest):
 # ============================================
 
 @app.get("/api/tenant/{tenant_id}/details")
-async def get_tenant_details(tenant_id: str):
+async def get_tenant_details(tenant_id: str, current_user: dict = Depends(auth_service.get_current_user)):
     """Obtener detalles de un tenant"""
     try:
         tenants_file = DATA_DIR / "tenants.json"
@@ -623,49 +642,13 @@ async def get_tenant_details(tenant_id: str):
 # ============================================
 
 @app.post("/api/export/{tenant_id}")
-async def export_site(tenant_id: str):
+async def export_site(tenant_id: str, current_user: dict = Depends(auth_service.get_current_user)):
     """Exportar sitio web como ZIP"""
     try:
         result = export_service.export_site(tenant_id)
         return result
     except Exception as e:
         logger.error(f"Error exportando sitio: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ============================================
-# ENDPOINTS DE SITE EDITOR
-# ============================================
-
-@app.get("/api/site-editor/{tenant_id}")
-async def get_site_data(tenant_id: str):
-    """Obtener datos del sitio para editar"""
-    try:
-        site_data_file = DATA_DIR / "websites" / tenant_id / "site_data.json"
-        if not site_data_file.exists():
-            raise HTTPException(status_code=404, detail="Sitio no encontrado. Genera el sitio primero.")
-        
-        with open(site_data_file, 'r', encoding='utf-8-sig') as f:
-            site_data = json.load(f)
-        
-        return {
-            "status": "success",
-            "site_data": site_data
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/site-editor/{tenant_id}")
-async def update_site_data(tenant_id: str, site_data: dict):
-    """Actualizar datos del sitio y regenerar"""
-    try:
-        result = website_service.regenerate_site(tenant_id, site_data)
-        return result
-    except Exception as e:
-        logger.error(f"Error actualizando sitio: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
