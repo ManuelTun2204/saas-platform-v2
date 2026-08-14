@@ -1,14 +1,18 @@
 import os
+import json
 import jwt
 import logging
 import secrets
 import hashlib
 from datetime import datetime, timedelta
+from pathlib import Path
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "super-secret-key-change-in-production-" + secrets.token_hex(16))
 JWT_ALGORITHM = "HS256"
@@ -63,10 +67,30 @@ class AuthService:
         payload = self.decode_token(token)
         if payload.get("type") != "access":
             raise HTTPException(status_code=401, detail="Token inválido")
+        username = payload.get("username") or payload.get("sub")
+        
+        # Verificar que el usuario siga existiendo y usar su rol actual
+        # (los usuarios eliminados o con rol cambiado pierden/actualizan acceso de inmediato)
+        try:
+            users_file = DATA_DIR / "users.json"
+            if not users_file.exists():
+                raise HTTPException(status_code=401, detail="Usuario no encontrado")
+            with open(users_file, 'r', encoding='utf-8-sig') as f:
+                users = json.load(f)
+            user = next((u for u in users if u.get("username") == username), None)
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error verificando usuario: {e}")
+            raise HTTPException(status_code=401, detail="Usuario no encontrado")
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="Usuario no encontrado")
+        
         return {
-            "user_id": payload.get("sub"),
-            "username": payload.get("username"),
-            "role": payload.get("role", "user")
+            "user_id": username,
+            "username": username,
+            "role": user.get("role", "user")
         }
 
 
