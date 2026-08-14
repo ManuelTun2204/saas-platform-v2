@@ -23,6 +23,7 @@ wheels/
 *.egg
 docker-compose.override.yml
 data/
+backups/
 *.zip
 .vscode/
 .idea/
