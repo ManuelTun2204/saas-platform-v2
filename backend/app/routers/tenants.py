@@ -135,10 +135,10 @@ async def chat_endpoint(tenant_id: str, request: ChatRequest, http_request: Requ
             raise HTTPException(status_code=429, detail="Demasiadas solicitudes. Intenta nuevamente en un momento.")
 
         question = request.question
-        session_id = request.session_id or "default"
+        session_id = (request.session_id or "default")[:100]
         user_email = request.email
 
-        answer = await rag_service.query(tenant_id, question)
+        answer = await rag_service.query(tenant_id, question, session_id=session_id)
 
         email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
         detected_email = re.search(email_pattern, question)

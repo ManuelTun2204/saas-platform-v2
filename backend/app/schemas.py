@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class TenantCreateRequest(BaseModel):
@@ -42,9 +42,9 @@ class RegisterRequest(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    question: str
-    session_id: str = ""
-    email: str = ""
+    question: str = Field(..., min_length=1, max_length=2000)
+    session_id: str = Field(default="", max_length=100)
+    email: str = Field(default="", max_length=254)
 
 
 class CheckoutRequest(BaseModel):

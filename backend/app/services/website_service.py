@@ -405,6 +405,44 @@ def detect_industry_key(industry: str) -> str:
     return "default"
 
 
+# Prompts de imagen para el template de servicios (image.pollinations.ai)
+IMAGE_PROMPTS = {
+    "restaurante": {"hero": "elegant modern restaurant interior warm lighting professional photo", "secondary": "gourmet food plating closeup professional photography", "services": ["gourmet chef cooking", "wine and dining", "dessert plating", "cafe interior", "fresh ingredients", "event catering"]},
+    "cafeteria": {"hero": "cozy specialty coffee shop barista latte art", "secondary": "coffee beans and espresso machine detail", "services": ["barista pouring latte art", "iced coffee drinks", "cozy cafe seating", "pastries display", "espresso machine", "coffee tasting"]},
+    "pasteleria": {"hero": "beautiful artisan bakery cake display colorful pastries", "secondary": "decorated layer cake closeup", "services": ["birthday cake design", "cupcakes assortment", "wedding cake", "artisan bread", "cookies baking", "sweet desserts"]},
+    "panaderia": {"hero": "artisan bakery fresh bread rustic display", "secondary": "fresh baguettes and sourdough", "services": ["sourdough bread", "baguettes", "brioche pastries", "bakery oven", "sandwich making", "baked goods"]},
+    "tecnologia": {"hero": "futuristic technology innovation software development abstract", "secondary": "developer workspace multiple screens code", "services": ["mobile app development", "cloud infrastructure", "data analytics", "cybersecurity", "ai solutions", "devops pipeline"]},
+    "software": {"hero": "modern software development team agile workspace", "secondary": "code on screen closeup", "services": ["custom software", "saas platform", "api integration", "quality assurance", "product design", "cloud hosting"]},
+    "consultoria": {"hero": "professional business consulting meeting strategy boardroom", "secondary": "business charts and growth analysis", "services": ["strategy consulting", "financial planning", "market research", "process optimization", "business coaching", "risk management"]},
+    "gimnasio": {"hero": "modern gym equipment weights training atmosphere", "secondary": "athlete training dumbbells", "services": ["personal training", "crossfit classes", "strength training", "nutrition coaching", "cardio zone", "group workouts"]},
+    "fitness": {"hero": "fitness yoga wellness active lifestyle", "secondary": "yoga class calm studio", "services": ["yoga classes", "pilates sessions", "cardio training", "personal coaching", "wellness retreat", "stretching routines"]},
+    "clinica": {"hero": "modern medical clinic clean professional healthcare", "secondary": "doctor consultation stethoscope", "services": ["general medicine", "specialist consultation", "diagnostics", "vaccination", "patient care", "emergency care"]},
+    "medico": {"hero": "professional doctor modern hospital technology", "secondary": "medical equipment diagnostic", "services": ["family medicine", "cardiology", "pediatrics", "lab analysis", "preventive care", "surgical care"]},
+    "dental": {"hero": "modern dental clinic bright clean smile", "secondary": "dentist tools professional", "services": ["general dentistry", "orthodontics", "teeth whitening", "implants", "pediatric dental", "emergency dental"]},
+    "estetica": {"hero": "luxury beauty salon skincare treatment", "secondary": "facial treatment professional spa", "services": ["facial treatments", "makeup artistry", "skincare routines", "manicure pedicure", "hair styling", "body treatments"]},
+    "spa": {"hero": "relaxing spa massage candles tranquility", "secondary": "spa stones towels aromatherapy", "services": ["massage therapy", "aromatherapy", "facial rituals", "hot stone therapy", "wellness packages", "couples spa"]},
+    "fotografia": {"hero": "professional photographer studio camera lighting", "secondary": "photography camera lens detail", "services": ["wedding photography", "portrait sessions", "event coverage", "product photography", "corporate shoots", "drone footage"]},
+    "arquitectura": {"hero": "modern architecture building design minimal", "secondary": "architect blueprints and models", "services": ["architectural design", "interior design", "construction planning", "renovation projects", "landscape design", "3d rendering"]},
+    "moda": {"hero": "fashion boutique clothing collection stylish", "secondary": "tailor sewing fashion detail", "services": ["fashion design", "custom tailoring", "wardrobe styling", "fashion consultation", "boutique curation", "bridal wear"]},
+    "educacion": {"hero": "modern classroom learning students education", "secondary": "books and study materials", "services": ["academic courses", "online learning", "tutoring", "workshops", "language classes", "career training"]},
+    "legal": {"hero": "law office professional legal counsel", "secondary": "law books and gavel", "services": ["legal consultation", "contracts review", "corporate law", "litigation support", "notary services", "family law"]},
+    "inmobiliaria": {"hero": "modern luxury home real estate exterior", "secondary": "keys and house model", "services": ["property sales", "property rentals", "property management", "appraisals", "investment advice", "relocation services"]},
+    "automotriz": {"hero": "modern car dealership vehicles showroom", "secondary": "car engine mechanics detail", "services": ["vehicle sales", "maintenance", "bodywork repair", "detailing", "diagnostics", "parts supply"]},
+    "marketing": {"hero": "digital marketing strategy social media growth", "secondary": "analytics dashboard marketing metrics", "services": ["social media management", "seo optimization", "paid advertising", "content creation", "branding design", "email marketing"]},
+    "default": {"hero": "professional modern business success teamwork", "secondary": "business meeting collaboration office", "services": ["expert consulting", "quality service", "customer support", "innovative solutions", "team work", "guaranteed results"]},
+}
+
+
+def build_service_image_data(industry_key: str) -> dict:
+    """Devuelve keywords de imagen para el template de servicios"""
+    prompts = IMAGE_PROMPTS.get(industry_key, IMAGE_PROMPTS["default"])
+    return {
+        "hero": prompts["hero"],
+        "secondary": prompts["secondary"],
+        "services": list(prompts["services"]),
+    }
+
+
 def map_icons(services: list) -> list:
     for service in services:
         original_icon = service.get("icon", "⭐")
@@ -456,10 +494,18 @@ class WebsiteService:
         images = INDUSTRY_IMAGES.get(industry_key, INDUSTRY_IMAGES["default"])
         site_data["seo_enabled"] = seo_enabled
         site_data["chatbot_enabled"] = chatbot_enabled
+        site_data["public_url"] = PUBLIC_URL
         site_data["hero_image"] = images["hero"]
         site_data["about_image"] = images["about"]
         site_data["gallery_images"] = images["gallery"]
         site_data["services"] = map_icons(site_data.get("services", []))
+        # Variables que necesita el template services.html (sin romper landing.html)
+        site_data.setdefault("google_font", "Poppins")
+        site_data.setdefault("cta_text", site_data.get("hero_cta") or "Contáctanos ahora")
+        img_data = build_service_image_data(industry_key)
+        site_data.setdefault("hero_image_keyword", img_data["hero"])
+        site_data.setdefault("secondary_image_keyword", img_data["secondary"])
+        site_data.setdefault("service_images", img_data["services"][:max(len(site_data.get("services", [])), 1)])
         try:
             save_dir = WEBSITES_DIR / site_data.get("tenant_id", "unknown")
             save_dir.mkdir(exist_ok=True)

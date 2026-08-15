@@ -683,11 +683,26 @@ function renderTopCompanies(topCompanies) {
         var c = topCompanies[i];
         var percent = (c.conversations / maxConv) * 100;
         html += '<div>';
-        html += '<div class="flex justify-between mb-1"><span class="font-semibold">' + c.name + '</span><span class="text-gray-600">' + c.conversations + ' conversaciones</span></div>';
+        html += '<div class="flex justify-between mb-1"><span class="font-semibold">' + escapeHtml(c.name) + '</span><span class="text-gray-600">' + escapeHtml(c.conversations) + ' conversaciones</span></div>';
         html += '<div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-blue-600 h-2.5 rounded-full" style="width: ' + percent + '%"></div></div>';
         html += '</div>';
     }
     container.innerHTML = html;
+}
+
+function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function escapeJsString(value) {
+    if (value === null || value === undefined) return '';
+    return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
 }
 
 function renderRecentLeads(recentLeads) {
@@ -706,10 +721,10 @@ function renderRecentLeads(recentLeads) {
         var question = l.question || '';
         if (question.length > 60) question = question.substring(0, 60) + '...';
         html += '<tr class="border-t">';
-        html += '<td class="px-4 py-3 font-semibold">' + l.email + '</td>';
-        html += '<td class="px-4 py-3 text-gray-600">' + l.company + '</td>';
-        html += '<td class="px-4 py-3 text-gray-500 text-sm hidden md:table-cell">' + question + '</td>';
-        html += '<td class="px-4 py-3 text-sm text-gray-500">' + dateStr + '</td>';
+        html += '<td class="px-4 py-3 font-semibold">' + escapeHtml(l.email) + '</td>';
+        html += '<td class="px-4 py-3 text-gray-600">' + escapeHtml(l.company) + '</td>';
+        html += '<td class="px-4 py-3 text-gray-500 text-sm hidden md:table-cell">' + escapeHtml(question) + '</td>';
+        html += '<td class="px-4 py-3 text-sm text-gray-500">' + escapeHtml(dateStr) + '</td>';
         html += '</tr>';
     }
     html += '</tbody></table>';
@@ -734,15 +749,15 @@ async function loadCompanies() {
             var pkgName = t.package || '';
             var pkgMap = { full: 'Full Service', web_chat: 'Web + Chat', chat_only: 'Solo Chatbot', seo_only: 'SEO Only' };
             var pkgColor = { full: 'bg-blue-100 text-blue-800', web_chat: 'bg-green-100 text-green-800', chat_only: 'bg-purple-100 text-purple-800', seo_only: 'bg-amber-100 text-amber-800' };
-            var pkgBadge = pkgName ? '<span class="px-2 py-0.5 rounded-full text-xs ' + (pkgColor[pkgName] || 'bg-gray-100 text-gray-700') + '">' + (pkgMap[pkgName] || pkgName) + '</span>' : '';
-            html += '<div class="bg-white p-6 rounded-2xl shadow-sm border hover:shadow-lg cursor-pointer" onclick="viewCompanyDetails(\'' + tenantId + '\', \'' + name.replace(/'/g, "\\'") + '\')">';
+            var pkgBadge = pkgName ? '<span class="px-2 py-0.5 rounded-full text-xs ' + (pkgColor[pkgName] || 'bg-gray-100 text-gray-700') + '">' + escapeHtml(pkgMap[pkgName] || pkgName) + '</span>' : '';
+            html += '<div class="bg-white p-6 rounded-2xl shadow-sm border hover:shadow-lg cursor-pointer" onclick="viewCompanyDetails(\'' + escapeJsString(tenantId) + '\', \'' + escapeJsString(name) + '\')">';
             html += '<div class="flex justify-between items-start mb-2">';
-            html += '<h3 class="font-bold text-lg">' + name + '</h3>';
-            html += '<button onclick="deleteTenant(event, \'' + tenantId + '\', \'' + name.replace(/'/g, "\\'") + '\')" class="text-gray-300 hover:text-red-600 text-lg" title="Eliminar">&times;</button>';
+            html += '<h3 class="font-bold text-lg">' + escapeHtml(name) + '</h3>';
+            html += '<button onclick="deleteTenant(event, \'' + escapeJsString(tenantId) + '\', \'' + escapeJsString(name) + '\')" class="text-gray-300 hover:text-red-600 text-lg" title="Eliminar">&times;</button>';
             html += '</div>';
-            html += '<p class="text-sm text-gray-500 mb-2">' + industry + '</p>';
+            html += '<p class="text-sm text-gray-500 mb-2">' + escapeHtml(industry) + '</p>';
             html += '<div class="flex items-center justify-between">';
-            html += '<p class="text-xs text-gray-400">ID: ' + tenantId + '</p>';
+            html += '<p class="text-xs text-gray-400">ID: ' + escapeHtml(tenantId) + '</p>';
             html += pkgBadge;
             html += '</div>';
             html += '</div>';

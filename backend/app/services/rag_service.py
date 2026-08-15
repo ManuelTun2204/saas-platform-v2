@@ -152,38 +152,11 @@ RESPUESTA:"""
             # Generar respuesta con LLM
             answer = await self.llm_service.generate_content(full_prompt, max_tokens=400, temperature=0.3)
             
-                        # Detectar si es un lead (contiene email)
+            # Detectar si es un lead (contiene email o muestra interés)
             import re
             email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
             emails_found = re.findall(email_pattern, question)
             is_lead = len(emails_found) > 0 or any(word in question.lower() for word in ['contratar', 'precio', 'costo', 'cotizar', 'comprar'])
-            
-            # Guardar lead si aplica (solo si hay email)
-            if is_lead and emails_found:
-                lead_data = {
-                    "tenant_id": tenant_id,
-                    "email": emails_found[0],
-                    "session_id": session_id,
-                    "timestamp": datetime.now().isoformat(),
-                    "source": "chatbot"
-                }
-                self.storage.save_lead(lead_data)
-                
-                # ✅ ENVIAR NOTIFICACIÓN POR EMAIL (DENTRO del if con try/except)
-                try:
-                    from app.services.email_service import EmailService
-                    email_service = EmailService()
-                    tenant_info = self.storage.get_tenant(tenant_id)
-                    company_name = tenant_info.get("company_name", tenant_id) if tenant_info else tenant_id
-                    await email_service.send_lead_notification(
-                        tenant_id=tenant_id,
-                        company_name=company_name,
-                        lead_email=emails_found[0],
-                        question=question,
-                        answer=answer
-                    )
-                except Exception as email_error:
-                    logger.error(f"⚠️ Error enviando email de lead (no crítico): {email_error}")
             
             # Guardar conversación (siempre)
             conv_data = {
