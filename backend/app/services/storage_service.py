@@ -8,15 +8,22 @@ from typing import List, Dict, Optional
 logger = logging.getLogger(__name__)
 
 # Ruta base dentro de Docker: /app/data/storage
-STORAGE_DIR = Path(__file__).parent.parent.parent / "data" / "storage"
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
+STORAGE_DIR = DATA_DIR / "storage"
 STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+
+# Los tenants viven en data/tenants.json (así lo usa el resto de la app).
+# leads/conversations viven en data/storage/. Este mapa mantiene las rutas consistentes.
+_COLLECTION_PATHS = {
+    "tenants": DATA_DIR / "tenants.json",
+}
 
 class StorageService:
     """Servicio de persistencia JSON con soporte UTF-8 BOM para Windows"""
     
     @staticmethod
     def _get_file_path(collection: str) -> Path:
-        return STORAGE_DIR / f"{collection}.json"
+        return _COLLECTION_PATHS.get(collection, STORAGE_DIR / f"{collection}.json")
     
     @staticmethod
     def _read_json(collection: str) -> List[Dict]:

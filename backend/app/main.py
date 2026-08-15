@@ -877,10 +877,15 @@ async def get_global_analytics(current_user: dict = Depends(auth_service.get_cur
                 packages_count.setdefault(pkg, 1)
         packages_count = {k: v for k, v in packages_count.items() if v > 0}
 
-        # === INGRESOS ESTIMADOS (precios de paquetes) ===
+        # === INGRESOS ESTIMADOS (solo empresas con pago confirmado) ===
         package_prices = PRICES
+        paid_tenants = [t for t in tenants if t.get("payment_status") == "paid"]
+        packages_count_paid = {}
+        for t in paid_tenants:
+            pkg = t.get("package", "sin_paquete")
+            packages_count_paid[pkg] = packages_count_paid.get(pkg, 0) + 1
         total_revenue = sum(
-            count * package_prices.get(pkg, 0) for pkg, count in packages_count.items()
+            count * package_prices.get(pkg, 0) for pkg, count in packages_count_paid.items()
         )
         
         # === GRÁFICA 3: Leads por día (últimos 7 días) ===
@@ -926,21 +931,35 @@ async def get_global_analytics(current_user: dict = Depends(auth_service.get_cur
             tenant = next((t for t in tenants if (t.get("tenant_id") or t.get("id")) == tid), None)
             name = tenant.get("company_name", tid) if tenant else tid
             top_companies.append({"name": name, "conversations": count})
-        
+
+        # === ÚLTIMOS LEADS (últimos 10 con nombre de empresa) ===
+        tenant_name_map = {t.get("tenant_id") or t.get("id"): t.get("company_name", "") for t in tenants}
+        recent_leads = []
+        for lead in sorted(leads, key=lambda l: l.get("timestamp", ""), reverse=True)[:10]:
+            tid = lead.get("tenant_id", "")
+            recent_leads.append({
+                "email": lead.get("email", ""),
+                "company": tenant_name_map.get(tid, tid),
+                "question": lead.get("question", ""),
+                "timestamp": lead.get("timestamp", "")
+            })
+
         return {
             "status": "success",
             "metrics": {
                 "total_tenants": total_tenants,
                 "total_conversations": total_conversations,
                 "total_leads": total_leads,
-                "monthly_revenue_estimate": total_revenue
+                "monthly_revenue_estimate": total_revenue,
+                "paid_tenants": len(paid_tenants)
             },
             "charts": {
                 "industries": industries_count,
                 "packages": packages_count,
                 "leads_timeline": leads_timeline,
                 "top_companies": top_companies
-            }
+            },
+            "recent_leads": recent_leads
         }
     except Exception as e:
         logger.error(f"Error obteniendo analytics: {e}")

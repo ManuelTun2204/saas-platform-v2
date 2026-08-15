@@ -164,7 +164,7 @@ RESPUESTA:"""
                     "tenant_id": tenant_id,
                     "email": emails_found[0],
                     "session_id": session_id,
-                    "captured_at": datetime.now().isoformat(),
+                    "timestamp": datetime.now().isoformat(),
                     "source": "chatbot"
                 }
                 self.storage.save_lead(lead_data)

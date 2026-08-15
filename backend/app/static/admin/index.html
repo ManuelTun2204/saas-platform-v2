@@ -43,7 +43,10 @@
 
 <!-- VISTA DASHBOARD -->
 <div id="view-dashboard" class="view-content hidden max-w-7xl mx-auto px-4 py-8">
-<h2 class="text-2xl font-bold mb-6">Dashboard</h2>
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-2xl font-bold">Dashboard</h2>
+<button onclick="loadDashboard()" class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 font-semibold text-sm"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button>
+</div>
 
 <!-- METRICAS -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -58,10 +61,12 @@
 <div class="bg-white p-6 rounded-xl shadow-sm border">
 <h3 class="font-bold mb-4">Empresas por Industria</h3>
 <canvas id="chart-industries" height="200"></canvas>
+<div id="empty-chart-industries" class="hidden text-center py-10 text-gray-400">Sin datos aun</div>
 </div>
 <div class="bg-white p-6 rounded-xl shadow-sm border">
 <h3 class="font-bold mb-4">Distribucion de Paquetes</h3>
 <canvas id="chart-packages" height="200"></canvas>
+<div id="empty-chart-packages" class="hidden text-center py-10 text-gray-400">Sin datos aun</div>
 </div>
 </div>
 
@@ -69,10 +74,19 @@
 <div class="bg-white p-6 rounded-xl shadow-sm border">
 <h3 class="font-bold mb-4">Leads Ultimos 7 Dias</h3>
 <canvas id="chart-leads" height="200"></canvas>
+<div id="empty-chart-leads" class="hidden text-center py-10 text-gray-400">Sin datos aun</div>
 </div>
 <div class="bg-white p-6 rounded-xl shadow-sm border">
 <h3 class="font-bold mb-4">Top 5 Empresas por Conversaciones</h3>
 <div id="top-companies" class="space-y-3"></div>
+</div>
+</div>
+
+<!-- LEADS RECIENTES -->
+<div class="bg-white rounded-xl shadow-sm border mt-6">
+<div class="p-6">
+<h3 class="font-bold mb-4">Ultimos Leads</h3>
+<div id="recent-leads-list" class="overflow-x-auto"></div>
 </div>
 </div>
 </div>
@@ -545,6 +559,7 @@ async function loadDashboard() {
                 renderLeadsChart(data.charts.leads_timeline);
                 renderTopCompanies(data.charts.top_companies);
             }
+            renderRecentLeads(data.recent_leads);
         }
     } catch (e) {
         console.error('Error dashboard:', e);
@@ -554,8 +569,17 @@ async function loadDashboard() {
 function renderIndustriesChart(industries) {
     var ctx = document.getElementById('chart-industries');
     if (!ctx) return;
-    if (charts.industries) charts.industries.destroy();
+    var emptyEl = document.getElementById('empty-chart-industries');
     var labels = Object.keys(industries);
+    if (!labels.length) {
+        ctx.classList.add('hidden');
+        emptyEl.classList.remove('hidden');
+        if (charts.industries) { charts.industries.destroy(); charts.industries = null; }
+        return;
+    }
+    ctx.classList.remove('hidden');
+    emptyEl.classList.add('hidden');
+    if (charts.industries) charts.industries.destroy();
     var values = Object.values(industries);
     var colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
     charts.industries = new Chart(ctx, {
@@ -580,8 +604,17 @@ function renderIndustriesChart(industries) {
 function renderPackagesChart(packages) {
     var ctx = document.getElementById('chart-packages');
     if (!ctx) return;
-    if (charts.packages) charts.packages.destroy();
+    var emptyEl = document.getElementById('empty-chart-packages');
     var labels = Object.keys(packages);
+    if (!labels.length) {
+        ctx.classList.add('hidden');
+        emptyEl.classList.remove('hidden');
+        if (charts.packages) { charts.packages.destroy(); charts.packages = null; }
+        return;
+    }
+    ctx.classList.remove('hidden');
+    emptyEl.classList.add('hidden');
+    if (charts.packages) charts.packages.destroy();
     var values = Object.values(packages);
     var colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
     charts.packages = new Chart(ctx, {
@@ -605,6 +638,15 @@ function renderPackagesChart(packages) {
 function renderLeadsChart(timeline) {
     var ctx = document.getElementById('chart-leads');
     if (!ctx) return;
+    var emptyEl = document.getElementById('empty-chart-leads');
+    if (!timeline || timeline.every(function(item) { return item.count === 0; })) {
+        ctx.classList.add('hidden');
+        emptyEl.classList.remove('hidden');
+        if (charts.leads) { charts.leads.destroy(); charts.leads = null; }
+        return;
+    }
+    ctx.classList.remove('hidden');
+    emptyEl.classList.add('hidden');
     if (charts.leads) charts.leads.destroy();
     var labels = timeline.map(function(item) { return item.date.substring(5); });
     var values = timeline.map(function(item) { return item.count; });
@@ -645,6 +687,32 @@ function renderTopCompanies(topCompanies) {
         html += '<div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-blue-600 h-2.5 rounded-full" style="width: ' + percent + '%"></div></div>';
         html += '</div>';
     }
+    container.innerHTML = html;
+}
+
+function renderRecentLeads(recentLeads) {
+    var container = document.getElementById('recent-leads-list');
+    if (!container) return;
+    if (!recentLeads || recentLeads.length === 0) {
+        container.innerHTML = '<p class="text-gray-400 py-4">No hay leads capturados aun.</p>';
+        return;
+    }
+    var html = '<table class="w-full"><thead class="bg-gray-50"><tr>';
+    html += '<th class="px-4 py-2 text-left">Email</th><th class="px-4 py-2 text-left">Empresa</th><th class="px-4 py-2 text-left hidden md:table-cell">Pregunta</th><th class="px-4 py-2 text-left">Fecha</th>';
+    html += '</tr></thead><tbody>';
+    for (var i = 0; i < recentLeads.length; i++) {
+        var l = recentLeads[i];
+        var dateStr = l.timestamp ? l.timestamp.replace('T', ' ').substring(0, 16) : '';
+        var question = l.question || '';
+        if (question.length > 60) question = question.substring(0, 60) + '...';
+        html += '<tr class="border-t">';
+        html += '<td class="px-4 py-3 font-semibold">' + l.email + '</td>';
+        html += '<td class="px-4 py-3 text-gray-600">' + l.company + '</td>';
+        html += '<td class="px-4 py-3 text-gray-500 text-sm hidden md:table-cell">' + question + '</td>';
+        html += '<td class="px-4 py-3 text-sm text-gray-500">' + dateStr + '</td>';
+        html += '</tr>';
+    }
+    html += '</tbody></table>';
     container.innerHTML = html;
 }
 
