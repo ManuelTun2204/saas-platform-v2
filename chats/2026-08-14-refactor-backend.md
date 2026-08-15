@@ -36,7 +36,14 @@ Fecha: 2026-08-14 (laptop) · Repo: `ManuelTun2204/saas-platform-v2`
 - Los datos usados para probar se limpiaron. `data/` esta en `.gitignore` y NO se sube.
 - En esta laptop quedo un usuario `admin` / `admin123` local solo para probar (no existe en la oficina).
 
+## Clave de OpenRouter (ACTUALIZADA)
+
+- El usuario genero una clave nueva y se actualizo en `.env` (no se sube a GitHub). Verificada:
+  - Llamada directa a OpenRouter: responde OK.
+  - Prueba completa end-to-end en Docker: crear empresa -> pagar (demo) -> sitio generado con IA -> subir documento `.txt` -> el chatbot respondio CON la informacion del documento ("El capuccino cuesta 60 pesos; martes 20% estudiantes").
+- TODO el sistema queda verificado y funcional.
+
 ## Estado
 
-- Commit pendiente de subir con el refactor (routers), la robustez de tenants.json, la limpieza de codigo muerto y este documento.
-- Cuando actualices la clave de OpenRouter, probar de nuevo el chat: preguntar algo que este en un documento subido y confirmar que responda con esa informacion.
+- Commit `4d69fee` subido con el refactor (routers), la robustez de tenants.json, la limpieza de codigo muerto y este documento.
+- Pendiente en la oficina: `git pull` y actualizar tambien el `.env` con la clave nueva.
