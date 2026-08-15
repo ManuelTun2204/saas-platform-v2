@@ -1,83 +1,62 @@
-﻿.env
-.env.example
+﻿Estructura actual del proyecto (14/08/2026)
+============================================
+
+# Raiz
 .gitignore
-app/services/llm_service.py
-app/services/rag_service.py
-backend/app/main.py
-backend/app/services/auth_service.py.bak
-backend/app/services/llm_service.py
-backend/app/services/rag_service.py
-backend/app/services/rag_service.py.bak
-backend/app/services/storage_service.py
-backend/app/services/website_service.py
-backend/app/static/admin/index.html
-backend/app/static/index.html
-backend/app/static/widget/widget.js
-backend/app/templates/landing.html
-backend/app/templates/portafolio.html
-backend/app/templates/portfolio.html
-backend/app/templates/services.html
-backend/Dockerfile
-backend/requirements.txt
-data/storage/conversations.json
-data/tenants.json
-data/tenants/autos de lujo/vector_db/chroma.sqlite3
-data/tenants/computadoras/documents/plantilla_catalogo.txt
-data/tenants/computadoras/documents/plantilla_faqs.txt
-data/tenants/computadoras/documents/plantilla_politicas.txt
-data/tenants/computadoras/vector_db/chroma.sqlite3
-data/tenants/computadoras/vector_db/ddf03015-d91c-4bcd-a722-a185cbce3d67/data_level0.bin
-data/tenants/computadoras/vector_db/ddf03015-d91c-4bcd-a722-a185cbce3d67/header.bin
-data/tenants/computadoras/vector_db/ddf03015-d91c-4bcd-a722-a185cbce3d67/length.bin
-data/tenants/computadoras/vector_db/ddf03015-d91c-4bcd-a722-a185cbce3d67/link_lists.bin
-data/tenants/markora/vector_db/chroma.sqlite3
-data/tenants/pastel/documents/plantilla_catalogo.txt
-data/tenants/pastel/documents/plantilla_faqs.txt
-data/tenants/pastel/documents/plantilla_politicas.txt
-data/tenants/pastel/vector_db/chroma.sqlite3
-data/tenants/pasteleria/documents/plantilla_catalogo.txt
-data/tenants/pasteleria/documents/plantilla_faqs.txt
-data/tenants/pasteleria/documents/plantilla_politicas.txt
-data/tenants/pasteleria/vector_db/chroma.sqlite3
-data/tenants/pastelitos/documents/plantilla_catalogo.txt
-data/tenants/pastelitos/documents/plantilla_faqs.txt
-data/tenants/pastelitos/documents/plantilla_politicas.txt
-data/tenants/pastelitos/vector_db/chroma.sqlite3
-data/tenants/pparra/documents/plantilla_catalogo.txt
-data/tenants/pparra/documents/plantilla_faqs.txt
-data/tenants/pparra/documents/plantilla_politicas.txt
-data/tenants/pparra/vector_db/8cb884e9-0274-473b-93b4-4c4ef9696913/data_level0.bin
-data/tenants/pparra/vector_db/8cb884e9-0274-473b-93b4-4c4ef9696913/header.bin
-data/tenants/pparra/vector_db/8cb884e9-0274-473b-93b4-4c4ef9696913/length.bin
-data/tenants/pparra/vector_db/8cb884e9-0274-473b-93b4-4c4ef9696913/link_lists.bin
-data/tenants/pparra/vector_db/chroma.sqlite3
-data/tenants/vaaso/vector_db/chroma.sqlite3
-data/users.json
-data/websites/automoviles/index.html
-data/websites/chanman/chatbot-install.html
-data/websites/cliente-012/index.html
-data/websites/gael/index.html
-data/websites/pasteles/index.html
-data/websites/static/widget/widget.js
-data/websites/test-fix-464436244/index.html
-data/websites/vaaso/index.html
+.env              (claves, no se sube a git)
+.env.example
+README.md
+PROMT_MAESTRO_V3.md
+dev.ps1           (panel de control)
 docker-compose.yml
-docker-compose.yml.old
-frontend/generator/index.html
-frontend/src/components/chatbot-widget-ref/widget.js
-n8n_data/config
-n8n_data/crash.journal
-n8n_data/database.sqlite
-n8n_data/database.sqlite-shm
-n8n_data/database.sqlite-wal
-n8n_data/n8nEventLog.log
-n8n_data/n8nEventLog-1.log
-n8n_data/n8nEventLog-2.log
-n8n_data/n8nEventLog-3.log
-n8n_data/nodes/package.json
+SINCRONIZAR.cmd   (boton de sincronizacion con GitHub)
+estructura_completa.txt
+test_generator.py
 plantilla_catalogo.txt
 plantilla_faqs.txt
 plantilla_politicas.txt
-PROMT_MAESTRO_V3.md
-README.md
-test_generator.py
+
+# Backend (Docker: /app)
+backend/
+  Dockerfile
+  requirements.txt
+  app/
+    main.py                       (FastAPI + routers)
+    deps.py                       (instancias de servicios, helpers compartidos)
+    schemas.py                    (modelos Pydantic)
+    routers/
+      __init__.py
+      auth.py                     (login, refresh, register, me, usuarios)
+      tenants.py                  (tenants, detalles, generacion, documentos, chat, export, editor)
+      payments.py                 (config, checkout, status, finalize, paginas de retorno)
+      analytics.py                (dashboard /api/analytics/global)
+    services/
+      auth_service.py             (JWT + PBKDF2)
+      email_service.py            (notificaciones Resend)
+      export_service.py           (ZIP de sitios)
+      llm_service.py              (OpenRouter con fallback)
+      payment_service.py          (Stripe / Mercado Pago / PayPal / demo)
+      rag_service.py              (ChromaDB + embeddings + memoria)
+      storage_service.py          (persistencia JSON atomica)
+      website_service.py          (generacion de sitios, 4 paquetes, SEO)
+    static/
+      index.html
+      admin/index.html            (panel de administracion)
+      widget/widget.js            (widget de chatbot embebible)
+    templates/
+      landing.html, services.html, portfolio.html, portafolio.html
+      checkout_return.html, checkout_cancel.html
+
+# Datos (volumen Docker, no se sube a git)
+data/
+  users.json
+  tenants.json
+  storage/  (conversations.json, leads.json, orders.json)
+  websites/<tenant>/      (sitios generados, servidos en /data/websites)
+  tenants/<tenant>/       (documentos RAG + vector_db)
+  exports/                (ZIP exportados)
+
+# Otros
+chats/        (copias de las conversaciones, se suben a git)
+scripts/
+  backup.ps1  (backup automatico con rotacion)
