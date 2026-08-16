@@ -5,7 +5,7 @@ import re
 import time
 from pathlib import Path
 
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 
 from app.services.llm_service import LLMService
@@ -34,15 +34,32 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 _RATE_BUCKETS = {}
 
 
-def check_rate_limit(key: str, limit: int, window_seconds: int) -> bool:
+def check_rate_limit(key: str, limit: int, window_seconds: int, consume: bool = True) -> bool:
     now = time.time()
     bucket = _RATE_BUCKETS.setdefault(key, collections.deque())
     while bucket and bucket[0] < now - window_seconds:
         bucket.popleft()
     if len(bucket) >= limit:
         return False
-    bucket.append(now)
+    if consume:
+        bucket.append(now)
     return True
+
+
+def require_admin(current_user: dict = Depends(auth_service.get_current_user)):
+    """Dependencia que exige rol de administrador"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Solo administradores pueden realizar esta accion")
+    return current_user
+
+
+def write_json_atomic(path: Path, data):
+    """Escribe JSON de forma atomica (temp + renombre) para evitar archivos corruptos con multiples workers"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    with open(tmp, "w", encoding="utf-8-sig") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    tmp.replace(path)
 
 
 def validate_tenant_id(tenant_id: str) -> str:
@@ -81,8 +98,7 @@ def create_tenant_record(tenant_data: dict) -> dict:
     new_tenant["created_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
     new_tenant["payment_status"] = "pending"
     tenants.append(new_tenant)
-    with open(tenants_file, 'w', encoding='utf-8-sig') as f:
-        json.dump(tenants, f, indent=2, ensure_ascii=False)
+    write_json_atomic(tenants_file, tenants)
     return new_tenant
 
 

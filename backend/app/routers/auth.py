@@ -3,10 +3,10 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.schemas import LoginRequest, RefreshRequest, RegisterRequest
-from app.deps import DATA_DIR, auth_service, read_json_file
+from app.deps import DATA_DIR, auth_service, check_rate_limit, read_json_file, require_admin, write_json_atomic
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +14,15 @@ router = APIRouter()
 
 
 @router.post("/api/auth/login")
-async def login(request: LoginRequest):
-    """Login con JWT tokens"""
+async def login(request: LoginRequest, http_request: Request):
+    """Login con JWT tokens (con limite de intentos para evitar fuerza bruta)"""
+    client_ip = http_request.client.host if http_request.client else "unknown"
+    # Limite global por IP (evita probar muchos usuarios) y por usuario+IP (evita fuerza bruta).
+    # Solo los intentos FALLIDOS cuentan para el limite por usuario, para no bloquear logins legitimos.
+    if not check_rate_limit(f"loginip:{client_ip}", limit=20, window_seconds=300):
+        raise HTTPException(status_code=429, detail="Demasiados intentos. Espera 5 minutos.")
+    if not check_rate_limit(f"loginuser:{request.username}:{client_ip}", limit=5, window_seconds=300, consume=False):
+        raise HTTPException(status_code=429, detail="Demasiados intentos para este usuario. Espera 5 minutos.")
     try:
         users_file = DATA_DIR / "users.json"
         if not users_file.exists():
@@ -24,9 +31,11 @@ async def login(request: LoginRequest):
 
         user = next((u for u in users if u.get("username") == request.username), None)
         if not user:
+            check_rate_limit(f"loginuser:{request.username}:{client_ip}", limit=5, window_seconds=300)
             raise HTTPException(status_code=401, detail="Credenciales inválidas")
 
         if not auth_service.verify_password(request.password, user.get("password_hash", "")):
+            check_rate_limit(f"loginuser:{request.username}:{client_ip}", limit=5, window_seconds=300)
             raise HTTPException(status_code=401, detail="Credenciales inválidas")
 
         user_data = {
@@ -103,12 +112,9 @@ async def get_current_user_info(user: dict = Depends(auth_service.get_current_us
 
 
 @router.post("/api/auth/register")
-async def register(request: RegisterRequest, current_user: dict = Depends(auth_service.get_current_user)):
+async def register(request: RegisterRequest, current_user: dict = Depends(require_admin)):
     """Registrar nuevo usuario (solo admins)"""
     try:
-        if current_user.get("role") != "admin":
-            raise HTTPException(status_code=403, detail="No autorizado")
-
         users = read_json_file(DATA_DIR / "users.json", [])
         if any(u.get("username") == request.username for u in users):
             raise HTTPException(status_code=400, detail="Usuario ya existe")
@@ -120,8 +126,7 @@ async def register(request: RegisterRequest, current_user: dict = Depends(auth_s
             "created_at": datetime.now().isoformat()
         }
         users.append(new_user)
-        with open(DATA_DIR / "users.json", 'w', encoding='utf-8-sig') as f:
-            json.dump(users, f, indent=2, ensure_ascii=False)
+        write_json_atomic(DATA_DIR / "users.json", users)
 
         logger.info(f"✅ Usuario registrado: {request.username}")
         return {"status": "success", "message": f"Usuario {request.username} creado exitosamente"}
@@ -133,12 +138,9 @@ async def register(request: RegisterRequest, current_user: dict = Depends(auth_s
 
 
 @router.get("/api/users")
-async def list_users(current_user: dict = Depends(auth_service.get_current_user)):
+async def list_users(current_user: dict = Depends(require_admin)):
     """Listar todos los usuarios (solo admins)"""
     try:
-        if current_user.get("role") != "admin":
-            raise HTTPException(status_code=403, detail="Solo admins pueden ver usuarios")
-
         users = read_json_file(DATA_DIR / "users.json", [])
         safe_users = [
             {
@@ -157,12 +159,9 @@ async def list_users(current_user: dict = Depends(auth_service.get_current_user)
 
 
 @router.post("/api/users")
-async def create_user(request: RegisterRequest, current_user: dict = Depends(auth_service.get_current_user)):
+async def create_user(request: RegisterRequest, current_user: dict = Depends(require_admin)):
     """Crear nuevo usuario (solo admins)"""
     try:
-        if current_user.get("role") != "admin":
-            raise HTTPException(status_code=403, detail="Solo admins pueden crear usuarios")
-
         if request.role not in ["admin", "user"]:
             raise HTTPException(status_code=400, detail="Rol debe ser 'admin' o 'user'")
 
@@ -177,8 +176,7 @@ async def create_user(request: RegisterRequest, current_user: dict = Depends(aut
             "created_at": datetime.now().isoformat()
         }
         users.append(new_user)
-        with open(DATA_DIR / "users.json", 'w', encoding='utf-8-sig') as f:
-            json.dump(users, f, indent=2, ensure_ascii=False)
+        write_json_atomic(DATA_DIR / "users.json", users)
 
         logger.info(f"Usuario creado: {request.username} (rol: {request.role})")
         return {"status": "success", "message": f"Usuario {request.username} creado exitosamente"}
@@ -190,12 +188,9 @@ async def create_user(request: RegisterRequest, current_user: dict = Depends(aut
 
 
 @router.delete("/api/users/{username}")
-async def delete_user(username: str, current_user: dict = Depends(auth_service.get_current_user)):
+async def delete_user(username: str, current_user: dict = Depends(require_admin)):
     """Eliminar usuario (solo admins, no puede eliminarse a sí mismo)"""
     try:
-        if current_user.get("role") != "admin":
-            raise HTTPException(status_code=403, detail="Solo admins pueden eliminar usuarios")
-
         if username == current_user.get("username"):
             raise HTTPException(status_code=400, detail="No puedes eliminar tu propia cuenta")
 
@@ -207,8 +202,7 @@ async def delete_user(username: str, current_user: dict = Depends(auth_service.g
         if len(new_users) == len(users):
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-        with open(DATA_DIR / "users.json", 'w', encoding='utf-8-sig') as f:
-            json.dump(new_users, f, indent=2, ensure_ascii=False)
+        write_json_atomic(DATA_DIR / "users.json", new_users)
 
         logger.info(f"Usuario eliminado: {username}")
         return {"status": "success", "message": f"Usuario {username} eliminado"}

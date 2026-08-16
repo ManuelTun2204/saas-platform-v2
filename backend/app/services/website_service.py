@@ -13,6 +13,14 @@ WEBSITES_DIR.mkdir(parents=True, exist_ok=True)
 PUBLIC_URL = os.getenv("PUBLIC_URL", "http://localhost:8000").rstrip("/")
 
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+
+def _atomic_write_json(path: Path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    with open(tmp, "w", encoding="utf-8-sig") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    tmp.replace(path)
 # ============================================
 # BANCO DE IMÁGENES POR INDUSTRIA (Unsplash - GRATIS y HD)
 # ============================================
@@ -485,8 +493,7 @@ class WebsiteService:
             }
             tenants.append(new_tenant)
             logger.info(f"Tenant {tenant_id} creado nuevo")
-        with open(tenants_file, 'w', encoding='utf-8-sig') as f:
-            json.dump(tenants, f, indent=2, ensure_ascii=False)
+        _atomic_write_json(tenants_file, tenants)
 
     def _render_site(self, template_name: str, site_data: dict, seo_enabled: bool, chatbot_enabled: bool) -> str:
         dummy_request = Request(scope={"type": "http", "method": "GET", "headers": [], "path": "/"})
@@ -509,8 +516,7 @@ class WebsiteService:
         try:
             save_dir = WEBSITES_DIR / site_data.get("tenant_id", "unknown")
             save_dir.mkdir(exist_ok=True)
-            with open(save_dir / "site_data.json", "w", encoding="utf-8-sig") as f:
-                json.dump(site_data, f, indent=2, ensure_ascii=False)
+            _atomic_write_json(save_dir / "site_data.json", site_data)
         except Exception as e:
             logger.warning(f"No se pudo guardar site_data.json: {e}")
         return templates.get_template(template_name).render(request=dummy_request, **site_data)

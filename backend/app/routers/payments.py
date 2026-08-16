@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from app.schemas import CheckoutRequest
-from app.deps import DATA_DIR, auth_service, check_rate_limit, payment_service, templates, validate_tenant_id
+from app.deps import DATA_DIR, auth_service, check_rate_limit, payment_service, require_admin, templates, validate_tenant_id
 
 logger = logging.getLogger(__name__)
 
@@ -94,10 +94,8 @@ async def finalize_payment(order_id: str, http_request: Request):
 
 
 @router.get("/api/payments/orders")
-async def list_payment_orders(current_user: dict = Depends(auth_service.get_current_user)):
+async def list_payment_orders(current_user: dict = Depends(require_admin)):
     """Lista de todas las ordenes de pago (solo admin)"""
-    if current_user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Solo administradores")
     try:
         return {"status": "success", "orders": payment_service.list_orders()}
     except Exception as e:

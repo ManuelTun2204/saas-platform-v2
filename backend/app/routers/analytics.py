@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.deps import DATA_DIR, PRICES, auth_service, read_json_file
+from app.deps import DATA_DIR, PRICES, read_json_file, require_admin
 
 logger = logging.getLogger(__name__)
 
@@ -11,8 +11,8 @@ router = APIRouter()
 
 
 @router.get("/api/analytics/global")
-async def get_global_analytics(current_user: dict = Depends(auth_service.get_current_user)):
-    """Obtener métricas globales con datos para gráficas"""
+async def get_global_analytics(current_user: dict = Depends(require_admin)):
+    """Obtener métricas globales con datos para gráficas (solo admin)"""
     try:
         tenants = read_json_file(DATA_DIR / "tenants.json", [])
         conversations = read_json_file(DATA_DIR / "storage" / "conversations.json", [])
