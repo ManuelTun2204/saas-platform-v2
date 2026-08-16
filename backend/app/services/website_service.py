@@ -659,7 +659,8 @@ class WebsiteService:
                 preview_url = f"/data/websites/{tenant_id}/index.html?v={site_data['cache_buster']}"
                 deliverables = ["Sitio Web Profesional", "Chatbot RAG"]
             elif package == "chat_only":
-                widget_code = f'<script>var CHATBOT_TENANT_ID = "{tenant_id}";</script><script src="{PUBLIC_URL}/static/widget/widget.js"></script>'
+                from app.services.chat_config_service import build_widget_snippet
+                widget_code = build_widget_snippet(tenant_id, PUBLIC_URL)
                 company_label = site_data.get("company_name", tenant_id)
                 chat_html = f"""<!DOCTYPE html>
 <html lang="es">

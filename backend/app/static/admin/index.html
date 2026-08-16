@@ -218,10 +218,23 @@
 <button id="editor-btn" onclick="openEditor()" class="block w-full bg-gray-800 text-white px-4 py-3 rounded-lg hover:bg-gray-900">Editar Sitio</button>
 </div>
 <div id="widget-section" class="bg-white p-6 rounded-xl shadow-sm border space-y-3">
-<h3 class="font-bold">Codigo del Chatbot</h3>
-<p class="text-xs text-gray-500">Pega este codigo en tu sitio para activar el chatbot.</p>
-<textarea id="widget-code" readonly class="w-full h-24 p-2 bg-gray-50 border rounded-lg font-mono text-xs"></textarea>
+<h3 class="font-bold">Chatbot para tu Pagina</h3>
+<p class="text-xs text-gray-500">Pega esta linea antes de &lt;/body&gt; en tu pagina para activar el chatbot (el widget carga su configuracion solo):</p>
+<textarea id="widget-code" readonly class="w-full h-16 p-2 bg-gray-50 border rounded-lg font-mono text-xs"></textarea>
 <button onclick="copyWidgetCode()" class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">Copiar Codigo</button>
+<div class="border-t pt-3 mt-2">
+<h4 class="font-bold text-sm mb-2">Personalizar Chatbot</h4>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+<div><label class="block text-xs font-semibold mb-1">Titulo</label><input type="text" id="chat-title" class="w-full p-2 border rounded-lg text-sm"></div>
+<div><label class="block text-xs font-semibold mb-1">Subtitulo</label><input type="text" id="chat-subtitle" class="w-full p-2 border rounded-lg text-sm"></div>
+<div><label class="block text-xs font-semibold mb-1">Color Principal</label><input type="color" id="chat-primary" class="w-full h-9 border rounded-lg"></div>
+<div><label class="block text-xs font-semibold mb-1">Color Secundario</label><input type="color" id="chat-secondary" class="w-full h-9 border rounded-lg"></div>
+</div>
+<div class="mt-2"><label class="block text-xs font-semibold mb-1">Mensaje de Bienvenida</label><textarea id="chat-welcome" rows="2" class="w-full p-2 border rounded-lg text-sm"></textarea></div>
+<div class="mt-2"><label class="block text-xs font-semibold mb-1">Respuestas Rapidas (separadas por coma, maximo 4)</label><input type="text" id="chat-quick" class="w-full p-2 border rounded-lg text-sm" placeholder="¿Qué servicios ofrecen?, ¿Cuál es su horario?, Quiero que me contacten"></div>
+<button onclick="saveChatConfig()" class="mt-3 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Guardar Configuracion</button>
+<div id="chat-config-status" class="mt-2 text-xs"></div>
+</div>
 </div>
 </div>
 <div class="lg:col-span-2 space-y-4">
@@ -935,9 +948,10 @@ async function viewCompanyDetails(tenantId, name) {
                 var hasChat = (t.package !== 'seo_only');
                 var hasSeo = (t.package === 'full' || t.package === 'seo_only');
                 if (hasChat) {
-                    var code = '<script>var CHATBOT_TENANT_ID = "' + tenantId + '";</' + 'script>\n<script src="' + window.location.origin + '/static/widget/widget.js"></' + 'script>';
+                    var code = '<script src="' + window.location.origin + '/static/widget/widget.js" data-tenant="' + tenantId + '"></' + 'script>';
                     document.getElementById('widget-code').value = code;
                     document.getElementById('widget-section').classList.remove('hidden');
+                    loadChatConfig(tenantId);
                 }
                 if (hasSeo) {
                     document.getElementById('seo-link').style.display = '';
@@ -968,6 +982,55 @@ function copyWidgetCode() {
     }).catch(function() {
         alert('Codigo copiado. Pega el contenido del cuadro en tu sitio.');
     });
+}
+
+async function loadChatConfig(tenantId) {
+    try {
+        var res = await apiRequest('/api/chat-config/' + encodeURIComponent(tenantId));
+        var data = await res.json();
+        if (data.status === 'success' && data.config) {
+            var c = data.config;
+            document.getElementById('chat-title').value = c.title || '';
+            document.getElementById('chat-subtitle').value = c.subtitle || '';
+            document.getElementById('chat-primary').value = c.primary_color || '#667eea';
+            document.getElementById('chat-secondary').value = c.secondary_color || '#764ba2';
+            document.getElementById('chat-welcome').value = c.welcome || '';
+            document.getElementById('chat-quick').value = (c.quick_replies || []).join(', ');
+        }
+    } catch (e) {
+        console.error('Error cargando config de chat:', e);
+    }
+}
+
+async function saveChatConfig() {
+    var statusEl = document.getElementById('chat-config-status');
+    statusEl.className = 'mt-2 text-xs text-blue-600';
+    statusEl.innerText = 'Guardando...';
+    var payload = {
+        title: document.getElementById('chat-title').value,
+        subtitle: document.getElementById('chat-subtitle').value,
+        primary_color: document.getElementById('chat-primary').value,
+        secondary_color: document.getElementById('chat-secondary').value,
+        avatar_url: '',
+        welcome: document.getElementById('chat-welcome').value,
+        quick_replies: document.getElementById('chat-quick').value
+    };
+    try {
+        var res = await apiRequest('/api/chat-config/' + encodeURIComponent(currentTenantId), { method: 'POST', body: JSON.stringify(payload) });
+        var data = await res.json();
+        if (data.status === 'success') {
+            statusEl.className = 'mt-2 text-xs text-green-600';
+            statusEl.innerText = 'Configuracion guardada. El widget la aplicara al recargar la pagina del cliente.';
+            var preview = document.getElementById('site-preview');
+            if (preview) preview.src = preview.src.split('?')[0] + '?v=' + Date.now();
+        } else {
+            statusEl.className = 'mt-2 text-xs text-red-600';
+            statusEl.innerText = 'Error: ' + (data.detail || 'desconocido');
+        }
+    } catch (e) {
+        statusEl.className = 'mt-2 text-xs text-red-600';
+        statusEl.innerText = 'Error: ' + e.message;
+    }
 }
 
 async function exportSite() {

@@ -1,14 +1,40 @@
-﻿(function() {
+(function() {
+    var scriptEl = document.currentScript || (document.scripts && document.scripts[document.scripts.length - 1]);
+    function attr(name) { return scriptEl && scriptEl.getAttribute ? scriptEl.getAttribute(name) : null; }
+
     var CONFIG = {
-        tenantId: window.CHATBOT_TENANT_ID || 'cliente-01',
-        title: window.CHATBOT_TITLE || 'Asistente Virtual',
-        subtitle: window.CHATBOT_SUBTITLE || 'En línea - responde al instante',
-        primaryColor: window.CHATBOT_PRIMARY_COLOR || '#667eea',
-        secondaryColor: window.CHATBOT_SECONDARY_COLOR || '#764ba2',
-        avatarUrl: window.CHATBOT_AVATAR_URL || '',
-        welcome: window.CHATBOT_WELCOME || '¡Hola! 👋 Soy el asistente virtual de la empresa. ¿En qué puedo ayudarte hoy?',
-        quickReplies: window.CHATBOT_QUICK_REPLIES || ['¿Qué servicios ofrecen?', '¿Cuál es su horario?', 'Quiero que me contacten']
+        tenantId: 'cliente-01',
+        title: 'Asistente Virtual',
+        subtitle: 'En línea · responde al instante',
+        primaryColor: '#667eea',
+        secondaryColor: '#764ba2',
+        avatarUrl: '',
+        welcome: '¡Hola! 👋 Soy el asistente virtual de la empresa. ¿En qué puedo ayudarte hoy?',
+        quickReplies: ['¿Qué servicios ofrecen?', '¿Cuál es su horario?', 'Quiero que me contacten']
     };
+    var explicitKeys = {};
+
+    function setFrom(key, value) {
+        if (value !== null && value !== undefined && String(value).trim() !== '') {
+            CONFIG[key] = value;
+            explicitKeys[key] = true;
+        }
+    }
+
+    setFrom('tenantId', attr('data-tenant') || (window.CHATBOT_TENANT_ID || null));
+    setFrom('title', attr('data-title') || (window.CHATBOT_TITLE || null));
+    setFrom('subtitle', attr('data-subtitle') || (window.CHATBOT_SUBTITLE || null));
+    setFrom('primaryColor', attr('data-primary') || (window.CHATBOT_PRIMARY_COLOR || null));
+    setFrom('secondaryColor', attr('data-secondary') || (window.CHATBOT_SECONDARY_COLOR || null));
+    setFrom('avatarUrl', attr('data-avatar') || (window.CHATBOT_AVATAR_URL || null));
+    setFrom('welcome', attr('data-welcome') || (window.CHATBOT_WELCOME || null));
+    var dataQuick = attr('data-quick');
+    if (dataQuick) {
+        var qr = dataQuick.split(',').map(function(s) { return s.trim(); }).filter(Boolean).slice(0, 4);
+        if (qr.length) setFrom('quickReplies', qr);
+    } else if (window.CHATBOT_QUICK_REPLIES) {
+        setFrom('quickReplies', window.CHATBOT_QUICK_REPLIES.slice ? window.CHATBOT_QUICK_REPLIES.slice(0, 4) : window.CHATBOT_QUICK_REPLIES);
+    }
 
     var sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     var emailCaptured = false;
@@ -24,19 +50,21 @@
         return '';
     })();
 
-    var grad = 'linear-gradient(135deg, ' + CONFIG.primaryColor + ' 0%, ' + CONFIG.secondaryColor + ' 100%)';
+    function grad() {
+        return 'linear-gradient(135deg, ' + CONFIG.primaryColor + ' 0%, ' + CONFIG.secondaryColor + ' 100%)';
+    }
 
     var widgetHTML = `
         <div id="chatbot-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-            <div id="chatbot-toggle" style="width: 60px; height: 60px; border-radius: 50%; background: ${grad}; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(0,0,0,0.25); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" title="Abrir chat">
+            <div id="chatbot-toggle" style="width: 60px; height: 60px; border-radius: 50%; background: ${grad()}; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(0,0,0,0.25); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" title="Abrir chat">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
             </div>
             <div id="chatbot-window" style="display: none; width: 380px; max-width: calc(100vw - 40px); height: 560px; max-height: calc(100vh - 100px); background: #ffffff; border-radius: 20px; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25); flex-direction: column; overflow: hidden; position: absolute; bottom: 80px; right: 0; border: 1px solid rgba(255, 255, 255, 0.3); animation: chatbotSlideUp 0.3s ease-out;">
-                <div id="chatbot-header" style="background: ${grad}; color: white; padding: 16px 18px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+                <div id="chatbot-header" style="background: ${grad()}; color: white; padding: 16px 18px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
                     <div id="chatbot-avatar" style="width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; overflow: hidden; flex-shrink: 0;"></div>
                     <div style="flex: 1; min-width: 0;">
-                        <div style="font-weight: 700; font-size: 15px; line-height: 1.2;">${CONFIG.title}</div>
-                        <div style="font-size: 12px; opacity: 0.95; display: flex; align-items: center; gap: 5px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #4ade80; display: inline-block;"></span>${CONFIG.subtitle}</div>
+                        <div id="chatbot-title" style="font-weight: 700; font-size: 15px; line-height: 1.2;">${CONFIG.title}</div>
+                        <div id="chatbot-subtitle" style="font-size: 12px; opacity: 0.95; display: flex; align-items: center; gap: 5px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #4ade80; display: inline-block;"></span>${CONFIG.subtitle}</div>
                     </div>
                     <button id="chatbot-minimize" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center;" title="Minimizar">&minus;</button>
                 </div>
@@ -45,7 +73,7 @@
                 <div style="padding: 12px 16px; border-top: 1px solid #eceef1; background: #ffffff; flex-shrink: 0;">
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <input type="text" id="chatbot-input" placeholder="Escribe tu mensaje..." style="flex: 1; padding: 11px 14px; border: 1px solid #e2e5ea; border-radius: 12px; font-size: 14px; outline: none; background: #f9fafb; transition: all 0.2s;">
-                        <button id="chatbot-send" style="width: 44px; height: 44px; background: ${grad}; color: white; border: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.18); flex-shrink: 0;" title="Enviar">
+                        <button id="chatbot-send" style="width: 44px; height: 44px; background: ${grad()}; color: white; border: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.18); flex-shrink: 0;" title="Enviar">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                         </button>
                     </div>
@@ -76,11 +104,68 @@
     var quick = document.getElementById('chatbot-quick');
 
     var avatarEl = document.getElementById('chatbot-avatar');
-    if (CONFIG.avatarUrl) {
-        avatarEl.innerHTML = '<img src="' + CONFIG.avatarUrl + '" style="width:100%;height:100%;object-fit:cover;" alt="">';
-    } else {
-        avatarEl.textContent = (CONFIG.title || '?').charAt(0).toUpperCase();
+    function updateAvatar() {
+        if (CONFIG.avatarUrl) {
+            avatarEl.innerHTML = '<img src="' + CONFIG.avatarUrl + '" style="width:100%;height:100%;object-fit:cover;" alt="">';
+        } else {
+            avatarEl.textContent = (CONFIG.title || '?').charAt(0).toUpperCase();
+        }
     }
+    updateAvatar();
+
+    var previousWelcome = CONFIG.welcome;
+
+    function applyConfig() {
+        var headerEl = document.getElementById('chatbot-header');
+        var toggleEl = document.getElementById('chatbot-toggle');
+        var sendEl = document.getElementById('chatbot-send');
+        if (headerEl) headerEl.style.background = grad();
+        if (toggleEl) toggleEl.style.background = grad();
+        if (sendEl) sendEl.style.background = grad();
+        var titleEl = document.getElementById('chatbot-title');
+        if (titleEl) titleEl.textContent = CONFIG.title;
+        var subtitleEl = document.getElementById('chatbot-subtitle');
+        if (subtitleEl) subtitleEl.textContent = CONFIG.subtitle;
+        updateAvatar();
+        var firstMsg = messages && messages.children[0];
+        if (firstMsg && firstMsg.firstElementChild && firstMsg.firstElementChild.textContent === previousWelcome) {
+            firstMsg.firstElementChild.textContent = CONFIG.welcome;
+        }
+        if (messages && messages.children.length === 0) {
+            renderQuickReplies();
+        }
+    }
+
+    function fetchConfig() {
+        var tid = CONFIG.tenantId;
+        if (!tid || tid === 'cliente-01') return;
+        var url = widgetApiBase + '/api/chat/' + encodeURIComponent(tid) + '/config';
+        fetch(url, { headers: { 'Accept': 'application/json' } })
+            .then(function(resp) { if (!resp.ok) throw new Error('sin config'); return resp.json(); })
+            .then(function(data) {
+                if (data.status !== 'success' || !data.config) return;
+                previousWelcome = CONFIG.welcome;
+                var remote = data.config;
+                var mapping = {
+                    title: 'title',
+                    subtitle: 'subtitle',
+                    primary_color: 'primaryColor',
+                    secondary_color: 'secondaryColor',
+                    avatar_url: 'avatarUrl',
+                    welcome: 'welcome'
+                };
+                for (var key in mapping) {
+                    var ck = mapping[key];
+                    if (!explicitKeys[ck] && remote[key] !== undefined && remote[key] !== null) CONFIG[ck] = remote[key];
+                }
+                if (remote.quick_replies && !explicitKeys.quickReplies) {
+                    CONFIG.quickReplies = remote.quick_replies.slice(0, 4);
+                }
+                applyConfig();
+            })
+            .catch(function() {});
+    }
+    fetchConfig();
 
     var focusBorder = function(el) { el.style.borderColor = CONFIG.primaryColor; el.style.boxShadow = '0 0 0 3px ' + CONFIG.primaryColor + '22'; };
     var blurBorder = function(el) { el.style.borderColor = '#e2e5ea'; el.style.boxShadow = 'none'; };

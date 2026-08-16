@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import List, Union
 
 
 class TenantCreateRequest(BaseModel):
@@ -50,6 +51,16 @@ class ChatRequest(BaseModel):
 
 class LeadUpdate(BaseModel):
     status: str
+
+
+class ChatConfigRequest(BaseModel):
+    title: str = ""
+    subtitle: str = ""
+    primary_color: str = ""
+    secondary_color: str = ""
+    avatar_url: str = ""
+    welcome: str = ""
+    quick_replies: Union[List[str], str] = []
 
 
 class CheckoutRequest(BaseModel):

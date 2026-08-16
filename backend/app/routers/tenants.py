@@ -9,7 +9,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 
-from app.schemas import ChatRequest, TenantCreateRequest, WebsiteGenerationRequest
+from app.schemas import ChatConfigRequest, ChatRequest, TenantCreateRequest, WebsiteGenerationRequest
 from app.deps import DATA_DIR, check_rate_limit, create_tenant_record, export_service, rag_service, read_json_file, require_admin, website_service, write_json_atomic
 
 logger = logging.getLogger(__name__)
@@ -222,6 +222,51 @@ async def chat_endpoint(tenant_id: str, request: ChatRequest, http_request: Requ
             "status": "error",
             "answer": "Lo siento, estoy teniendo problemas técnicos. ¿Podrías intentar de nuevo o dejar tu email para que te contactemos?"
         }
+
+
+@router.get("/api/chat/{tenant_id}/config")
+async def get_chat_widget_config(tenant_id: str):
+    """Configuracion publica del widget de chat (la usa el widget.js al instalarse)"""
+    try:
+        from app.services.chat_config_service import get_chat_config
+        config = get_chat_config(tenant_id)
+        return {
+            "status": "success",
+            "tenant_id": tenant_id,
+            "api_base": os.getenv("PUBLIC_URL", "http://localhost:8000").rstrip("/"),
+            "config": config,
+        }
+    except Exception as e:
+        logger.error(f"Error obteniendo config del widget: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/chat-config/{tenant_id}")
+async def get_chat_config_admin(tenant_id: str, current_user: dict = Depends(require_admin)):
+    """Configuracion del widget para editar desde el panel (solo admin)"""
+    try:
+        from app.services.chat_config_service import get_chat_config
+        config = get_chat_config(tenant_id)
+        return {"status": "success", "tenant_id": tenant_id, "config": config}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error obteniendo config de chat (admin): {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/chat-config/{tenant_id}")
+async def save_chat_config(tenant_id: str, request: ChatConfigRequest, current_user: dict = Depends(require_admin)):
+    """Guardar la configuracion del widget de chat (solo admin)"""
+    try:
+        from app.services.chat_config_service import save_chat_config
+        saved = save_chat_config(tenant_id, request.dict())
+        return {"status": "success", "message": "Configuracion del chatbot guardada", "config": saved}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error guardando config de chat: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/api/tenant/{tenant_id}/details")
