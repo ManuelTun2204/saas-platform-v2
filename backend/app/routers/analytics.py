@@ -17,6 +17,7 @@ async def get_global_analytics(current_user: dict = Depends(auth_service.get_cur
         tenants = read_json_file(DATA_DIR / "tenants.json", [])
         conversations = read_json_file(DATA_DIR / "storage" / "conversations.json", [])
         leads = read_json_file(DATA_DIR / "storage" / "leads.json", [])
+        orders = read_json_file(DATA_DIR / "storage" / "orders.json", [])
 
         total_tenants = len(tenants)
         total_conversations = len(conversations)
@@ -45,6 +46,34 @@ async def get_global_analytics(current_user: dict = Depends(auth_service.get_cur
         total_revenue = sum(
             count * package_prices.get(pkg, 0) for pkg, count in packages_count_paid.items()
         )
+
+        # Ingresos reales desde las ordenes de pago
+        paid_orders = [o for o in orders if o.get("status") == "paid"]
+        revenue_total = round(sum(float(o.get("amount", 0) or 0) for o in paid_orders), 2)
+        today = datetime.now()
+        month_labels = []
+        revenue_by_month = {}
+        for i in range(5, -1, -1):
+            y = today.year
+            m = today.month - i
+            while m <= 0:
+                m += 12
+                y -= 1
+            key = f"{y}-{m:02d}"
+            month_labels.append(key)
+            revenue_by_month[key] = 0.0
+        for o in paid_orders:
+            created = o.get("created_at", "")
+            key = created[:7] if len(created) >= 7 else ""
+            if key in revenue_by_month:
+                try:
+                    revenue_by_month[key] += float(o.get("amount", 0) or 0)
+                except Exception:
+                    pass
+        revenue_monthly = [{"label": k, "amount": round(v, 2)} for k, v in revenue_by_month.items()]
+        revenue_this_month = revenue_by_month.get(today.strftime("%Y-%m"), 0.0)
+        orders_pending = len([o for o in orders if o.get("status") == "pending"])
+        orders_cancelled = len([o for o in orders if o.get("status") == "cancelled"])
 
         leads_by_day = {}
         today = datetime.now()
@@ -103,13 +132,19 @@ async def get_global_analytics(current_user: dict = Depends(auth_service.get_cur
                 "total_conversations": total_conversations,
                 "total_leads": total_leads,
                 "monthly_revenue_estimate": total_revenue,
-                "paid_tenants": len(paid_tenants)
+                "paid_tenants": len(paid_tenants),
+                "revenue_this_month": round(revenue_this_month, 2),
+                "revenue_total": revenue_total,
+                "orders_total": len(orders),
+                "orders_pending": orders_pending,
+                "orders_cancelled": orders_cancelled,
             },
             "charts": {
                 "industries": industries_count,
                 "packages": packages_count,
                 "leads_timeline": leads_timeline,
-                "top_companies": top_companies
+                "top_companies": top_companies,
+                "revenue_monthly": revenue_monthly,
             },
             "recent_leads": recent_leads
         }

@@ -13,6 +13,9 @@ RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/wh
     pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Hornear el modelo de embeddings en la imagen para arrancar sin internet (HF_HUB_OFFLINE=1)
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+
 COPY ./app /app/app
 
 EXPOSE 8000

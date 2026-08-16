@@ -16,4 +16,14 @@
 <a href="/" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-xl">Volver al panel</a>
 </div>
 </body>
+<script>
+(function() {
+    var orderId = {{ order_id|tojson }};
+    if (orderId) {
+        fetch('/api/payments/cancel/' + encodeURIComponent(orderId), { method: 'POST' })
+            .then(function(r) { return r.json(); })
+            .catch(function() {});
+    }
+})();
+</script>
 </html>

@@ -32,6 +32,7 @@
 <div class="flex space-x-6">
 <button onclick="showView('dashboard')" class="text-gray-700 hover:text-blue-600 font-medium">Dashboard</button>
 <button onclick="showView('companies')" class="text-gray-700 hover:text-blue-600 font-medium">Empresas</button>
+<button onclick="showView('orders')" class="text-gray-700 hover:text-blue-600 font-medium">Ordenes</button>
 <button id="nav-users-btn" onclick="showView('users')" class="text-gray-700 hover:text-blue-600 font-medium hidden">Usuarios</button>
 </div>
 <div class="flex items-center space-x-4">
@@ -53,7 +54,14 @@
 <div class="bg-white p-6 rounded-xl shadow-sm border"><div class="text-3xl font-bold text-blue-600" id="metric-tenants">0</div><div class="text-gray-600">Empresas</div></div>
 <div class="bg-white p-6 rounded-xl shadow-sm border"><div class="text-3xl font-bold text-green-600" id="metric-conversations">0</div><div class="text-gray-600">Conversaciones</div></div>
 <div class="bg-white p-6 rounded-xl shadow-sm border"><div class="text-3xl font-bold text-purple-600" id="metric-leads">0</div><div class="text-gray-600">Leads</div></div>
-<div class="bg-white p-6 rounded-xl shadow-sm border"><div class="text-3xl font-bold text-orange-600" id="metric-revenue"></div><div class="text-gray-600">Ingresos Est.</div></div>
+<div class="bg-white p-6 rounded-xl shadow-sm border"><div class="text-3xl font-bold text-orange-600" id="metric-revenue"></div><div class="text-gray-600">Ingresos (mes)</div></div>
+</div>
+
+<!-- INGRESOS POR MES -->
+<div class="bg-white p-6 rounded-xl shadow-sm border mb-6">
+<h3 class="font-bold mb-4">Ingresos por Mes (ordenes pagadas)</h3>
+<canvas id="chart-revenue" height="100"></canvas>
+<div id="empty-chart-revenue" class="hidden text-center py-10 text-gray-400">Sin ingresos aun</div>
 </div>
 
 <!-- GRAFICAS -->
@@ -282,6 +290,16 @@
 </div>
 </div>
 
+<!-- VISTA ORDENES -->
+<div id="view-orders" class="view-content hidden max-w-7xl mx-auto px-4 py-8">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-2xl font-bold">Ordenes de Pago</h2>
+<button onclick="loadOrders()" class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 font-semibold text-sm"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button>
+</div>
+<div id="orders-summary" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>
+<div id="orders-list"></div>
+</div>
+
 </div>
 
 <script>
@@ -441,6 +459,7 @@ function showView(view) {
     if (view === 'companies') loadCompanies();
     if (view === 'dashboard') loadDashboard();
     if (view === 'users') loadUsers();
+    if (view === 'orders') loadOrders();
 }
 
 function selectTheme(element) {
@@ -551,13 +570,14 @@ async function loadDashboard() {
             document.getElementById('metric-tenants').innerText = m.total_tenants || 0;
             document.getElementById('metric-conversations').innerText = m.total_conversations || 0;
             document.getElementById('metric-leads').innerText = m.total_leads || 0;
-            document.getElementById('metric-revenue').innerText = '$' + (m.monthly_revenue_estimate || 0).toLocaleString();
+            document.getElementById('metric-revenue').innerText = '$' + (m.revenue_this_month || 0).toLocaleString();
             
             if (data.charts) {
                 renderIndustriesChart(data.charts.industries);
                 renderPackagesChart(data.charts.packages);
                 renderLeadsChart(data.charts.leads_timeline);
                 renderTopCompanies(data.charts.top_companies);
+                renderRevenueChart(data.charts.revenue_monthly);
             }
             renderRecentLeads(data.recent_leads);
         }
@@ -631,6 +651,40 @@ function renderPackagesChart(packages) {
         options: {
             responsive: true,
             plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+function renderRevenueChart(monthly) {
+    var ctx = document.getElementById('chart-revenue');
+    if (!ctx) return;
+    var emptyEl = document.getElementById('empty-chart-revenue');
+    if (!monthly || monthly.every(function(item) { return item.amount === 0; })) {
+        ctx.classList.add('hidden');
+        emptyEl.classList.remove('hidden');
+        if (charts.revenue) { charts.revenue.destroy(); charts.revenue = null; }
+        return;
+    }
+    ctx.classList.remove('hidden');
+    emptyEl.classList.add('hidden');
+    if (charts.revenue) charts.revenue.destroy();
+    var labels = monthly.map(function(item) { return item.label.substring(5); });
+    var values = monthly.map(function(item) { return item.amount; });
+    charts.revenue = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Ingresos ($)',
+                data: values,
+                backgroundColor: '#f59e0b',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
         }
     });
 }
@@ -1001,6 +1055,106 @@ async function createCompany() {
     } catch (e) {
         status.innerText = 'Error: ' + e.message;
         status.className = 'text-center text-sm font-semibold text-red-600';
+    }
+}
+
+function orderStatusBadge(status) {
+    if (status === 'paid') return '<span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">Pagada</span>';
+    if (status === 'pending') return '<span class="px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-800">Pendiente</span>';
+    if (status === 'cancelled') return '<span class="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">Cancelada</span>';
+    return '<span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">' + escapeHtml(String(status)) + '</span>';
+}
+
+function orderActions(o) {
+    var actions = '';
+    if (o.status === 'paid' && o.generated && o.preview_url) {
+        actions += '<a href="' + escapeHtml(o.preview_url) + '" target="_blank" class="text-blue-600 hover:text-blue-800 mr-3"><i class="fa-solid fa-eye mr-1"></i>Ver entrega</a>';
+    }
+    if (o.status === 'paid' && !o.generated) {
+        actions += '<button onclick="regenerateOrder(\'' + escapeHtml(o.order_id) + '\')" class="text-green-600 hover:text-green-800"><i class="fa-solid fa-rotate mr-1"></i>Regenerar entrega</button>';
+    }
+    if (o.status === 'pending') {
+        actions += '<button onclick="cancelOrder(\'' + escapeHtml(o.order_id) + '\')" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-ban mr-1"></i>Cancelar</button>';
+    }
+    return actions || '<span class="text-gray-400 text-xs">Sin acciones</span>';
+}
+
+async function loadOrders() {
+    try {
+        var res = await apiRequest('/api/payments/orders');
+        var data = await res.json();
+        var container = document.getElementById('orders-list');
+        var summary = document.getElementById('orders-summary');
+        if (!data.orders || data.orders.length === 0) {
+            container.innerHTML = '<p class="text-gray-500">No hay ordenes de pago</p>';
+            summary.innerHTML = '';
+            return;
+        }
+        var paid = data.orders.filter(function(o) { return o.status === 'paid'; });
+        var pending = data.orders.filter(function(o) { return o.status === 'pending'; });
+        var revenue = paid.reduce(function(sum, o) { return sum + (o.amount || 0); }, 0);
+        summary.innerHTML =
+            '<div class="bg-white p-5 rounded-xl shadow-sm border"><div class="text-2xl font-bold text-blue-600">' + data.orders.length + '</div><div class="text-gray-600">Ordenes totales</div></div>' +
+            '<div class="bg-white p-5 rounded-xl shadow-sm border"><div class="text-2xl font-bold text-amber-600">' + pending.length + '</div><div class="text-gray-600">Pendientes</div></div>' +
+            '<div class="bg-white p-5 rounded-xl shadow-sm border"><div class="text-2xl font-bold text-green-600">$' + revenue.toLocaleString() + '</div><div class="text-gray-600">Ingresos cobrados</div></div>';
+        var html = '<div class="overflow-x-auto bg-white rounded-xl shadow-sm border"><table class="w-full">';
+        html += '<thead class="bg-gray-50"><tr><th class="px-4 py-2 text-left">Empresa</th><th class="px-4 py-2 text-left">ID</th><th class="px-4 py-2 text-left">Paquete</th><th class="px-4 py-2 text-left">Monto</th><th class="px-4 py-2 text-left">Metodo</th><th class="px-4 py-2 text-left">Estado</th><th class="px-4 py-2 text-left">Creada</th><th class="px-4 py-2 text-left">Acciones</th></tr></thead>';
+        html += '<tbody>';
+        for (var i = 0; i < data.orders.length; i++) {
+            var o = data.orders[i];
+            html += '<tr class="border-t">';
+            html += '<td class="px-4 py-3 font-semibold">' + escapeHtml(o.company_name || o.tenant_id) + '</td>';
+            html += '<td class="px-4 py-3 text-sm text-gray-500">' + escapeHtml(o.tenant_id) + '</td>';
+            html += '<td class="px-4 py-3">' + escapeHtml(o.package) + '</td>';
+            html += '<td class="px-4 py-3">$' + (o.amount || 0).toLocaleString() + '</td>';
+            html += '<td class="px-4 py-3 text-sm text-gray-500">' + escapeHtml(o.provider) + '</td>';
+            html += '<td class="px-4 py-3">' + orderStatusBadge(o.status) + '</td>';
+            html += '<td class="px-4 py-3 text-sm text-gray-500">' + (o.created_at ? o.created_at.split(' ')[0] : 'N/A') + '</td>';
+            html += '<td class="px-4 py-3 text-sm">' + orderActions(o) + '</td>';
+            html += '</tr>';
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (e) {
+        console.error('Error cargando ordenes:', e);
+        document.getElementById('orders-list').innerHTML = '<p class="text-red-600">Error: ' + escapeHtml(e.message) + '</p>';
+    }
+}
+
+async function regenerateOrder(orderId) {
+    if (!confirm('Regenerar la entrega de esta orden?')) return;
+    var btn = event.target.closest('button');
+    if (btn) btn.innerText = 'Generando...';
+    try {
+        var res = await fetch('/api/payments/finalize/' + encodeURIComponent(orderId), { method: 'POST' });
+        var data = await res.json();
+        if (data.status === 'success') {
+            alert('Entrega generada. Abriendo en una pestaña nueva...');
+            if (data.preview_url) window.open(data.preview_url, '_blank');
+            loadOrders();
+        } else {
+            alert('Error: ' + (data.detail || 'desconocido'));
+            if (btn) btn.innerText = 'Regenerar entrega';
+        }
+    } catch (e) {
+        alert('Error: ' + e.message);
+        if (btn) btn.innerText = 'Regenerar entrega';
+    }
+}
+
+async function cancelOrder(orderId) {
+    if (!confirm('Cancelar esta orden pendiente?')) return;
+    try {
+        var res = await fetch('/api/payments/cancel/' + encodeURIComponent(orderId), { method: 'POST' });
+        var data = await res.json();
+        if (data.status === 'success') {
+            alert('Orden cancelada');
+            loadOrders();
+        } else {
+            alert('Error: ' + (data.detail || 'desconocido'));
+        }
+    } catch (e) {
+        alert('Error: ' + e.message);
     }
 }
 

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from app.schemas import CheckoutRequest
-from app.deps import DATA_DIR, auth_service, check_rate_limit, create_tenant_record, payment_service, templates
+from app.deps import DATA_DIR, auth_service, check_rate_limit, payment_service, templates, validate_tenant_id
 
 logger = logging.getLogger(__name__)
 
@@ -24,25 +24,21 @@ async def payments_config():
 
 @router.post("/api/payments/checkout")
 async def create_payment_checkout(request: CheckoutRequest, current_user: dict = Depends(auth_service.get_current_user)):
-    """Crear tenant + orden + redirección al checkout de la pasarela"""
+    """Crear orden + redirección al checkout. El tenant se crea solo tras el pago confirmado."""
     try:
         provider = request.provider
         valid_providers = [p["id"] for p in payment_service.get_available_providers()]
         if provider not in valid_providers:
             raise HTTPException(status_code=400, detail=f"Metodo de pago no disponible. Opciones: {', '.join(valid_providers)}")
 
-        tenant_data = {
-            "tenant_id": request.tenant_id,
+        tenant_id = validate_tenant_id(request.tenant_id)
+
+        site_config = {
             "company_name": request.company_name,
             "industry": request.industry,
             "system_prompt": request.system_prompt,
             "main_objective": request.main_objective,
             "escalation_email": request.escalation_email,
-        }
-        create_tenant_record(tenant_data)
-
-        site_config = {
-            "industry": request.industry,
             "objective": request.objective,
             "audience": request.audience,
             "tone": request.tone,
@@ -55,7 +51,7 @@ async def create_payment_checkout(request: CheckoutRequest, current_user: dict =
             "contact_phone": request.contact_phone,
             "contact_address": request.contact_address,
         }
-        order = payment_service.create_order(request.tenant_id, request.package, provider, site_config)
+        order = payment_service.create_order(tenant_id, request.package, provider, site_config)
         checkout_url = await payment_service.create_checkout(order)
         return {
             "status": "success",
@@ -97,6 +93,62 @@ async def finalize_payment(order_id: str, http_request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/api/payments/orders")
+async def list_payment_orders(current_user: dict = Depends(auth_service.get_current_user)):
+    """Lista de todas las ordenes de pago (solo admin)"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Solo administradores")
+    try:
+        return {"status": "success", "orders": payment_service.list_orders()}
+    except Exception as e:
+        logger.error(f"Error listando ordenes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/payments/cancel/{order_id}")
+async def cancel_payment_order(order_id: str):
+    """Marca una orden no pagada como cancelada (publico para la pagina de cancelacion)"""
+    try:
+        return payment_service.cancel_order(order_id)
+    except Exception as e:
+        logger.error(f"Error cancelando orden: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/payments/webhook/stripe")
+async def stripe_webhook(http_request: Request):
+    """Webhook de Stripe: confirma el pago y genera la entrega"""
+    raw = await http_request.body()
+    signature = http_request.headers.get("stripe-signature", "")
+    try:
+        return await payment_service.handle_stripe_webhook(raw, signature)
+    except Exception as e:
+        logger.error(f"Error en webhook de Stripe: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/payments/webhook/mercadopago")
+async def mercadopago_webhook(http_request: Request):
+    """Webhook de Mercado Pago: confirma el pago y genera la entrega"""
+    raw = await http_request.body()
+    try:
+        return await payment_service.handle_mp_webhook(raw)
+    except Exception as e:
+        logger.error(f"Error en webhook de Mercado Pago: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/payments/webhook/paypal")
+async def paypal_webhook(http_request: Request):
+    """Webhook de PayPal: confirma el pago y genera la entrega"""
+    raw = await http_request.body()
+    try:
+        return await payment_service.handle_paypal_webhook(raw)
+    except Exception as e:
+        logger.error(f"Error en webhook de PayPal: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/checkout-return", response_class=HTMLResponse)
 async def checkout_return_page(request: Request):
     """Pagina que confirma el pago y dispara la generacion"""
@@ -104,6 +156,6 @@ async def checkout_return_page(request: Request):
 
 
 @router.get("/checkout-cancel", response_class=HTMLResponse)
-async def checkout_cancel_page(request: Request):
+async def checkout_cancel_page(request: Request, order_id: str = ""):
     """Pagina de pago cancelado"""
-    return templates.TemplateResponse("checkout_cancel.html", {"request": request, "message": "Pago cancelado"})
+    return templates.TemplateResponse("checkout_cancel.html", {"request": request, "order_id": order_id, "message": "Pago cancelado"})

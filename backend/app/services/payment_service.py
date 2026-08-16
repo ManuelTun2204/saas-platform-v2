@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import os
 import json
 import logging
@@ -28,12 +30,21 @@ PACKAGES = {
 }
 
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN", "")
 PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "")
 PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET", "")
 PAYPAL_API_BASE = os.getenv("PAYPAL_API_BASE", "https://api-m.sandbox.paypal.com")
 
 _DEMO_PROVIDER = {"id": "demo", "name": "Demo (pago simulado)", "test": True}
+
+
+def _atomic_write_json(path: Path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    with open(tmp, "w", encoding="utf-8-sig") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    tmp.replace(path)
 
 
 def _read_orders():
@@ -48,14 +59,21 @@ def _read_orders():
 
 
 def _write_orders(orders):
-    ORDERS_FILE.parent.mkdir(exist_ok=True)
-    with open(ORDERS_FILE, "w", encoding="utf-8-sig") as f:
-        json.dump(orders, f, indent=2, ensure_ascii=False)
+    _atomic_write_json(ORDERS_FILE, orders)
 
 
 def _get_order(order_id):
     for o in _read_orders():
         if o.get("order_id") == order_id:
+            return o
+    return None
+
+
+def _find_order_by_provider_id(provider_id):
+    if not provider_id:
+        return None
+    for o in _read_orders():
+        if o.get("provider_id") == provider_id:
             return o
     return None
 
@@ -370,21 +388,175 @@ class PaymentService:
         }
 
     def _mark_tenant_paid(self, tenant_id, order_id):
+        order = _get_order(order_id)
+        cfg = order.get("site_config", {}) if order else {}
         tenants_file = DATA_DIR / "tenants.json"
         tenants = []
         if tenants_file.exists():
             try:
                 with open(tenants_file, "r", encoding="utf-8-sig") as f:
-                    tenants = json.load(f)
+                    loaded = json.load(f)
+                if isinstance(loaded, list):
+                    tenants = loaded
             except Exception:
                 tenants = []
-        for t in tenants:
-            if t.get("tenant_id") == tenant_id or t.get("id") == tenant_id:
-                t["payment_status"] = "paid"
-                t["payment_order_id"] = order_id
-                break
-        with open(tenants_file, "w", encoding="utf-8-sig") as f:
-            json.dump(tenants, f, indent=2, ensure_ascii=False)
+        idx = next(
+            (i for i, t in enumerate(tenants)
+             if t.get("tenant_id") == tenant_id or t.get("id") == tenant_id),
+            None
+        )
+        default_prompt = f"Eres el asistente virtual de {cfg.get('company_name') or tenant_id}"
+        if idx is None:
+            tenants.append({
+                "id": tenant_id,
+                "tenant_id": tenant_id,
+                "company_name": cfg.get("company_name") or tenant_id,
+                "industry": cfg.get("industry", ""),
+                "system_prompt": cfg.get("system_prompt", default_prompt),
+                "main_objective": cfg.get("main_objective", ""),
+                "escalation_email": cfg.get("escalation_email", ""),
+                "package": order.get("package", "") if order else "",
+                "payment_status": "paid",
+                "payment_order_id": order_id,
+                "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            })
+        else:
+            t = tenants[idx]
+            t["payment_status"] = "paid"
+            t["payment_order_id"] = order_id
+            t.setdefault("package", order.get("package", "") if order else "")
+            t.setdefault("company_name", cfg.get("company_name") or tenant_id)
+            t.setdefault("industry", cfg.get("industry", ""))
+            t.setdefault("system_prompt", cfg.get("system_prompt", default_prompt))
+            t.setdefault("main_objective", cfg.get("main_objective", ""))
+            t.setdefault("escalation_email", cfg.get("escalation_email", ""))
+        _atomic_write_json(tenants_file, tenants)
+
+    def list_orders(self):
+        orders = sorted(_read_orders(), key=lambda o: o.get("created_at", ""), reverse=True)
+        result = []
+        for o in orders:
+            cfg = o.get("site_config", {})
+            result.append({
+                "order_id": o.get("order_id", ""),
+                "tenant_id": o.get("tenant_id", ""),
+                "company_name": cfg.get("company_name", "") or o.get("tenant_id", ""),
+                "package": o.get("package", ""),
+                "amount": o.get("amount", 0),
+                "currency": o.get("currency", CURRENCY),
+                "provider": o.get("provider", ""),
+                "status": o.get("status", ""),
+                "generated": o.get("generated", False),
+                "preview_url": o.get("preview_url", ""),
+                "created_at": o.get("created_at", ""),
+                "updated_at": o.get("updated_at", ""),
+            })
+        return result
+
+    def cancel_order(self, order_id):
+        order = _get_order(order_id)
+        if not order:
+            return {"status": "error", "detail": "Orden no encontrada"}
+        if order.get("status") == "paid":
+            return {"status": "error", "detail": "Una orden pagada no puede cancelarse"}
+        _update_order(order_id, {"status": "cancelled"})
+        return {"status": "success", "order_id": order_id}
+
+    async def handle_stripe_webhook(self, raw_body: bytes, signature: str):
+        if STRIPE_WEBHOOK_SECRET:
+            try:
+                parts = {}
+                for part in signature.split(","):
+                    k, _, v = part.partition("=")
+                    parts[k.strip()] = v.strip()
+                if not parts.get("t") or not parts.get("v1"):
+                    raise ValueError("Cabecera incompleta")
+                signed = f"{parts['t']}.{raw_body.decode('utf-8')}".encode()
+                expected = hmac.new(STRIPE_WEBHOOK_SECRET.encode(), signed, hashlib.sha256).hexdigest()
+                if not hmac.compare_digest(expected, parts["v1"]):
+                    raise ValueError("Firma invalida")
+            except Exception as e:
+                logger.warning(f"Stripe webhook: firma invalida: {e}")
+                return {"status": "error", "detail": "Firma invalida"}
+        try:
+            event = json.loads(raw_body.decode("utf-8"))
+        except Exception:
+            return {"status": "error", "detail": "Payload invalido"}
+        etype = event.get("type", "")
+        obj = event.get("data", {}).get("object", {})
+        if etype not in ("checkout.session.completed", "payment_intent.succeeded"):
+            return {"status": "ignored", "detail": f"Evento no manejado: {etype}"}
+        order_id = obj.get("client_reference_id", "") or obj.get("metadata", {}).get("order_id", "")
+        if not order_id:
+            order = _find_order_by_provider_id(obj.get("id", "") or obj.get("payment_intent", ""))
+            if order:
+                order_id = order["order_id"]
+        if not order_id or _get_order(order_id) is None:
+            return {"status": "ignored", "detail": "Orden no encontrada"}
+        _update_order(order_id, {"status": "paid"})
+        return await self.finalize(order_id)
+
+    async def handle_mp_webhook(self, raw_body: bytes):
+        if not MP_ACCESS_TOKEN:
+            return {"status": "error", "detail": "Mercado Pago no configurado"}
+        try:
+            payload = json.loads(raw_body.decode("utf-8"))
+        except Exception:
+            return {"status": "error", "detail": "Payload invalido"}
+        payment_id = payload.get("data", {}).get("id")
+        if not payment_id:
+            return {"status": "ignored", "detail": "Sin id de pago"}
+        async with httpx.AsyncClient() as client:
+            r = await client.get(
+                f"https://api.mercadopago.com/v1/payments/{payment_id}",
+                headers={"Authorization": f"Bearer {MP_ACCESS_TOKEN}"},
+                timeout=30,
+            )
+        if r.status_code >= 400:
+            logger.error(f"MP webhook: no se pudo verificar pago {payment_id}: {r.text}")
+            return {"status": "error", "detail": "No se pudo verificar el pago"}
+        payment = r.json()
+        if payment.get("status") != "approved":
+            return {"status": "ignored", "detail": "Pago no aprobado"}
+        order_id = payment.get("external_reference", "")
+        if not order_id or _get_order(order_id) is None:
+            return {"status": "ignored", "detail": "Orden no encontrada"}
+        _update_order(order_id, {"status": "paid"})
+        return await self.finalize(order_id)
+
+    async def handle_paypal_webhook(self, raw_body: bytes):
+        try:
+            payload = json.loads(raw_body.decode("utf-8"))
+        except Exception:
+            return {"status": "error", "detail": "Payload invalido"}
+        event_type = payload.get("event_type", "")
+        if event_type not in ("PAYMENT.CAPTURE.COMPLETED", "CHECKOUT.ORDER.APPROVED", "CHECKOUT.ORDER.COMPLETED"):
+            return {"status": "ignored", "detail": f"Evento no manejado: {event_type}"}
+        resource = payload.get("resource", {})
+        related = resource.get("supplementary_data", {}).get("related_ids", {})
+        provider_id = related.get("order_id", "") or resource.get("id", "")
+        if not provider_id:
+            return {"status": "ignored", "detail": "Sin id de recurso"}
+        order = _find_order_by_provider_id(provider_id)
+        if not order:
+            return {"status": "ignored", "detail": "Orden no encontrada"}
+        try:
+            token = await self._paypal_token()
+            async with httpx.AsyncClient() as client:
+                r = await client.get(
+                    f"{PAYPAL_API_BASE}/v2/checkout/orders/{provider_id}",
+                    headers={"Authorization": f"Bearer {token}"},
+                    timeout=30,
+                )
+            if r.status_code >= 400:
+                return {"status": "error", "detail": "No se pudo verificar la orden"}
+            if r.json().get("status") != "COMPLETED":
+                return {"status": "ignored", "detail": "Orden no completada"}
+        except Exception as e:
+            logger.error(f"PayPal webhook: error verificando: {e}")
+            return {"status": "error", "detail": "No se pudo verificar"}
+        _update_order(order["order_id"], {"status": "paid"})
+        return await self.finalize(order["order_id"])
 
     async def finalize(self, order_id):
         order = _get_order(order_id)

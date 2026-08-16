@@ -45,9 +45,9 @@ def check_rate_limit(key: str, limit: int, window_seconds: int) -> bool:
     return True
 
 
-def create_tenant_record(tenant_data: dict) -> dict:
-    """Crea un tenant en tenants.json validando el ID. Lanza HTTPException si falla."""
-    tenant_id = (tenant_data.get("tenant_id") or "").strip()
+def validate_tenant_id(tenant_id: str) -> str:
+    """Valida el ID de tenant y devuelve el valor normalizado. Lanza HTTPException si falla."""
+    tenant_id = (tenant_id or "").strip()
     if not tenant_id:
         raise HTTPException(status_code=400, detail="tenant_id es requerido")
     if len(tenant_id) < 3 or len(tenant_id) > 63:
@@ -57,6 +57,12 @@ def create_tenant_record(tenant_data: dict) -> dict:
             status_code=400,
             detail="tenant_id inválido. Solo letras, números, guiones (-) y guiones bajos (_). Sin espacios. Ej: 'dulce-demo'"
         )
+    return tenant_id
+
+
+def create_tenant_record(tenant_data: dict) -> dict:
+    """Crea un tenant en tenants.json validando el ID. Lanza HTTPException si falla."""
+    tenant_id = validate_tenant_id(tenant_data.get("tenant_id"))
     tenants_file = DATA_DIR / "tenants.json"
     tenants = []
     if tenants_file.exists():

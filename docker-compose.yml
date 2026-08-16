@@ -25,6 +25,9 @@
       PRICE_FULL: ${PRICE_FULL:-399}
       PRICE_WEB_CHAT: ${PRICE_WEB_CHAT:-249}
       PRICE_CHAT_ONLY: ${PRICE_CHAT_ONLY:-99}
+      PRICE_SEO_ONLY: ${PRICE_SEO_ONLY:-99}
+      HF_HUB_OFFLINE: "1"
+      HF_HUB_DISABLE_TELEMETRY: "1"
     volumes:
       - ./data:/app/data
     restart: always
