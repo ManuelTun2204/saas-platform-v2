@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ hero_title }} | Soluciones Premium</title>
-    <meta name="description" content="{{ hero_subtitle }}">
+    <title>{{ seo_title or (hero_title ~ ' | Servicios') }}</title>
+    <meta name="description" content="{{ seo_description or hero_subtitle }}">
+    <meta name="keywords" content="{{ seo_keywords or (company_name ~ ', servicios profesionales') }}">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="{{ seo_title or hero_title }}">
+    <meta property="og:description" content="{{ seo_description or hero_subtitle }}">
+    <meta property="og:type" content="website">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family={{ google_font }}:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>

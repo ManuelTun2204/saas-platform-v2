@@ -141,6 +141,9 @@ async def get_global_analytics(current_user: dict = Depends(require_admin)):
             top_companies.append({"name": name, "conversations": count})
 
         tenant_name_map = {t.get("tenant_id") or t.get("id"): t.get("company_name", "") for t in tenants}
+        leads_nuevos = sum(1 for l in leads if l.get("status", "nuevo") == "nuevo")
+        leads_contactados = sum(1 for l in leads if l.get("status") == "contactado")
+        leads_convertidos = sum(1 for l in leads if l.get("status") == "convertido")
         recent_leads = []
         for lead in sorted(leads, key=lambda l: l.get("timestamp", ""), reverse=True)[:10]:
             tid = lead.get("tenant_id", "")
@@ -148,6 +151,7 @@ async def get_global_analytics(current_user: dict = Depends(require_admin)):
                 "email": lead.get("email", ""),
                 "company": tenant_name_map.get(tid, tid),
                 "question": lead.get("question", ""),
+                "status": lead.get("status", "nuevo"),
                 "timestamp": lead.get("timestamp", "")
             })
 
@@ -157,6 +161,9 @@ async def get_global_analytics(current_user: dict = Depends(require_admin)):
                 "total_tenants": total_tenants,
                 "total_conversations": total_conversations,
                 "total_leads": total_leads,
+                "leads_nuevos": leads_nuevos,
+                "leads_contactados": leads_contactados,
+                "leads_convertidos": leads_convertidos,
                 "monthly_revenue_estimate": total_revenue,
                 "paid_tenants": len(paid_tenants),
                 "revenue_this_month": round(revenue_this_month, 2),

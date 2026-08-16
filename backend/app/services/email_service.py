@@ -107,3 +107,76 @@ class EmailService:
         except Exception as e:
             logger.error(f"❌ Error en send_lead_notification: {e}")
             return False
+
+    async def send_lead_confirmation(self, lead_email: str, company_name: str):
+        """Envía un correo de confirmación al visitante que dejó su correo"""
+        if not self.api_key:
+            logger.warning("Email no enviado: falta RESEND_API_KEY")
+            return False
+
+        try:
+            subject = f"¡Gracias por tu interés en {company_name}! 💬"
+
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }}
+                    .container {{ max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
+                    .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }}
+                    .header h1 {{ margin: 0; font-size: 24px; }}
+                    .content {{ padding: 30px; }}
+                    .note {{ background: #f8f9fa; padding: 16px; border-radius: 8px; border-left: 4px solid #667eea; color: #555; }}
+                    .footer {{ background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>¡Gracias por escribirnos!</h1>
+                        <p>Hemos recibido tu mensaje en {company_name}</p>
+                    </div>
+                    <div class="content">
+                        <p>Hola,</p>
+                        <p>Gracias por tu interés en <strong>{company_name}</strong>. Hemos recibido tu solicitud
+                        y una persona del equipo te contactará muy pronto.</p>
+                        <div class="note">
+                            <p><strong>💡 Mientras tanto:</strong> si tienes alguna otra pregunta,
+                            vuelve al chat y escríbenos cuando quieras. Estamos para ayudarte.</p>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <p>Mensaje automático de {company_name}</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://api.resend.com/emails",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "from": self.from_email,
+                        "to": [lead_email],
+                        "subject": subject,
+                        "html": html_content
+                    },
+                    timeout=30.0
+                )
+
+                if response.status_code == 200:
+                    logger.info(f"✅ Email de confirmacion enviado a: {lead_email}")
+                    return True
+                else:
+                    logger.error(f"❌ Error enviando confirmacion: {response.status_code} - {response.text}")
+                    return False
+
+        except Exception as e:
+            logger.error(f"❌ Error en send_lead_confirmation: {e}")
+            return False

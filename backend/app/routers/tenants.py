@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 import os
@@ -16,6 +17,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+
+EDITABLE_KEYS = {
+    "company_name", "hero_title", "hero_subtitle", "hero_cta", "hero_image",
+    "about_title", "about_text", "about_image", "contact_email", "contact_phone",
+    "contact_address", "brand_hex", "brand_secondary", "visual_style",
+    "services", "gallery_images",
+    "seo_title", "seo_description", "seo_keywords",
+}
 
 
 @router.post("/api/tenants")
@@ -150,6 +159,7 @@ async def chat_endpoint(tenant_id: str, request: ChatRequest, http_request: Requ
         question = request.question
         session_id = (request.session_id or "default")[:100]
         user_email = request.email
+        source = request.source
 
         answer = await rag_service.query(tenant_id, question, session_id=session_id)
 
@@ -159,11 +169,17 @@ async def chat_endpoint(tenant_id: str, request: ChatRequest, http_request: Requ
             user_email = detected_email.group()
 
         if user_email:
+            lead_id = hashlib.sha1(
+                f"{user_email}|{tenant_id}|{session_id}|{datetime.now().isoformat()}".encode()
+            ).hexdigest()[:12]
             lead_data = {
+                "id": lead_id,
                 "tenant_id": tenant_id,
                 "email": user_email,
                 "question": question,
                 "session_id": session_id,
+                "source": source,
+                "status": "nuevo",
                 "timestamp": datetime.now().isoformat()
             }
 
@@ -185,6 +201,10 @@ async def chat_endpoint(tenant_id: str, request: ChatRequest, http_request: Requ
                         lead_email=user_email,
                         question=question,
                         answer=answer
+                    )
+                    await email_service.send_lead_confirmation(
+                        lead_email=user_email,
+                        company_name=company_name
                     )
                     logger.info(f"✅ Email de lead enviado: {user_email}")
                 except Exception as email_error:
@@ -254,7 +274,10 @@ async def get_site_editor_data(tenant_id: str, current_user: dict = Depends(requ
             "brand_secondary": site_data.get("brand_secondary", "#764ba2"),
             "visual_style": site_data.get("visual_style", "moderno"),
             "services": site_data.get("services", []),
-            "gallery_images": site_data.get("gallery_images", [])
+            "gallery_images": site_data.get("gallery_images", []),
+            "seo_title": site_data.get("seo_title", ""),
+            "seo_description": site_data.get("seo_description", ""),
+            "seo_keywords": site_data.get("seo_keywords", ""),
         }
         return {"status": "success", "data": editable}
     except HTTPException:
@@ -274,7 +297,7 @@ async def save_site_editor_data(tenant_id: str, data: dict, current_user: dict =
 
         site_data = read_json_file(site_data_file, {})
         for key in data:
-            if key in site_data:
+            if key in EDITABLE_KEYS:
                 site_data[key] = data[key]
 
         write_json_atomic(site_data_file, site_data)

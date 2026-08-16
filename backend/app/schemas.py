@@ -45,6 +45,11 @@ class ChatRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=2000)
     session_id: str = Field(default="", max_length=100)
     email: str = Field(default="", max_length=254)
+    source: str = Field(default="", max_length=500)
+
+
+class LeadUpdate(BaseModel):
+    status: str
 
 
 class CheckoutRequest(BaseModel):

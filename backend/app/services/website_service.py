@@ -556,6 +556,10 @@ class WebsiteService:
         site_data["contact_address"] = contact_address
         site_data["page_type"] = page_type
         site_data["visual_style"] = visual_style
+        # SEO: título, descripción y palabras clave con valores por defecto editables
+        site_data.setdefault("seo_title", f"{site_data.get('company_name', tenant_id)} | {industry.title()} | Servicios")
+        site_data.setdefault("seo_description", site_data.get("hero_subtitle", f"Servicios profesionales de {industry}"))
+        site_data.setdefault("seo_keywords", f"{industry}, {site_data.get('company_name', tenant_id)}, servicios profesionales, {visual_style}")
         deliverables = []
         preview_url = "#"
         try:

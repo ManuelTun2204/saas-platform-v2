@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ company_name }} | Portfolio</title>
+    <title>{{ seo_title or (company_name ~ ' | Portfolio') }}</title>
+    <meta name="description" content="{{ seo_description or tagline }}">
+    <meta name="keywords" content="{{ seo_keywords or (company_name ~ ', portafolio, proyectos') }}">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="{{ seo_title or company_name }}">
+    <meta property="og:description" content="{{ seo_description or tagline }}">
+    <meta property="og:type" content="website">
     <link href="https://fonts.googleapis.com/css2?family={{ font_family | replace(' ', '+') }}:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --primary: {{ primary_color }}; --dark: #0f172a; }

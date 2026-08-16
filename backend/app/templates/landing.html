@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% if seo_enabled %}
-    <title>{{ company_name }} | {{ industry | title }}</title>
-    <meta name="description" content="{{ hero_subtitle }}">
-    <meta name="keywords" content="{{ industry }}, {{ company_name }}, servicios profesionales">
-    {% else %}
-    <title>{{ company_name }}</title>
-    {% endif %}
+    <title>{{ seo_title or (company_name ~ ' | ' ~ (industry | title) ~ ' | Servicios') }}</title>
+    <meta name="description" content="{{ seo_description or hero_subtitle }}">
+    <meta name="keywords" content="{{ seo_keywords or (industry ~ ', ' ~ company_name ~ ', servicios profesionales') }}">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="{{ seo_title or company_name }}">
+    <meta property="og:description" content="{{ seo_description or hero_subtitle }}">
+    <meta property="og:type" content="website">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

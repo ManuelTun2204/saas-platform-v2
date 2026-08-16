@@ -11,6 +11,10 @@
     };
 
     var sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    var emailCaptured = false;
+    var capturedEmail = '';
+    var userMessageCount = 0;
+    var emailAskShown = false;
 
     var widgetApiBase = (function() {
         var script = document.currentScript;
@@ -124,8 +128,12 @@
                 chip.onmouseover = function() { chip.style.background = CONFIG.primaryColor + '11'; chip.style.borderColor = CONFIG.primaryColor; };
                 chip.onmouseout = function() { chip.style.background = '#ffffff'; chip.style.borderColor = CONFIG.primaryColor + '44'; };
                 chip.onclick = function() {
-                    input.value = text;
-                    sendMessage();
+                    if (/contacten|contactar|correo|email|email/i.test(text)) {
+                        askEmail();
+                    } else {
+                        input.value = text;
+                        sendMessage();
+                    }
                 };
                 quick.appendChild(chip);
             })(CONFIG.quickReplies[i]);
@@ -209,13 +217,17 @@
         showTyping();
 
         try {
+            var payload = {
+                question: question,
+                session_id: sessionId,
+                source: window.location.href.substring(0, 500)
+            };
+            if (capturedEmail) payload.email = capturedEmail;
+
             var response = await fetch(widgetApiBase + '/api/chat/' + CONFIG.tenantId, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    question: question,
-                    session_id: sessionId
-                })
+                body: JSON.stringify(payload)
             });
 
             var data = await response.json();
@@ -234,5 +246,101 @@
         sendBtn.disabled = false;
         sendBtn.style.opacity = '1';
         input.focus();
+
+        userMessageCount++;
+        if (!emailAskShown && !emailCaptured && userMessageCount >= 2) {
+            askEmail();
+        }
+    }
+
+    function askEmail() {
+        if (emailAskShown || emailCaptured) return;
+        emailAskShown = true;
+
+        var row = document.createElement('div');
+        row.style.marginBottom = '12px';
+        row.style.display = 'flex';
+        row.style.flexDirection = 'column';
+        row.style.alignItems = 'flex-start';
+
+        var bubble = document.createElement('div');
+        bubble.style.padding = '11px 15px';
+        bubble.style.borderRadius = '16px 16px 16px 4px';
+        bubble.style.maxWidth = '82%';
+        bubble.style.fontSize = '14px';
+        bubble.style.lineHeight = '1.5';
+        bubble.style.wordWrap = 'break-word';
+        bubble.style.background = '#ffffff';
+        bubble.style.color = '#1f2937';
+        bubble.style.border = '1px solid #eceef1';
+        bubble.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+        bubble.textContent = '¿Me dejas tu correo para que te contactemos? 📧';
+        row.appendChild(bubble);
+
+        var form = document.createElement('div');
+        form.style.display = 'flex';
+        form.style.gap = '8px';
+        form.style.marginTop = '10px';
+        form.style.width = '82%';
+
+        var emailInput = document.createElement('input');
+        emailInput.type = 'email';
+        emailInput.placeholder = 'tu@correo.com';
+        emailInput.style.cssText = 'flex:1; min-width:0; padding:10px 12px; border:1px solid ' + CONFIG.primaryColor + '55; border-radius:12px; font-size:13px; outline:none;';
+
+        var okBtn = document.createElement('button');
+        okBtn.textContent = 'Enviar';
+        okBtn.style.cssText = 'padding:10px 14px; border:none; border-radius:12px; background:' + CONFIG.primaryColor + '; color:#ffffff; font-size:13px; cursor:pointer;';
+
+        form.appendChild(emailInput);
+        form.appendChild(okBtn);
+        row.appendChild(form);
+        messages.appendChild(row);
+        messages.scrollTop = messages.scrollHeight;
+        emailInput.focus();
+
+        function submitEmail() {
+            var value = emailInput.value.trim();
+            if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)) {
+                emailInput.style.borderColor = '#ef4444';
+                emailInput.focus();
+                return;
+            }
+            okBtn.disabled = true;
+            capturedEmail = value;
+            emailCaptured = true;
+            addMessage('user', '📧 ' + value);
+            row.remove();
+            sendEmailContact(value);
+        }
+
+        okBtn.onclick = submitEmail;
+        emailInput.onkeydown = function(e) { if (e.key === 'Enter') submitEmail(); };
+    }
+
+    async function sendEmailContact(email) {
+        showTyping();
+        try {
+            var response = await fetch(widgetApiBase + '/api/chat/' + CONFIG.tenantId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question: 'Quiero que me contacten',
+                    session_id: sessionId,
+                    email: email,
+                    source: window.location.href.substring(0, 500)
+                })
+            });
+            var data = await response.json();
+            hideTyping();
+            if (data.status === 'success') {
+                addMessage('assistant', data.answer);
+            } else {
+                addMessage('assistant', '¡Gracias! Recibimos tu correo. Te contactaremos muy pronto.');
+            }
+        } catch (error) {
+            hideTyping();
+            addMessage('assistant', '¡Gracias! Recibimos tu correo. Te contactaremos muy pronto.');
+        }
     }
 })();

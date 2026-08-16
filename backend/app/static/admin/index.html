@@ -33,6 +33,7 @@
 <button onclick="showView('dashboard')" class="text-gray-700 hover:text-blue-600 font-medium">Dashboard</button>
 <button onclick="showView('companies')" class="text-gray-700 hover:text-blue-600 font-medium">Empresas</button>
 <button onclick="showView('orders')" class="text-gray-700 hover:text-blue-600 font-medium">Ordenes</button>
+<button onclick="showView('leads')" class="text-gray-700 hover:text-blue-600 font-medium">Leads</button>
 <button id="nav-users-btn" onclick="showView('users')" class="text-gray-700 hover:text-blue-600 font-medium hidden">Usuarios</button>
 </div>
 <div class="flex items-center space-x-4">
@@ -259,6 +260,14 @@
 <div class="mt-4"><label class="block text-sm font-semibold mb-1">Titulo Principal (Hero)</label><input type="text" id="ed-hero-title" class="w-full p-3 border rounded-lg"></div>
 <div class="mt-4"><label class="block text-sm font-semibold mb-1">Subtitulo (Hero)</label><textarea id="ed-hero-subtitle" rows="2" class="w-full p-3 border rounded-lg"></textarea></div>
 <div class="mt-4"><label class="block text-sm font-semibold mb-1">Texto Sobre Nosotros</label><textarea id="ed-about-text" rows="4" class="w-full p-3 border rounded-lg"></textarea></div>
+<div class="mt-6 pt-4 border-t">
+<h4 class="font-bold text-sm mb-3 text-gray-700">SEO (aparece en Google)</h4>
+<div class="grid grid-cols-1 gap-4">
+<div><label class="block text-sm font-semibold mb-1">Titulo SEO (para Google)</label><input type="text" id="ed-seo-title" class="w-full p-3 border rounded-lg" placeholder="Ej: Cafeteria Don Jose | Cafes Artesanales"></div>
+<div><label class="block text-sm font-semibold mb-1">Descripcion SEO</label><textarea id="ed-seo-description" rows="2" class="w-full p-3 border rounded-lg" placeholder="Breve descripcion que aparece bajo el titulo en Google"></textarea></div>
+<div><label class="block text-sm font-semibold mb-1">Palabras clave (separadas por coma)</label><input type="text" id="ed-seo-keywords" class="w-full p-3 border rounded-lg" placeholder="Ej: cafe, cafeteria, desayunos"></div>
+</div>
+</div>
 <div id="editor-status" class="mt-3 text-sm"></div>
 <div class="mt-5 flex justify-end gap-3">
 <button onclick="closeEditor()" class="px-6 py-3 border rounded-lg hover:bg-gray-50">Cancelar</button>
@@ -306,6 +315,30 @@
 </div>
 <div id="orders-summary" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>
 <div id="orders-list"></div>
+</div>
+
+<!-- VISTA LEADS -->
+<div id="view-leads" class="view-content hidden max-w-7xl mx-auto px-4 py-8">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-2xl font-bold">Leads (Contactos)</h2>
+<button onclick="loadLeads()" class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 font-semibold text-sm"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+<div class="bg-white p-5 rounded-xl shadow-sm border"><div class="text-2xl font-bold text-purple-600" id="leads-count-total">0</div><div class="text-gray-600">Leads</div></div>
+<div class="bg-white p-5 rounded-xl shadow-sm border"><div class="text-2xl font-bold text-blue-600" id="leads-count-nuevo">0</div><div class="text-gray-600">Nuevos</div></div>
+<div class="bg-white p-5 rounded-xl shadow-sm border"><div class="text-2xl font-bold text-amber-600" id="leads-count-contactado">0</div><div class="text-gray-600">Contactados</div></div>
+<div class="bg-white p-5 rounded-xl shadow-sm border"><div class="text-2xl font-bold text-green-600" id="leads-count-convertido">0</div><div class="text-gray-600">Convertidos</div></div>
+</div>
+<div class="flex flex-col md:flex-row gap-3 mb-4">
+<input type="text" id="lead-search" placeholder="Buscar por correo o empresa..." class="flex-1 p-3 border rounded-lg" onkeyup="loadLeads()">
+<select id="lead-status-filter" class="p-3 border rounded-lg" onchange="loadLeads()">
+<option value="">Todos los estados</option>
+<option value="nuevo">Nuevos</option>
+<option value="contactado">Contactados</option>
+<option value="convertido">Convertidos</option>
+</select>
+</div>
+<div id="leads-list"></div>
 </div>
 
 </div>
@@ -995,6 +1028,9 @@ async function openEditor() {
             document.getElementById('ed-hero-title').value = d.hero_title || '';
             document.getElementById('ed-hero-subtitle').value = d.hero_subtitle || '';
             document.getElementById('ed-about-text').value = d.about_text || '';
+            document.getElementById('ed-seo-title').value = d.seo_title || '';
+            document.getElementById('ed-seo-description').value = d.seo_description || '';
+            document.getElementById('ed-seo-keywords').value = d.seo_keywords || '';
             document.getElementById('editor-modal').classList.remove('hidden');
         } else {
             alert('No se pudo cargar el sitio para editar.');
@@ -1021,7 +1057,10 @@ async function saveEditor() {
         contact_address: document.getElementById('ed-contact-address').value,
         hero_title: document.getElementById('ed-hero-title').value,
         hero_subtitle: document.getElementById('ed-hero-subtitle').value,
-        about_text: document.getElementById('ed-about-text').value
+        about_text: document.getElementById('ed-about-text').value,
+        seo_title: document.getElementById('ed-seo-title').value,
+        seo_description: document.getElementById('ed-seo-description').value,
+        seo_keywords: document.getElementById('ed-seo-keywords').value
     };
     try {
         var res = await apiRequest('/api/site-editor/' + currentTenantId, { method: 'POST', body: JSON.stringify(payload) });
@@ -1124,6 +1163,76 @@ function orderActions(o) {
         actions += '<button onclick="cancelOrder(\'' + escapeHtml(o.order_id) + '\')" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-ban mr-1"></i>Cancelar</button>';
     }
     return actions || '<span class="text-gray-400 text-xs">Sin acciones</span>';
+}
+
+function leadStatusBadge(status) {
+    if (status === 'nuevo') return '<span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">Nuevo</span>';
+    if (status === 'contactado') return '<span class="px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-800">Contactado</span>';
+    if (status === 'convertido') return '<span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">Convertido</span>';
+    return '<span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">' + escapeHtml(String(status)) + '</span>';
+}
+
+function leadActions(lead) {
+    var options = '<option value="nuevo"' + (lead.status === 'nuevo' ? ' selected' : '') + '>Nuevo</option>';
+    options += '<option value="contactado"' + (lead.status === 'contactado' ? ' selected' : '') + '>Contactado</option>';
+    options += '<option value="convertido"' + (lead.status === 'convertido' ? ' selected' : '') + '>Convertido</option>';
+    return '<select onchange="setLeadStatus(\'' + escapeHtml(lead.id) + '\', this.value)" class="text-sm border rounded px-2 py-1">' + options + '</select>';
+}
+
+async function setLeadStatus(leadId, status) {
+    try {
+        var res = await apiRequest('/api/leads/' + encodeURIComponent(leadId), {
+            method: 'PATCH',
+            body: JSON.stringify({ status: status })
+        });
+        var data = await res.json();
+        if (data.status !== 'success') {
+            alert('Error: ' + (data.detail || 'desconocido'));
+        }
+        loadLeads();
+    } catch (e) {
+        alert('Error: ' + e.message);
+        loadLeads();
+    }
+}
+
+async function loadLeads() {
+    var q = document.getElementById('lead-search').value.trim();
+    var status = document.getElementById('lead-status-filter').value;
+    try {
+        var url = '/api/leads?q=' + encodeURIComponent(q) + '&status=' + encodeURIComponent(status);
+        var res = await apiRequest(url);
+        var data = await res.json();
+        var container = document.getElementById('leads-list');
+        if (data.leads && data.leads.length > 0) {
+            document.getElementById('leads-count-total').textContent = data.counts.total;
+            document.getElementById('leads-count-nuevo').textContent = data.counts.nuevo;
+            document.getElementById('leads-count-contactado').textContent = data.counts.contactado;
+            document.getElementById('leads-count-convertido').textContent = data.counts.convertido;
+            var html = '<div class="overflow-x-auto bg-white rounded-xl shadow-sm border"><table class="w-full">';
+            html += '<thead class="bg-gray-50"><tr><th class="px-4 py-2 text-left">Correo</th><th class="px-4 py-2 text-left">Empresa</th><th class="px-4 py-2 text-left">Pregunta</th><th class="px-4 py-2 text-left">Pagina</th><th class="px-4 py-2 text-left">Estado</th><th class="px-4 py-2 text-left">Fecha</th><th class="px-4 py-2 text-left">Cambiar estado</th></tr></thead>';
+            html += '<tbody>';
+            for (var i = 0; i < data.leads.length; i++) {
+                var l = data.leads[i];
+                html += '<tr class="border-t">';
+                html += '<td class="px-4 py-3 font-semibold">' + escapeHtml(l.email) + '</td>';
+                html += '<td class="px-4 py-3">' + escapeHtml(l.company) + '</td>';
+                html += '<td class="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">' + escapeHtml(l.question) + '</td>';
+                html += '<td class="px-4 py-3 text-xs text-gray-500 max-w-xs truncate">' + escapeHtml(l.source || '') + '</td>';
+                html += '<td class="px-4 py-3">' + leadStatusBadge(l.status) + '</td>';
+                html += '<td class="px-4 py-3 text-sm text-gray-500">' + escapeHtml(l.timestamp) + '</td>';
+                html += '<td class="px-4 py-3">' + leadActions(l) + '</td>';
+                html += '</tr>';
+            }
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p class="text-gray-500">No hay leads' + (q || status ? ' con ese filtro' : '') + '</p>';
+        }
+    } catch (e) {
+        console.error('Error cargando leads:', e);
+        document.getElementById('leads-list').innerHTML = '<p class="text-red-600">Error: ' + escapeHtml(e.message) + '</p>';
+    }
 }
 
 async function loadOrders() {
