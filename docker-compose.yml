@@ -26,6 +26,10 @@
       PRICE_WEB_CHAT: ${PRICE_WEB_CHAT:-249}
       PRICE_CHAT_ONLY: ${PRICE_CHAT_ONLY:-99}
       PRICE_SEO_ONLY: ${PRICE_SEO_ONLY:-99}
+      # Modelos LLM (bloque de costos): Qwen3 baratos via OpenRouter, configurables sin tocar codigo
+      LLM_SITE_MODEL: ${LLM_SITE_MODEL:-qwen/qwen3-30b-a3b-instruct-2507}
+      LLM_CHAT_MODEL: ${LLM_CHAT_MODEL:-qwen/qwen3-30b-a3b-instruct-2507}
+      LLM_FALLBACK_MODEL: ${LLM_FALLBACK_MODEL:-meta-llama/llama-3.1-8b-instruct}
       HF_HUB_OFFLINE: "1"
       HF_HUB_DISABLE_TELEMETRY: "1"
     volumes:

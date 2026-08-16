@@ -1,4 +1,5 @@
-﻿import os
+﻿import logging
+import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -7,6 +8,9 @@ from fastapi.responses import HTMLResponse
 
 from app.deps import BASE_DIR, DATA_DIR
 from app.routers import auth, tenants, payments, analytics
+
+# Mostrar en consola los logs de la app (costos de IA, errores, etc.)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 app = FastAPI(title="SaaS Platform Pro API", version="1.0.0")
 

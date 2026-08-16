@@ -18,6 +18,7 @@ async def get_global_analytics(current_user: dict = Depends(require_admin)):
         conversations = read_json_file(DATA_DIR / "storage" / "conversations.json", [])
         leads = read_json_file(DATA_DIR / "storage" / "leads.json", [])
         orders = read_json_file(DATA_DIR / "storage" / "orders.json", [])
+        llm_usage = read_json_file(DATA_DIR / "storage" / "llm_usage.json", [])
 
         total_tenants = len(tenants)
         total_conversations = len(conversations)
@@ -74,6 +75,31 @@ async def get_global_analytics(current_user: dict = Depends(require_admin)):
         revenue_this_month = revenue_by_month.get(today.strftime("%Y-%m"), 0.0)
         orders_pending = len([o for o in orders if o.get("status") == "pending"])
         orders_cancelled = len([o for o in orders if o.get("status") == "cancelled"])
+
+        # Costo de IA (LLM) acumulado desde el archivo de uso
+        cost_total = 0.0
+        cost_by_month = {key: 0.0 for key in month_labels}
+        llm_calls_total = len(llm_usage)
+        for rec in llm_usage:
+            cost = rec.get("cost_usd")
+            if cost is None:
+                continue
+            try:
+                cost_total += float(cost)
+            except Exception:
+                pass
+            created = rec.get("ts", "")
+            key = created[:7] if len(created) >= 7 else ""
+            if key in cost_by_month:
+                try:
+                    cost_by_month[key] += float(cost)
+                except Exception:
+                    pass
+        llm_cost_monthly = [{"label": k, "amount": round(v, 4)} for k, v in cost_by_month.items()]
+        llm_cost_this_month = round(cost_by_month.get(today.strftime("%Y-%m"), 0.0), 4)
+        llm_calls_this_month = sum(
+            1 for rec in llm_usage if rec.get("ts", "").startswith(today.strftime("%Y-%m"))
+        )
 
         leads_by_day = {}
         today = datetime.now()
@@ -138,6 +164,10 @@ async def get_global_analytics(current_user: dict = Depends(require_admin)):
                 "orders_total": len(orders),
                 "orders_pending": orders_pending,
                 "orders_cancelled": orders_cancelled,
+                "llm_cost_this_month": llm_cost_this_month,
+                "llm_cost_total": round(cost_total, 4),
+                "llm_calls_total": llm_calls_total,
+                "llm_calls_this_month": llm_calls_this_month,
             },
             "charts": {
                 "industries": industries_count,
@@ -145,6 +175,7 @@ async def get_global_analytics(current_user: dict = Depends(require_admin)):
                 "leads_timeline": leads_timeline,
                 "top_companies": top_companies,
                 "revenue_monthly": revenue_monthly,
+                "llm_cost_monthly": llm_cost_monthly,
             },
             "recent_leads": recent_leads
         }

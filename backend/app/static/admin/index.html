@@ -50,11 +50,12 @@
 </div>
 
 <!-- METRICAS -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
 <div class="bg-white p-6 rounded-xl shadow-sm border"><div class="text-3xl font-bold text-blue-600" id="metric-tenants">0</div><div class="text-gray-600">Empresas</div></div>
 <div class="bg-white p-6 rounded-xl shadow-sm border"><div class="text-3xl font-bold text-green-600" id="metric-conversations">0</div><div class="text-gray-600">Conversaciones</div></div>
 <div class="bg-white p-6 rounded-xl shadow-sm border"><div class="text-3xl font-bold text-purple-600" id="metric-leads">0</div><div class="text-gray-600">Leads</div></div>
 <div class="bg-white p-6 rounded-xl shadow-sm border"><div class="text-3xl font-bold text-orange-600" id="metric-revenue"></div><div class="text-gray-600">Ingresos (mes)</div></div>
+<div class="bg-white p-6 rounded-xl shadow-sm border"><div class="text-3xl font-bold text-red-600" id="metric-llm-cost"></div><div class="text-gray-600">Costo IA (mes)</div></div>
 </div>
 
 <!-- INGRESOS POR MES -->
@@ -62,6 +63,13 @@
 <h3 class="font-bold mb-4">Ingresos por Mes (ordenes pagadas)</h3>
 <canvas id="chart-revenue" height="100"></canvas>
 <div id="empty-chart-revenue" class="hidden text-center py-10 text-gray-400">Sin ingresos aun</div>
+</div>
+
+<!-- COSTO IA POR MES -->
+<div class="bg-white p-6 rounded-xl shadow-sm border mb-6">
+<h3 class="font-bold mb-4">Costo IA por Mes (LLM via OpenRouter)</h3>
+<canvas id="chart-llm-cost" height="100"></canvas>
+<div id="empty-chart-llm-cost" class="hidden text-center py-10 text-gray-400">Sin uso de IA aun</div>
 </div>
 
 <!-- GRAFICAS -->
@@ -571,6 +579,7 @@ async function loadDashboard() {
             document.getElementById('metric-conversations').innerText = m.total_conversations || 0;
             document.getElementById('metric-leads').innerText = m.total_leads || 0;
             document.getElementById('metric-revenue').innerText = '$' + (m.revenue_this_month || 0).toLocaleString();
+            document.getElementById('metric-llm-cost').innerText = '$' + (m.llm_cost_this_month || 0).toLocaleString(undefined, {maximumFractionDigits: 2});
             
             if (data.charts) {
                 renderIndustriesChart(data.charts.industries);
@@ -578,6 +587,7 @@ async function loadDashboard() {
                 renderLeadsChart(data.charts.leads_timeline);
                 renderTopCompanies(data.charts.top_companies);
                 renderRevenueChart(data.charts.revenue_monthly);
+                renderLlmCostChart(data.charts.llm_cost_monthly);
             }
             renderRecentLeads(data.recent_leads);
         }
@@ -685,6 +695,43 @@ function renderRevenueChart(monthly) {
             responsive: true,
             plugins: { legend: { display: false } },
             scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+
+function renderLlmCostChart(monthly) {
+    var ctx = document.getElementById('chart-llm-cost');
+    if (!ctx) return;
+    var emptyEl = document.getElementById('empty-chart-llm-cost');
+    if (!monthly || monthly.every(function(item) { return item.amount === 0; })) {
+        ctx.classList.add('hidden');
+        emptyEl.classList.remove('hidden');
+        if (charts.llmCost) { charts.llmCost.destroy(); charts.llmCost = null; }
+        return;
+    }
+    ctx.classList.remove('hidden');
+    emptyEl.classList.add('hidden');
+    if (charts.llmCost) charts.llmCost.destroy();
+    var labels = monthly.map(function(item) { return item.label.substring(5); });
+    var values = monthly.map(function(item) { return item.amount; });
+    charts.llmCost = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Costo IA ($)',
+                data: values,
+                backgroundColor: '#ef4444',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: function(c) { return '$' + c.parsed.y.toFixed(4); } } }
+            },
+            scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return '$' + v; } } } }
         }
     });
 }
