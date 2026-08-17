@@ -13,6 +13,7 @@
     <meta property="og:type" content="website">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family={{ google_font }}:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -320,7 +321,17 @@
     </section>
 
     <footer class="bg-gray-950 text-gray-500 py-12 text-center text-sm border-t border-gray-800">
-        <p>&copy; 2026 {{ hero_title.split(' ')[0] }}. Todos los derechos reservados.</p>
+        <p class="mb-4">&copy; 2026 {{ hero_title.split(' ')[0] }}. Todos los derechos reservados.</p>
+        {% set social = social_media or {} %}
+        {% if social.facebook or social.instagram or social.tiktok or social.youtube or social.twitter %}
+        <div class="flex justify-center gap-3">
+            {% if social.facebook %}<a href="{{ social.facebook }}" target="_blank" rel="noopener" class="w-9 h-9 bg-gray-800 hover:bg-blue-600 rounded-full flex items-center justify-center transition"><i class="fab fa-facebook-f text-white text-sm"></i></a>{% endif %}
+            {% if social.instagram %}<a href="{{ social.instagram }}" target="_blank" rel="noopener" class="w-9 h-9 bg-gray-800 hover:bg-pink-600 rounded-full flex items-center justify-center transition"><i class="fab fa-instagram text-white text-sm"></i></a>{% endif %}
+            {% if social.tiktok %}<a href="{{ social.tiktok }}" target="_blank" rel="noopener" class="w-9 h-9 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition"><i class="fab fa-tiktok text-white text-sm"></i></a>{% endif %}
+            {% if social.youtube %}<a href="{{ social.youtube }}" target="_blank" rel="noopener" class="w-9 h-9 bg-gray-800 hover:bg-red-600 rounded-full flex items-center justify-center transition"><i class="fab fa-youtube text-white text-sm"></i></a>{% endif %}
+            {% if social.twitter %}<a href="{{ social.twitter }}" target="_blank" rel="noopener" class="w-9 h-9 bg-gray-800 hover:bg-blue-400 rounded-full flex items-center justify-center transition"><i class="fab fa-x-twitter text-white text-sm"></i></a>{% endif %}
+        </div>
+        {% endif %}
     </footer>
 
     {% if chatbot_enabled %}

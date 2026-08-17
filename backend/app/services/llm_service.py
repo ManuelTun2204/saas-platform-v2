@@ -176,7 +176,14 @@ Devuelve SOLO un objeto JSON válido (sin markdown, sin ```json, sin texto adici
         {{"question": "¿Pregunta sobre garantías o calidad?", "answer": "Respuesta clara y útil de 2-3 oraciones"}},
         {{"question": "¿Pregunta sobre formas de pago?", "answer": "Respuesta clara y útil de 2-3 oraciones"}},
         {{"question": "¿Pregunta sobre atención al cliente?", "answer": "Respuesta clara y útil de 2-3 oraciones"}}
-    ]
+    ],
+    "social_media": {{
+        "facebook": "https://facebook.com/nombre-empresa",
+        "instagram": "https://instagram.com/nombre-empresa",
+        "tiktok": "https://tiktok.com/@nombre-empresa",
+        "youtube": "",
+        "twitter": ""
+    }}
 }}
 
 REGLAS IMPORTANTES:

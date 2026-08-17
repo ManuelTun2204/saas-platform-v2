@@ -531,6 +531,17 @@
             <div>
                 <h3 class="text-xl font-bold mb-4 gradient-text">{{ company_name }}</h3>
                 <p class="text-gray-400">{{ hero_subtitle[:100] }}...</p>
+                <!-- Redes sociales -->
+                {% set social = social_media or {} %}
+                {% if social.facebook or social.instagram or social.tiktok or social.youtube or social.twitter %}
+                <div class="flex gap-3 mt-4">
+                    {% if social.facebook %}<a href="{{ social.facebook }}" target="_blank" rel="noopener" class="w-10 h-10 bg-gray-800 hover:bg-blue-600 rounded-full flex items-center justify-center transition"><i class="fab fa-facebook-f text-white"></i></a>{% endif %}
+                    {% if social.instagram %}<a href="{{ social.instagram }}" target="_blank" rel="noopener" class="w-10 h-10 bg-gray-800 hover:bg-pink-600 rounded-full flex items-center justify-center transition"><i class="fab fa-instagram text-white"></i></a>{% endif %}
+                    {% if social.tiktok %}<a href="{{ social.tiktok }}" target="_blank" rel="noopener" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition"><i class="fab fa-tiktok text-white"></i></a>{% endif %}
+                    {% if social.youtube %}<a href="{{ social.youtube }}" target="_blank" rel="noopener" class="w-10 h-10 bg-gray-800 hover:bg-red-600 rounded-full flex items-center justify-center transition"><i class="fab fa-youtube text-white"></i></a>{% endif %}
+                    {% if social.twitter %}<a href="{{ social.twitter }}" target="_blank" rel="noopener" class="w-10 h-10 bg-gray-800 hover:bg-blue-400 rounded-full flex items-center justify-center transition"><i class="fab fa-x-twitter text-white"></i></a>{% endif %}
+                </div>
+                {% endif %}
             </div>
             <div>
                 <h4 class="font-semibold mb-4">Enlaces</h4>
