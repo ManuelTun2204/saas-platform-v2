@@ -582,7 +582,8 @@ class WebsiteService:
                 "corporativo": {"primary": "#1e3a8a", "secondary": "#475569"},
                 "creativo": {"primary": "#ec4899", "secondary": "#8b5cf6"},
                 "natural": {"primary": "#16a34a", "secondary": "#b45309"},
-                "elegante": {"primary": "#ca8a04", "secondary": "#171717"}
+                "elegante": {"primary": "#ca8a04", "secondary": "#171717"},
+                "glassmorphism": {"primary": "#667eea", "secondary": "#764ba2"}
             }
             
             if visual_style in theme_colors:
