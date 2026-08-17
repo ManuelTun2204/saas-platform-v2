@@ -256,11 +256,40 @@
                 </button>
             </form>
 
-            <!-- Loading -->
-            <div id="loading" class="hidden text-center py-12">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p class="mt-4 text-gray-600 font-medium">Creando tu sitio web con IA...</p>
-                <p class="mt-1 text-gray-400 text-sm">Esto puede tomar 30-60 segundos</p>
+            <!-- Loading con progreso -->
+            <div id="loading" class="hidden py-8">
+                <div class="text-center mb-6">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p class="mt-4 text-gray-700 font-bold text-lg">Creando tu sitio web con IA...</p>
+                </div>
+                <!-- Barra de progreso -->
+                <div class="w-full bg-gray-200 rounded-full h-3 mb-6">
+                    <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500" style="width: 5%"></div>
+                </div>
+                <!-- Pasos -->
+                <div class="space-y-3 max-w-md mx-auto text-left text-sm" id="progress-steps">
+                    <div id="step-1" class="flex items-center gap-3 text-gray-400">
+                        <span class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center text-xs font-bold shrink-0">1</span>
+                        <span>Validando configuración...</span>
+                    </div>
+                    <div id="step-2" class="flex items-center gap-3 text-gray-400">
+                        <span class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center text-xs font-bold shrink-0">2</span>
+                        <span>Generando contenido con IA...</span>
+                    </div>
+                    <div id="step-3" class="flex items-center gap-3 text-gray-400">
+                        <span class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center text-xs font-bold shrink-0">3</span>
+                        <span>Creando imágenes y galería...</span>
+                    </div>
+                    <div id="step-4" class="flex items-center gap-3 text-gray-400">
+                        <span class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center text-xs font-bold shrink-0">4</span>
+                        <span>Configurando SEO y chatbot...</span>
+                    </div>
+                    <div id="step-5" class="flex items-center gap-3 text-gray-400">
+                        <span class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center text-xs font-bold shrink-0">5</span>
+                        <span>Publicando tu sitio...</span>
+                    </div>
+                </div>
+                <p id="progress-time" class="text-center text-gray-400 text-xs mt-4">Tiempo estimado: ~40 segundos</p>
             </div>
             
             <!-- Success -->
@@ -347,6 +376,32 @@
             document.getElementById('generator-form').classList.add('hidden');
             document.getElementById('loading').classList.remove('hidden');
 
+            // Simular progreso visual
+            var progressSteps = [
+                { step: 1, pct: 15, delay: 500 },
+                { step: 2, pct: 40, delay: 12000 },
+                { step: 3, pct: 65, delay: 25000 },
+                { step: 4, pct: 85, delay: 35000 },
+                { step: 5, pct: 95, delay: 45000 }
+            ];
+            var timers = [];
+            progressSteps.forEach(function(s) {
+                timers.push(setTimeout(function() {
+                    document.getElementById('progress-bar').style.width = s.pct + '%';
+                    // Marcar pasos anteriores como completados
+                    for (var i = 1; i <= s.step; i++) {
+                        var el = document.getElementById('step-' + i);
+                        if (el) {
+                            el.classList.remove('text-gray-400');
+                            el.classList.add('text-green-600');
+                            el.querySelector('span:first-child').classList.remove('border-gray-300');
+                            el.querySelector('span:first-child').classList.add('border-green-500', 'bg-green-500', 'text-white');
+                            el.querySelector('span:first-child').innerHTML = '✓';
+                        }
+                    }
+                }, s.delay));
+            });
+
             const tenantId = document.getElementById('tenant-id').value;
             const pkg = document.querySelector('input[name="package"]:checked').value;
             const payload = {
@@ -366,14 +421,31 @@
                 });
                 const data = await response.json();
 
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('success').classList.remove('hidden');
-                
-                const list = document.getElementById('deliverables-list');
-                list.innerHTML = data.deliverables.map(d => '<li>' + d + '</li>').join('');
-                
-                document.getElementById('preview-link').href = window.location.origin + data.preview_url;
+                // Completar todos los pasos
+                timers.forEach(clearTimeout);
+                document.getElementById('progress-bar').style.width = '100%';
+                for (var i = 1; i <= 5; i++) {
+                    var el = document.getElementById('step-' + i);
+                    if (el) {
+                        el.classList.remove('text-gray-400');
+                        el.classList.add('text-green-600');
+                        el.querySelector('span:first-child').classList.remove('border-gray-300');
+                        el.querySelector('span:first-child').classList.add('border-green-500', 'bg-green-500', 'text-white');
+                        el.querySelector('span:first-child').innerHTML = '✓';
+                    }
+                }
+
+                setTimeout(function() {
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('success').classList.remove('hidden');
+                    
+                    const list = document.getElementById('deliverables-list');
+                    list.innerHTML = data.deliverables.map(d => '<li>' + d + '</li>').join('');
+                    
+                    document.getElementById('preview-link').href = window.location.origin + data.preview_url;
+                }, 800);
             } catch (error) {
+                timers.forEach(clearTimeout);
                 alert('Error: ' + error.message);
                 location.reload();
             }
