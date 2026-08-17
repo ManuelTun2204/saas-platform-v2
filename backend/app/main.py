@@ -64,6 +64,24 @@ async def health():
     return {"status": "ok"}
 
 
+@app.get("/landing")
+async def serve_landing():
+    """Landing pública con escaparate de plantillas y generador"""
+    landing_file = BASE_DIR / "static" / "index.html"
+    if not landing_file.exists():
+        raise HTTPException(status_code=404, detail="Landing no encontrada")
+    content = landing_file.read_bytes().decode('utf-8')
+    return HTMLResponse(
+        content=content,
+        headers={
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

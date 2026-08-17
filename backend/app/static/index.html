@@ -3,65 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaaS Platform V2 - Generador Modular</title>
+    <title>SaaS Platform V2 - Sitios Web Profesionales con IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { DEFAULT: '#667eea', secondary: '#764ba2' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .showcase-card:hover .showcase-overlay { opacity: 1; }
+        .showcase-card:hover img { transform: scale(1.05); }
+        .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); }
+        .gradient-hero { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); }
+        .style-tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen font-sans">
-    <header class="bg-white shadow-sm p-4 text-center">
-        <h1 class="text-2xl font-bold text-gray-900">Configura tu Servicio</h1>
-        <p class="text-sm text-gray-500">Selecciona el paquete que mejor se adapte a tu negocio</p>
-    </header>
 
-    <main class="max-w-4xl mx-auto p-6">
-        <form id="generator-form" class="space-y-6">
-            <input type="text" id="tenant-id" value="cliente-01" class="w-full p-3 border rounded" placeholder="ID del Cliente">
-            
-            <!-- Selector de Paquetes -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label class="cursor-pointer border-2 border-blue-500 bg-blue-50 rounded-xl p-4 flex flex-col items-center text-center hover:shadow-md transition package-option" onclick="selectPackage('full', this)">
-                    <input type="radio" name="package" value="full" class="hidden" checked>
-                    <span class="text-2xl mb-2">🚀</span>
-                    <span class="font-bold text-lg">Servicio Completo</span>
-                    <span class="text-sm text-gray-600">Web + Chatbot RAG + Posicionamiento SEO</span>
-                </label>
-                <label class="cursor-pointer border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center text-center hover:border-blue-300 hover:shadow-md transition package-option" onclick="selectPackage('web_chat', this)">
-                    <input type="radio" name="package" value="web_chat" class="hidden">
-                    <span class="text-2xl mb-2">💻</span>
-                    <span class="font-bold text-lg">Web + Chatbot</span>
-                    <span class="text-sm text-gray-600">Sitio web profesional con asistente IA</span>
-                </label>
-                <label class="cursor-pointer border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center text-center hover:border-blue-300 hover:shadow-md transition package-option" onclick="selectPackage('chat_only', this)">
-                    <input type="radio" name="package" value="chat_only" class="hidden">
-                    <span class="text-2xl mb-2">🤖</span>
-                    <span class="font-bold text-lg">Solo Chatbot</span>
-                    <span class="text-sm text-gray-600">Widget inteligente para tu web actual</span>
-                </label>
-                <label class="cursor-pointer border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center text-center hover:border-blue-300 hover:shadow-md transition package-option" onclick="selectPackage('seo_only', this)">
-                    <input type="radio" name="package" value="seo_only" class="hidden">
-                    <span class="text-2xl mb-2">📈</span>
-                    <span class="font-bold text-lg">Solo Posicionamiento</span>
-                    <span class="text-sm text-gray-600">Auditoría, Meta Tags y Schema Markup</span>
-                </label>
+    <!-- HERO -->
+    <section class="gradient-hero text-white py-16 md:py-24 px-6 text-center">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
+                Sitios web profesionales<br>
+                <span class="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">generados con IA en minutos</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+                Landing pages, chatbots inteligentes y SEO automatizado para tu negocio. Elige un estilo, personaliza y publica.
+            </p>
+            <a href="#generador" class="inline-block bg-gradient-to-r from-blue-500 to-purple-500 text-white px-8 py-4 rounded-full font-bold text-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all hover:scale-105">
+                Crear mi sitio ahora
+            </a>
+        </div>
+    </section>
+
+    <!-- ESCAPARATE DE PLANTILLAS -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-3">Mira lo que podemos crear para ti</h2>
+            <p class="text-gray-500 text-lg">Ejemplos reales generados por nuestra plataforma. Haz clic en "Ver ejemplo" para explorar cada sitio.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            <!-- Showcase 1: Restaurante -->
+            <div class="showcase-card group relative bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-all duration-300">
+                <div class="relative h-56 overflow-hidden">
+                    <img src="https://image.pollinations.ai/prompt/luxury%20gourmet%20restaurant%20interior%20warm%20lighting%20elegant%20dishes?width=800&height=400&nologo=true&seed=showcase1" 
+                         alt="Restaurante La Terraza" class="w-full h-full object-cover transition-transform duration-500">
+                    <div class="showcase-overlay absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-300 flex items-center justify-center gap-4">
+                        <a href="/data/websites/showcase-restaurante/index.html" target="_blank" 
+                           class="bg-white text-gray-900 px-5 py-2 rounded-full font-bold hover:bg-gray-100 transition">Ver ejemplo</a>
+                        <button onclick="useTemplate('restaurante gourmet','reservaciones y delivery','parejas y familias','elegante','moderno','#2563eb','#764ba2')" 
+                                class="bg-brand text-white px-5 py-2 rounded-full font-bold hover:bg-brand-secondary transition">Usar esta plantilla</button>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h3 class="font-bold text-lg text-gray-900">Restaurante La Terraza</h3>
+                        <span class="style-tag bg-blue-100 text-blue-700">Moderno</span>
+                    </div>
+                    <p class="text-gray-500 text-sm">Gourmet & reservaciones. Hero con imagen, galería, chatbot y botón WhatsApp.</p>
+                </div>
             </div>
 
-            <input type="text" id="industry" value="Consultoría Financiera" class="w-full p-3 border rounded" placeholder="Industria">
-            <input type="text" id="objective" value="Captar leads" class="w-full p-3 border rounded" placeholder="Objetivo">
-            <input type="text" id="audience" value="Empresarios" class="w-full p-3 border rounded" placeholder="Audiencia">
-            <input type="text" id="tone" value="Profesional" class="w-full p-3 border rounded" placeholder="Tono">
-            
-            <button type="submit" class="w-full bg-blue-600 text-white p-4 rounded-lg font-bold hover:bg-blue-700 transition">Generar Servicio</button>
-        </form>
+            <!-- Showcase 2: Dentista (Glassmorphism) -->
+            <div class="showcase-card group relative bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-all duration-300">
+                <div class="relative h-56 overflow-hidden">
+                    <img src="https://image.pollinations.ai/prompt/modern%20dental%20clinic%20white%20clean%20professional%20bright?width=800&height=400&nologo=true&seed=showcase2" 
+                         alt="Clínica Dental Sonrisa" class="w-full h-full object-cover transition-transform duration-500">
+                    <div class="showcase-overlay absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-300 flex items-center justify-center gap-4">
+                        <a href="/data/websites/showcase-dentista/index.html" target="_blank" 
+                           class="bg-white text-gray-900 px-5 py-2 rounded-full font-bold hover:bg-gray-100 transition">Ver ejemplo</a>
+                        <button onclick="useTemplate('clinica dental','agendar consultas','familias','profesional','glassmorphism','#667eea','#764ba2')" 
+                                class="bg-brand text-white px-5 py-2 rounded-full font-bold hover:bg-brand-secondary transition">Usar esta plantilla</button>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h3 class="font-bold text-lg text-gray-900">Clínica Dental Sonrisa</h3>
+                        <span class="style-tag bg-purple-100 text-purple-700">Vidrio</span>
+                    </div>
+                    <p class="text-gray-500 text-sm">Glassmorphism premium. Fondo oscuro, cards con blur, chatbot y WhatsApp.</p>
+                </div>
+            </div>
 
-        <div id="loading" class="hidden text-center p-10"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div><p class="mt-4">Procesando...</p></div>
-        
-        <div id="success" class="hidden bg-green-50 p-6 rounded-xl border border-green-200 text-center">
-            <h2 class="text-xl font-bold text-green-800 mb-2">¡Servicio Configurado con Éxito!</h2>
-            <ul id="deliverables-list" class="text-left text-green-700 mb-4 space-y-1 list-disc list-inside"></ul>
-            <a id="preview-link" href="#" target="_blank" class="inline-block bg-green-600 text-white px-6 py-3 rounded font-bold hover:bg-green-700 transition">Ver Resultado / Panel</a>
+            <!-- Showcase 3: Tienda (Natural) -->
+            <div class="showcase-card group relative bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-all duration-300">
+                <div class="relative h-56 overflow-hidden">
+                    <img src="https://image.pollinations.ai/prompt/trendy%20fashion%20store%20interior%20colorful%20clothes%20modern%20retail?width=800&height=400&nologo=true&seed=showcase3" 
+                         alt="Tienda Urban Style" class="w-full h-full object-cover transition-transform duration-500">
+                    <div class="showcase-overlay absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-300 flex items-center justify-center gap-4">
+                        <a href="/data/websites/showcase-tienda/index.html" target="_blank" 
+                           class="bg-white text-gray-900 px-5 py-2 rounded-full font-bold hover:bg-gray-100 transition">Ver ejemplo</a>
+                        <button onclick="useTemplate('tienda de ropa','ventas online','jovenes 18-35','casual','natural','#16a34a','#b45309')" 
+                                class="bg-brand text-white px-5 py-2 rounded-full font-bold hover:bg-brand-secondary transition">Usar esta plantilla</button>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h3 class="font-bold text-lg text-gray-900">Tienda Urban Style</h3>
+                        <span class="style-tag bg-green-100 text-green-700">Natural</span>
+                    </div>
+                    <p class="text-gray-500 text-sm">Tienda de ropa juvenil. Colores cálidos, galería, contacto y chatbot.</p>
+                </div>
+            </div>
+
+            <!-- Showcase 4: Consultoría (Elegante) -->
+            <div class="showcase-card group relative bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-all duration-300">
+                <div class="relative h-56 overflow-hidden">
+                    <img src="https://image.pollinations.ai/prompt/corporate%20business%20consulting%20office%20skyline%20professional%20dark?width=800&height=400&nologo=true&seed=showcase4" 
+                         alt="Consultora Empresarial" class="w-full h-full object-cover transition-transform duration-500">
+                    <div class="showcase-overlay absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-300 flex items-center justify-center gap-4">
+                        <a href="/data/websites/showcase-consultoria/index.html" target="_blank" 
+                           class="bg-white text-gray-900 px-5 py-2 rounded-full font-bold hover:bg-gray-100 transition">Ver ejemplo</a>
+                        <button onclick="useTemplate('consultoria empresarial','captar clientes corporativos','empresarios','corporativo','elegante','#ca8a04','#171717')" 
+                                class="bg-brand text-white px-5 py-2 rounded-full font-bold hover:bg-brand-secondary transition">Usar esta plantilla</button>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h3 class="font-bold text-lg text-gray-900">Consultora Empresarial</h3>
+                        <span class="style-tag bg-yellow-100 text-yellow-700">Elegante</span>
+                    </div>
+                    <p class="text-gray-500 text-sm"> corporativo premium. Dorado y negro, testimonios, CTA y chatbot.</p>
+                </div>
+            </div>
+
         </div>
-    </main>
+    </section>
+
+    <!-- SEPARADOR -->
+    <div class="max-w-4xl mx-auto px-6">
+        <div class="flex items-center gap-4 my-8">
+            <div class="flex-1 h-px bg-gray-200"></div>
+            <span class="text-gray-400 text-sm font-medium">O configura tu propio sitio</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+    </div>
+
+    <!-- GENERADOR -->
+    <section id="generador" class="max-w-4xl mx-auto px-6 pb-20">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Configura tu Servicio</h2>
+            
+            <form id="generator-form" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">ID del Cliente</label>
+                    <input type="text" id="tenant-id" value="cliente-01" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="cliente-01">
+                </div>
+                
+                <!-- Selector de Paquetes -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">Paquete</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="cursor-pointer border-2 border-blue-500 bg-blue-50 rounded-xl p-4 flex flex-col items-center text-center hover:shadow-md transition package-option" onclick="selectPackage('full', this)">
+                            <input type="radio" name="package" value="full" class="hidden" checked>
+                            <span class="text-2xl mb-2">🚀</span>
+                            <span class="font-bold text-lg">Servicio Completo</span>
+                            <span class="text-sm text-gray-600">Web + Chatbot RAG + SEO</span>
+                            <span class="text-blue-600 font-bold mt-1">$399 USD</span>
+                        </label>
+                        <label class="cursor-pointer border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center text-center hover:border-blue-300 hover:shadow-md transition package-option" onclick="selectPackage('web_chat', this)">
+                            <input type="radio" name="package" value="web_chat" class="hidden">
+                            <span class="text-2xl mb-2">💻</span>
+                            <span class="font-bold text-lg">Web + Chatbot</span>
+                            <span class="text-sm text-gray-600">Sitio web + asistente IA</span>
+                            <span class="text-gray-600 font-bold mt-1">$249 USD</span>
+                        </label>
+                        <label class="cursor-pointer border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center text-center hover:border-blue-300 hover:shadow-md transition package-option" onclick="selectPackage('chat_only', this)">
+                            <input type="radio" name="package" value="chat_only" class="hidden">
+                            <span class="text-2xl mb-2">🤖</span>
+                            <span class="font-bold text-lg">Solo Chatbot</span>
+                            <span class="text-sm text-gray-600">Widget para tu web actual</span>
+                            <span class="text-gray-600 font-bold mt-1">$99 USD</span>
+                        </label>
+                        <label class="cursor-pointer border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center text-center hover:border-blue-300 hover:shadow-md transition package-option" onclick="selectPackage('seo_only', this)">
+                            <input type="radio" name="package" value="seo_only" class="hidden">
+                            <span class="text-2xl mb-2">📈</span>
+                            <span class="font-bold text-lg">Solo Posicionamiento</span>
+                            <span class="text-sm text-gray-600">Auditoría + Meta Tags + Schema</span>
+                            <span class="text-gray-600 font-bold mt-1">Consultar</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Industria</label>
+                        <input type="text" id="industry" value="Consultoría Financiera" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="Ej: Restaurante, Dentista, Tienda">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Objetivo</label>
+                        <input type="text" id="objective" value="Captar leads" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="Ej: Agendar citas, Vender online">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Audiencia</label>
+                        <input type="text" id="audience" value="Empresarios" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="Ej: Familias, Jóvenes, Empresarios">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Tono</label>
+                        <input type="text" id="tone" value="Profesional" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent" placeholder="Ej: Elegante, Casual, Corporativo">
+                    </div>
+                </div>
+
+                <!-- Estilos visuales -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">Estilo Visual</label>
+                    <div class="flex flex-wrap gap-3">
+                        <button type="button" onclick="selectVisualStyle('moderno', this)" class="style-btn border-2 border-blue-500 bg-blue-50 px-4 py-2 rounded-full text-sm font-semibold transition">Moderno</button>
+                        <button type="button" onclick="selectVisualStyle('natural', this)" class="style-btn border-2 border-gray-200 px-4 py-2 rounded-full text-sm font-semibold hover:border-green-300 transition">Natural</button>
+                        <button type="button" onclick="selectVisualStyle('elegante', this)" class="style-btn border-2 border-gray-200 px-4 py-2 rounded-full text-sm font-semibold hover:border-yellow-300 transition">Elegante</button>
+                        <button type="button" onclick="selectVisualStyle('glassmorphism', this)" class="style-btn border-2 border-gray-200 px-4 py-2 rounded-full text-sm font-semibold hover:border-purple-300 transition">Vidrio</button>
+                        <button type="button" onclick="selectVisualStyle('creativo', this)" class="style-btn border-2 border-gray-200 px-4 py-2 rounded-full text-sm font-semibold hover:border-pink-300 transition">Creativo</button>
+                        <button type="button" onclick="selectVisualStyle('minimalista', this)" class="style-btn border-2 border-gray-200 px-4 py-2 rounded-full text-sm font-semibold hover:border-gray-400 transition">Minimalista</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all hover:scale-[1.02]">
+                    Generar mi Sitio Web
+                </button>
+            </form>
+
+            <!-- Loading -->
+            <div id="loading" class="hidden text-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p class="mt-4 text-gray-600 font-medium">Creando tu sitio web con IA...</p>
+                <p class="mt-1 text-gray-400 text-sm">Esto puede tomar 30-60 segundos</p>
+            </div>
+            
+            <!-- Success -->
+            <div id="success" class="hidden bg-green-50 p-6 rounded-xl border border-green-200 text-center">
+                <h2 class="text-xl font-bold text-green-800 mb-2">¡Sitio Web Generado con Éxito!</h2>
+                <ul id="deliverables-list" class="text-left text-green-700 mb-4 space-y-1 list-disc list-inside"></ul>
+                <a id="preview-link" href="#" target="_blank" class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition">Ver mi Sitio Web</a>
+            </div>
+        </div>
+    </section>
 
     <script>
+        // Showcase: pre-llenar formulario con template
+        function useTemplate(industry, objective, audience, tone, style, primary, secondary) {
+            document.getElementById('industry').value = industry;
+            document.getElementById('objective').value = objective;
+            document.getElementById('audience').value = audience;
+            document.getElementById('tone').value = tone;
+            
+            // Seleccionar estilo visual
+            document.querySelectorAll('.style-btn').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'bg-blue-50');
+                btn.classList.add('border-gray-200');
+            });
+            const styleBtns = document.querySelectorAll('.style-btn');
+            styleBtns.forEach(btn => {
+                if (btn.textContent.trim().toLowerCase() === style || 
+                    (style === 'glassmorphism' && btn.textContent.trim() === 'Vidrio')) {
+                    btn.classList.remove('border-gray-200');
+                    btn.classList.add('border-blue-500', 'bg-blue-50');
+                }
+            });
+            selectedVisualStyle = style;
+            
+            // Scroll al formulario
+            document.getElementById('generador').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Paquetes
         function selectPackage(pkg, element) {
             document.querySelectorAll('.package-option').forEach(el => {
                 el.classList.remove('border-blue-500', 'bg-blue-50');
@@ -72,6 +284,19 @@
             element.querySelector('input').checked = true;
         }
 
+        // Estilos visuales
+        let selectedVisualStyle = 'moderno';
+        function selectVisualStyle(style, element) {
+            document.querySelectorAll('.style-btn').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'bg-blue-50');
+                btn.classList.add('border-gray-200');
+            });
+            element.classList.remove('border-gray-200');
+            element.classList.add('border-blue-500', 'bg-blue-50');
+            selectedVisualStyle = style;
+        }
+
+        // Generar sitio
         document.getElementById('generator-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             document.getElementById('generator-form').classList.add('hidden');
@@ -84,7 +309,8 @@
                 objective: document.getElementById('objective').value,
                 audience: document.getElementById('audience').value,
                 tone: document.getElementById('tone').value,
-                package: pkg
+                package: pkg,
+                visual_style: selectedVisualStyle
             };
 
             try {
@@ -99,7 +325,7 @@
                 document.getElementById('success').classList.remove('hidden');
                 
                 const list = document.getElementById('deliverables-list');
-                list.innerHTML = data.deliverables.map(d => `<li>${d}</li>`).join('');
+                list.innerHTML = data.deliverables.map(d => '<li>' + d + '</li>').join('');
                 
                 document.getElementById('preview-link').href = window.location.origin + data.preview_url;
             } catch (error) {
