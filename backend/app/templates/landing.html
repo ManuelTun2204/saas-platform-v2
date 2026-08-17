@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="es">
+<html lang="{{ language | default('es') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -447,8 +447,8 @@
 <section id="contacto" class="py-20 bg-gradient-to-br from-brand to-brand-secondary text-white">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
-            <h2 class="text-4xl font-bold mb-4">¿Listo para empezar?</h2>
-            <p class="text-xl opacity-90">Cuéntanos sobre tu negocio y te contactaremos pronto</p>
+            <h2 class="text-4xl font-bold mb-4">{% if language == 'en' %}Ready to get started?{% else %}¿Listo para empezar?{% endif %}</h2>
+            <p class="text-xl opacity-90">{% if language == 'en' %}Tell us about your business and we'll contact you soon{% else %}Cuéntanos sobre tu negocio y te contactaremos pronto{% endif %}</p>
         </div>
 
         {% if contact_email or contact_phone or contact_address %}
@@ -483,39 +483,39 @@
                 <input type="hidden" id="contact-tenant" value="{{ tenant_id }}">
                 <div class="grid md:grid-cols-2 gap-5">
                     <div>
-                        <label class="block text-sm font-semibold mb-1 opacity-90">Nombre</label>
+                        <label class="block text-sm font-semibold mb-1 opacity-90">{% if language == 'en' %}Name{% else %}Nombre{% endif %}</label>
                         <input type="text" id="contact-name" required
                                class="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
                                placeholder="Tu nombre">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold mb-1 opacity-90">Email *</label>
+                        <label class="block text-sm font-semibold mb-1 opacity-90">{% if language == 'en' %}Email *{% else %}Email *{% endif %}</label>
                         <input type="email" id="contact-email-input" required
                                class="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
                                placeholder="tu@email.com">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1 opacity-90">Teléfono (opcional)</label>
+                        <label class="block text-sm font-semibold mb-1 opacity-90">{% if language == 'en' %}Phone (optional){% else %}Teléfono (opcional){% endif %}</label>
                     <input type="tel" id="contact-phone-input"
                            class="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
                            placeholder="+52 999 123 4567">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1 opacity-90">Mensaje *</label>
+                        <label class="block text-sm font-semibold mb-1 opacity-90">{% if language == 'en' %}Message *{% else %}Mensaje *{% endif %}</label>
                     <textarea id="contact-message" required rows="4"
                               class="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 resize-none"
                               placeholder="Cuéntanos sobre tu negocio y qué necesitas..."></textarea>
                 </div>
-                <button type="submit" id="contact-submit"
-                        class="w-full bg-white text-brand font-bold py-4 rounded-xl hover:bg-gray-100 transition text-lg">
-                    Enviar Mensaje
-                </button>
+                    <button type="submit" id="contact-submit"
+                            class="w-full bg-white text-brand font-bold py-4 rounded-xl hover:bg-gray-100 transition text-lg">
+                        {% if language == 'en' %}Send Message{% else %}Enviar Mensaje{% endif %}
+                    </button>
             </form>
             <div id="contact-success" class="hidden text-center py-8">
                 <i class="fas fa-check-circle text-5xl mb-4 text-green-300"></i>
-                <p class="text-xl font-bold mb-2">¡Mensaje enviado!</p>
-                <p class="opacity-90">Te contactaremos pronto. Gracias por tu interés.</p>
+                <p class="text-xl font-bold mb-2">{% if language == 'en' %}Message sent!{% else %}¡Mensaje enviado!{% endif %}</p>
+                <p class="opacity-90">{% if language == 'en' %}We'll contact you soon. Thanks for your interest.{% else %}Te contactaremos pronto. Gracias por tu interés.{% endif %}</p>
             </div>
             <div id="contact-error" class="hidden text-center py-4">
                 <p class="text-red-200 font-semibold"></p>
@@ -570,7 +570,7 @@
             </div>
         </div>
         <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2026 {{ company_name }}. Todos los derechos reservados.</p>
+            <p>&copy; 2026 {{ company_name }}. {% if language == 'en' %}All rights reserved.{% else %}Todos los derechos reservados.{% endif %}</p>
         </div>
     </div>
 </footer>

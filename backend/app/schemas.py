@@ -21,6 +21,7 @@ class WebsiteGenerationRequest(BaseModel):
     brand_secondary: str = "#764ba2"
     visual_style: str = "moderno"
     page_type: str = "landing"
+    language: str = "es"
     calendly_url: str = ""
     contact_email: str = ""
     contact_phone: str = ""

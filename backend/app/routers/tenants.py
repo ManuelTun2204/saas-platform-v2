@@ -89,6 +89,7 @@ async def generate_service(tenant_id: str, request: WebsiteGenerationRequest, cu
             brand_secondary=request.brand_secondary,
             visual_style=request.visual_style,
             page_type=request.page_type,
+            language=request.language,
             calendly_url=request.calendly_url,
             contact_email=request.contact_email,
             contact_phone=request.contact_phone,

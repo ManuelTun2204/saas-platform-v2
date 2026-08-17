@@ -539,12 +539,12 @@ class WebsiteService:
             logger.error(f"Error regenerando sitio: {e}", exc_info=True)
             return {"status": "error", "detail": str(e)}
 
-    async def generate_modular_service(self, tenant_id: str, industry: str, objective: str, audience: str, tone: str, package: str, brand_hex: str = "#2563eb", brand_secondary: str = "#764ba2", visual_style: str = "modern", page_type: str = "landing", calendly_url: str = "", contact_email: str = "", contact_phone: str = "", contact_address: str = "") -> dict:
+    async def generate_modular_service(self, tenant_id: str, industry: str, objective: str, audience: str, tone: str, package: str, brand_hex: str = "#2563eb", brand_secondary: str = "#764ba2", visual_style: str = "modern", page_type: str = "landing", language: str = "es", calendly_url: str = "", contact_email: str = "", contact_phone: str = "", contact_address: str = "") -> dict:
         logger.info(f"Procesando paquete: {package} para {tenant_id}")
         if package == "chat_only":
             site_data = {"company_name": tenant_id, "hero_subtitle": f"Chatbot IA para {industry}"}
         else:
-            site_data = await self.llm_service.generate_website_json(industry, objective, audience, tone, visual_style)
+            site_data = await self.llm_service.generate_website_json(industry, objective, audience, tone, visual_style, language=language)
         site_data["tenant_id"] = tenant_id
         site_data["cache_buster"] = int(time.time())
         site_data["industry"] = industry
@@ -563,9 +563,15 @@ class WebsiteService:
                 seed = abs(hash(t.get("name", ""))) % 10000
                 t["photo"] = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(t['photo_prompt'])}?width=200&height=200&nologo=true&seed={seed}"
         # SEO: título, descripción y palabras clave con valores por defecto editables
-        site_data.setdefault("seo_title", f"{site_data.get('company_name', tenant_id)} | {industry.title()} | Servicios")
-        site_data.setdefault("seo_description", site_data.get("hero_subtitle", f"Servicios profesionales de {industry}"))
-        site_data.setdefault("seo_keywords", f"{industry}, {site_data.get('company_name', tenant_id)}, servicios profesionales, {visual_style}")
+        if language == "en":
+            site_data.setdefault("seo_title", f"{site_data.get('company_name', tenant_id)} | {industry.title()} | Services")
+            site_data.setdefault("seo_description", site_data.get("hero_subtitle", f"Professional {industry} services"))
+            site_data.setdefault("seo_keywords", f"{industry}, {site_data.get('company_name', tenant_id)}, professional services, {visual_style}")
+        else:
+            site_data.setdefault("seo_title", f"{site_data.get('company_name', tenant_id)} | {industry.title()} | Servicios")
+            site_data.setdefault("seo_description", site_data.get("hero_subtitle", f"Servicios profesionales de {industry}"))
+            site_data.setdefault("seo_keywords", f"{industry}, {site_data.get('company_name', tenant_id)}, servicios profesionales, {visual_style}")
+        site_data["language"] = language
         deliverables = []
         preview_url = "#"
         try:

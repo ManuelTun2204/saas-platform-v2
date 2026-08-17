@@ -118,10 +118,12 @@ class LLMService:
                 logger.error(f"Error en generate_content (fallback): {e2}")
                 raise Exception(f"Error generando contenido: {str(e2)}")
 
-    async def generate_website_json(self, industry: str, objective: str, audience: str, tone: str, visual_style: str = "modern") -> dict:
+    async def generate_website_json(self, industry: str, objective: str, audience: str, tone: str, visual_style: str = "modern", language: str = "es") -> dict:
         """Genera JSON estructurado completo para sitio web profesional con todos los bloques"""
         
         prompt = f"""Eres un experto diseñador web y copywriter profesional. Genera contenido completo y realista para un sitio web de alta calidad.
+
+IDIOMA DEL CONTENIDO: {"ESPAÑOL (todo el texto, títulos, descripciones, servicios, FAQs, equipo, etc. deben estar en español)" if language == "es" else "ENGLISH (all text, titles, descriptions, services, FAQs, team, etc. must be in English)"}
 
 DATOS DE LA EMPRESA:
 - Industria: {industry}
@@ -191,7 +193,7 @@ REGLAS IMPORTANTES:
 2. Los precios deben ser REALISTAS para la industria {industry}
 3. Las FAQs deben ser preguntas REALES que haría un cliente
 4. El equipo debe tener nombres HISPANOS variados (hombres y mujeres)
-5. Todo el contenido debe estar en ESPAÑOL
+5. Todo el contenido debe estar en {"español" if language == "es" else "English"}
 6. Los números en 'stats' deben ser realistas para una empresa establecida
 7. Devuelve SOLO el JSON, sin texto adicional, sin markdown, sin comentarios"""
 

@@ -582,6 +582,7 @@ class PaymentService:
                 brand_secondary=cfg.get("brand_secondary", "#764ba2"),
                 visual_style=cfg.get("visual_style", "moderno"),
                 page_type=cfg.get("page_type", "landing"),
+                language=cfg.get("language", "es"),
                 calendly_url=cfg.get("calendly_url", ""),
                 contact_email=cfg.get("contact_email", ""),
                 contact_phone=cfg.get("contact_phone", ""),

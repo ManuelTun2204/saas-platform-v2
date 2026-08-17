@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="es">
+<html lang="{{ language | default('es') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -321,7 +321,7 @@
     </section>
 
     <footer class="bg-gray-950 text-gray-500 py-12 text-center text-sm border-t border-gray-800">
-        <p class="mb-4">&copy; 2026 {{ hero_title.split(' ')[0] }}. Todos los derechos reservados.</p>
+        <p class="mb-4">&copy; 2026 {{ hero_title.split(' ')[0] }}. {% if language == 'en' %}All rights reserved.{% else %}Todos los derechos reservados.{% endif %}</p>
         {% set social = social_media or {} %}
         {% if social.facebook or social.instagram or social.tiktok or social.youtube or social.twitter %}
         <div class="flex justify-center gap-3">
