@@ -1,7 +1,7 @@
 # Estado del Proyecto — SaaS Platform v2
 
-> Última actualización: 2026-08-16
-> Commit HEAD: `fd70882`
+> Última actualización: 2026-08-17
+> Commit HEAD: `af507c9`
 > Repo: https://github.com/ManuelTun2204/saas-platform-v2
 
 ---
@@ -52,13 +52,14 @@
 - Dashboard con métricas (leads, ingresos, costo de IA).
 - Editor visual del sitio (hero, sobre nosotros, servicios, galería, colores, SEO).
 - Leads con búsqueda, filtro por estado y cambio de estado.
+- Leads de formulario de contacto (POST /api/contact, rate limit 5/min, source: contact_form).
 - Sección "Chatbot para tu Pagina" con snippet de instalación y personalización.
 - Gestión de usuarios (admin/user).
 - Exportar sitio como ZIP.
 
 ### Seguridad
 - JWT tokens con refresh.
-- Rate limit en login (5 intentos fallidos → bloqueo) y en chat (20/min).
+- Rate limit en login (5 intentos fallidos → bloqueo), en chat (20/min) y en formulario de contacto (5/min por IP).
 - Solo admin accede a endpoints sensibles (403 si no).
 
 ### Emails
@@ -80,7 +81,7 @@ saas-platform-v2/
 │   │   │   ├── tenants.py       ← CRUD tenants, chat, editor, export, chat config, docs
 │   │   │   ├── payments.py      ← Checkout, status, finalize, cancel, webhooks, órdenes
 │   │   │   ├── analytics.py     ← Dashboard, métricas, logs de costo IA
-│   │   │   └── leads.py         ← GET/PATCH leads, búsqueda, filtros
+│   │   │   └── leads.py         ← GET/PATCH leads, búsqueda, filtros, POST /api/contact
 │   │   ├── services/
 │   │   │   ├── llm_service.py   ← Llamadas a OpenRouter (Qwen3 por defecto)
 │   │   │   ├── website_service.py  ← Generación/modular de sitios con IA
