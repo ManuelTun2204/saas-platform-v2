@@ -556,6 +556,12 @@ class WebsiteService:
         site_data["contact_address"] = contact_address
         site_data["page_type"] = page_type
         site_data["visual_style"] = visual_style
+        # Testimonials: generar URLs de foto desde photo_prompt
+        import urllib.parse
+        for t in site_data.get("testimonials", []):
+            if not t.get("photo") and t.get("photo_prompt"):
+                seed = abs(hash(t.get("name", ""))) % 10000
+                t["photo"] = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(t['photo_prompt'])}?width=200&height=200&nologo=true&seed={seed}"
         # SEO: título, descripción y palabras clave con valores por defecto editables
         site_data.setdefault("seo_title", f"{site_data.get('company_name', tenant_id)} | {industry.title()} | Servicios")
         site_data.setdefault("seo_description", site_data.get("hero_subtitle", f"Servicios profesionales de {industry}"))

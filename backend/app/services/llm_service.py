@@ -154,9 +154,9 @@ Devuelve SOLO un objeto JSON válido (sin markdown, sin ```json, sin texto adici
         {{"number": 98, "label": "Satisfacción (%)", "icon": "⭐"}}
     ],
     "testimonials": [
-        {{"name": "Nombre realista hispano", "role": "Cargo o relación con la empresa", "text": "Testimonio auténtico de 2-3 oraciones elogiando el servicio", "rating": 5}},
-        {{"name": "Nombre realista hispano", "role": "Cargo o relación con la empresa", "text": "Testimonio auténtico de 2-3 oraciones sobre la experiencia", "rating": 5}},
-        {{"name": "Nombre realista hispano", "role": "Cargo o relación con la empresa", "text": "Testimonio auténtico de 2-3 oraciones recomendando el servicio", "rating": 4}}
+        {{"name": "Nombre realista hispano", "role": "Cargo o relación con la empresa", "text": "Testimonio auténtico de 2-3 oraciones elogiando el servicio", "rating": 5, "photo_prompt": "profesional mexicano sonriente retrato corporativo"}},
+        {{"name": "Nombre realista hispano", "role": "Cargo o relación con la empresa", "text": "Testimonio auténtico de 2-3 oraciones sobre la experiencia", "rating": 5, "photo_prompt": "mujer profesional latina sonriente retrato"}},
+        {{"name": "Nombre realista hispano", "role": "Cargo o relación con la empresa", "text": "Testimonio auténtico de 2-3 oraciones recomendando el servicio", "rating": 4, "photo_prompt": "hombre de negocios profesional retrato corporativo"}}
     ],
     "pricing": [
         {{"name": "Básico", "price": "$99", "period": "/mes", "popular": false, "features": ["Característica básica 1", "Característica básica 2", "Característica básica 3", "Soporte por email"]}},
@@ -247,9 +247,9 @@ REGLAS IMPORTANTES:
                 {"number": 98, "label": "Satisfacción (%)", "icon": "⭐"}
             ],
             "testimonials": [
-                {"name": "María González", "role": "Cliente frecuente", "text": "Excelente servicio, muy profesionales y atentos. Los recomiendo ampliamente a cualquiera que busque calidad.", "rating": 5},
-                {"name": "Juan Pérez", "role": "Empresa asociada", "text": "La mejor experiencia que he tenido. Sin duda volveré a contratarlos para futuros proyectos.", "rating": 5},
-                {"name": "Ana Rodríguez", "role": "Cliente nueva", "text": "Me sorprendió la calidad del servicio. Superaron mis expectativas en todos los aspectos.", "rating": 4}
+                {"name": "María González", "role": "Cliente frecuente", "text": "Excelente servicio, muy profesionales y atentos. Los recomiendo ampliamente a cualquiera que busque calidad.", "rating": 5, "photo_prompt": "mujer profesional latina sonriente retrato corporativo"},
+                {"name": "Juan Pérez", "role": "Empresa asociada", "text": "La mejor experiencia que he tenido. Sin duda volveré a contratarlos para futuros proyectos.", "rating": 5, "photo_prompt": "hombre de negocios profesional retrato corporativo"},
+                {"name": "Ana Rodríguez", "role": "Cliente nueva", "text": "Me sorprendió la calidad del servicio. Superaron mis expectativas en todos los aspectos.", "rating": 4, "photo_prompt": "profesional mexicana sonriente retrato"}
             ],
             "pricing": [
                 {"name": "Básico", "price": "$99", "period": "/mes", "popular": False, "features": ["Servicio básico", "Soporte por email", "1 revisión mensual", "Acceso a recursos"]},

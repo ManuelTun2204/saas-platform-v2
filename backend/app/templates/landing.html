@@ -302,9 +302,13 @@
                 </div>
                 <p class="text-gray-700 mb-6 italic">"{{ testimonial.text }}"</p>
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-16 bg-gradient-to-br from-brand to-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    {% if testimonial.photo %}
+                    <img src="{{ testimonial.photo }}" alt="{{ testimonial.name }}" class="w-12 h-12 rounded-full object-cover shadow-md" loading="lazy">
+                    {% else %}
+                    <div class="w-12 h-12 bg-gradient-to-br from-brand to-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                         {{ testimonial.name[0] }}
                     </div>
+                    {% endif %}
                     <div>
                         <p class="font-bold text-gray-900">{{ testimonial.name }}</p>
                         <p class="text-sm text-gray-500">{{ testimonial.role }}</p>
