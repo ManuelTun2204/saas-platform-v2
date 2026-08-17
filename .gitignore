@@ -42,3 +42,4 @@ _*.ps1
 fix_*.py
 update_*.py
 PROMT_MAESTRO_V4.md
+.aider*

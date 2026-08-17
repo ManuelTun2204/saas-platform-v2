@@ -1,7 +1,7 @@
 # Estado del Proyecto — SaaS Platform v2
 
 > Última actualización: 2026-08-17
-> Commit HEAD: `cf426f1`
+> Commit HEAD: `f4f39d5`
 > Repo: https://github.com/ManuelTun2204/saas-platform-v2
 
 ---
@@ -62,11 +62,15 @@
 - Captura de leads cuando el usuario da su email.
 - Botón WhatsApp flotante (aparece solo si `contact_phone` tiene valor).
 
-### Plantillas generadas (3)
+### Plantillas generadas (7)
 - **landing.html** — Para restaurantes, cafes, tiendas. Hero con video, testimonios, servicios, galería, contacto, redes sociales, WhatsApp.
 - **services.html** — Para negocios de servicios (dentistas, gimnasios, etc). Hero con video, servicios, equipo, contacto, redes sociales.
 - **portfolio.html** — Para creativos, fotógrafos, arquitectos. Hero con video, portfolio, servicios, contacto, redes sociales.
-- Las 3: favicon SVG dinámico (iniciales del negocio), `lang` HTML dinámico, Font Awesome 6.4.0.
+- **medical.html** — Para consultorios, clínicas, dentistas. Servicios médicos, equipo, testimonios.
+- **ecommerce.html** — Para tiendas online. Showcase de productos, categorías, carrito, contacto.
+- **fitness.html** — Para gimnasios, entrenadores, yoga. Planes, entrenadores, instalaciones.
+- **hotel.html** — Para hoteles, hostales, airbnb. Habitaciones, galería, servicios, reservas.
+- Las 7: favicon SVG dinámico, `lang` HTML dinámico, Font Awesome 6.4.0.
 
 ### Panel admin
 - Dashboard con métricas reales (leads, ingresos, costo de IA basado en paquetes).
@@ -209,6 +213,48 @@ Solo corre `saas-backend`. Los contenedores huérfanos (n8n, postiz, typebot, po
 NAMES          IMAGE                        STATUS
 saas-backend   saas-platform-v2-backend     Up X minutes
 ```
+
+---
+
+## Desarrollo local con IA (Ollama + Aider)
+
+El proyecto está configurado para desarrollo local sin costo usando Ollama y Aider.
+
+### Herramientas instaladas
+- **Ollama v0.32.14** — `C:\Users\Emilio Tun\AppData\Local\Programs\Ollama\ollama.exe`
+- **Aider v0.86.2** — `C:\Users\Emilio Tun\.local\bin\aider.exe`
+- **Variable de entorno:** `OLLAMA_API_BASE=http://127.0.0.1:11434` (configurada con `setx`)
+
+### Modelos disponibles
+| Modelo | Tamaño | Velocidad CPU | Notas |
+|---|---|---|---|
+| `llama3.2:3b` | 2GB | ~10s | Rápido, buena calidad para ediciones simples |
+| `qwen3:4b` | 2.5GB | ~30s+ | Tiene "thinking" (lento en CPU) |
+| `deepseek-r1:latest` | 5.2GB | ~60s+ | Tiene "thinking" (muy lento en CPU) |
+
+### Cómo usar Aider
+Desde la carpeta del proyecto (`C:\projects\saas-platform-v2`):
+
+```powershell
+# Siempre abrir una consola nueva (para cargar OLLAMA_API_BASE)
+$env:PATH = "C:\Users\Emilio Tun\.local\bin;$env:PATH"
+$env:OLLAMA_API_BASE = "http://127.0.0.1:11434"
+
+# Ejemplo: editar un archivo
+aider --model ollama_chat/llama3.2:3b --no-show-model-warnings --no-pretty --no-gitignore --map-tokens 0 --yes-always --no-auto-commits --message "Tu instrucción aquí" -- backend/app/main.py
+```
+
+**Flags importantes:**
+- `--map-tokens 0` — Desactiva el repo-map (ahorra 30+ segundos de análisis)
+- `--yes-always` — Auto-acepta cambios sin confirmar
+- `--no-auto-commits` — No hace commits automáticos
+- `--exit` — Sale después de ejecutar el mensaje (no abre modo interactivo)
+
+**Limitaciones conocidas:**
+- Sin consola interactiva en este entorno (no detecta Windows console)
+- Modelos grandes son muy lentos en CPU (sin GPU)
+- Para tareas complejas, usar `llama3.2:3b` que es el más rápido
+- Después de cambios, ejecutar: `docker compose up -d --build backend`
 
 ---
 
