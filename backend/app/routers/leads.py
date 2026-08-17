@@ -1,9 +1,10 @@
 import hashlib
 import logging
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
-from app.deps import DATA_DIR, read_json_file, require_admin, write_json_atomic
+from app.deps import DATA_DIR, check_rate_limit, read_json_file, require_admin, write_json_atomic
 from app.schemas import LeadUpdate
 
 logger = logging.getLogger(__name__)
@@ -78,6 +79,59 @@ async def list_leads(q: str = "", status: str = "", current_user: dict = Depends
     except Exception as e:
         logger.error(f"Error listando leads: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/contact")
+async def contact_form(request: Request):
+    """Formulario de contacto publico - crea un lead (rate limit 5/min por IP)"""
+    client_ip = request.client.host if request.client else "unknown"
+    if not check_rate_limit(f"contact:{client_ip}", limit=5, window_seconds=60):
+        raise HTTPException(status_code=429, detail="Demasiadas solicitudes. Intenta en un minuto.")
+
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="JSON invalido")
+
+    name = (body.get("name") or "").strip()
+    email = (body.get("email") or "").strip()
+    phone = (body.get("phone") or "").strip()
+    message = (body.get("message") or "").strip()
+    tenant_id = (body.get("tenant_id") or "").strip()
+
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Email invalido")
+    if not message:
+        raise HTTPException(status_code=400, detail="El mensaje es obligatorio")
+
+    lead = {
+        "id": hashlib.sha1(f"{email}|{tenant_id}|{datetime.now().isoformat()}".encode()).hexdigest()[:12],
+        "tenant_id": tenant_id,
+        "email": email,
+        "name": name,
+        "phone": phone,
+        "question": message,
+        "source": "contact_form",
+        "status": "nuevo",
+        "timestamp": datetime.now().isoformat(),
+    }
+
+    leads = read_json_file(LEADS_FILE, [])
+
+    # Deduplicar: si ya existe un lead con el mismo email y tenant en los ultimos 5 min
+    from datetime import timedelta
+    cutoff = (datetime.now() - timedelta(minutes=5)).isoformat()
+    for existing in leads:
+        if (existing.get("email") == email
+                and existing.get("tenant_id") == tenant_id
+                and existing.get("timestamp", "") > cutoff):
+            return {"status": "success", "message": "Ya recibimos tu mensaje. Te contactaremos pronto."}
+
+    leads.append(lead)
+    write_json_atomic(LEADS_FILE, leads)
+
+    logger.info(f"✅ Lead de contacto: {email} ({name}) → tenant={tenant_id}")
+    return {"status": "success", "message": "¡Gracias! Te contactaremos pronto."}
 
 
 @router.patch("/api/leads/{lead_id}")

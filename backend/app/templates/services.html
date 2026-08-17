@@ -223,9 +223,9 @@
         <div class="max-w-5xl mx-auto px-6">
             <div class="text-center mb-16">
                 <h2 class="text-4xl md:text-5xl font-bold mb-6">¿Listo para empezar?</h2>
-                <p class="text-gray-400 text-xl">Contáctanos o agenda una cita directamente.</p>
+                <p class="text-gray-400 text-xl">Cuéntanos sobre tu negocio y te contactaremos pronto.</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center mb-12">
                 {% if contact_email %}
                 <div class="glass-dark p-8 rounded-2xl hover-lift">
                     <div class="text-4xl mb-4">📧</div>
@@ -248,9 +248,55 @@
                 </div>
                 {% endif %}
             </div>
+
+            <!-- Formulario de contacto -->
+            <div class="max-w-2xl mx-auto glass-dark rounded-2xl p-8">
+                <form id="contact-form" class="space-y-5">
+                    <input type="hidden" id="contact-tenant" value="{{ tenant_id }}">
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold mb-1 text-gray-300">Nombre</label>
+                            <input type="text" id="contact-name" required
+                                   class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="Tu nombre">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1 text-gray-300">Email *</label>
+                            <input type="email" id="contact-email-input" required
+                                   class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="tu@email.com">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1 text-gray-300">Teléfono (opcional)</label>
+                        <input type="tel" id="contact-phone-input"
+                               class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="+52 999 123 4567">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1 text-gray-300">Mensaje *</label>
+                        <textarea id="contact-message" required rows="4"
+                                  class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                  placeholder="Cuéntanos sobre tu negocio..."></textarea>
+                    </div>
+                    <button type="submit" id="contact-submit"
+                            class="w-full btn-premium font-bold py-4 rounded-xl text-lg">
+                        Enviar Mensaje
+                    </button>
+                </form>
+                <div id="contact-success" class="hidden text-center py-8">
+                    <div class="text-5xl mb-4">✅</div>
+                    <p class="text-xl font-bold mb-2">¡Mensaje enviado!</p>
+                    <p class="text-gray-400">Te contactaremos pronto.</p>
+                </div>
+                <div id="contact-error" class="hidden text-center py-4">
+                    <p class="text-red-400 font-semibold"></p>
+                </div>
+            </div>
+
             {% if calendly_url %}
             <div class="mt-16 text-center">
-                <a href="{{ calendly_url }}" target="_blank" class="inline-block btn-premium text-lg px-12 py-4"> Abrir Calendario y Agendar Cita</a>
+                <a href="{{ calendly_url }}" target="_blank" class="inline-block btn-premium text-lg px-12 py-4">📅 Agendar Cita Directamente</a>
             </div>
             {% endif %}
         </div>
@@ -290,6 +336,51 @@
                 }
             }
         });
+    </script>
+
+    <!-- FORMULARIO DE CONTACTO -->
+    <script>
+    (function() {
+        const form = document.getElementById('contact-form');
+        if (!form) return;
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('contact-submit');
+            const originalText = btn.textContent;
+            btn.textContent = 'Enviando...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('contact-name').value,
+                        email: document.getElementById('contact-email-input').value,
+                        phone: document.getElementById('contact-phone-input').value,
+                        message: document.getElementById('contact-message').value,
+                        tenant_id: document.getElementById('contact-tenant').value
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    form.classList.add('hidden');
+                    document.getElementById('contact-success').classList.remove('hidden');
+                } else {
+                    const errDiv = document.getElementById('contact-error');
+                    errDiv.classList.remove('hidden');
+                    errDiv.querySelector('p').textContent = data.detail || 'Error al enviar.';
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
+            } catch(err) {
+                const errDiv = document.getElementById('contact-error');
+                errDiv.classList.remove('hidden');
+                errDiv.querySelector('p').textContent = 'Error de conexion.';
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+    })();
     </script>
 {% if contact_phone %}
 <!-- WHATSAPP FLOTANTE -->
