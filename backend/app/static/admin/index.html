@@ -286,6 +286,28 @@
 </div>
 </div>
 <div id="editor-status" class="mt-3 text-sm"></div>
+<div class="mt-6 pt-4 border-t">
+<h4 class="font-bold text-sm mb-3 text-gray-700">Imágenes del Sitio</h4>
+<p class="text-xs text-gray-500 mb-3">Sube tu logo y fotos reales. Si no subes nada, se usan imágenes predeterminadas de la industria.</p>
+<div class="grid grid-cols-1 gap-4">
+<div>
+<label class="block text-sm font-semibold mb-1">Logo de la Empresa</label>
+<input type="file" id="ed-logo-file" accept="image/*" class="w-full p-2 border rounded-lg text-sm" onchange="previewLogo(this)">
+<div id="ed-logo-preview" class="mt-2"></div>
+</div>
+<div>
+<label class="block text-sm font-semibold mb-1">Foto Hero (portada)</label>
+<input type="file" id="ed-hero-file" accept="image/*" class="w-full p-2 border rounded-lg text-sm" onchange="previewHeroImage(this)">
+<div id="ed-hero-preview" class="mt-2"></div>
+</div>
+<div>
+<label class="block text-sm font-semibold mb-1">Galería de Fotos (selecciona varias)</label>
+<input type="file" id="ed-gallery-files" accept="image/*" multiple class="w-full p-2 border rounded-lg text-sm" onchange="previewGallery(this)">
+<div id="ed-gallery-preview" class="mt-2 grid grid-cols-3 gap-2"></div>
+</div>
+<div id="ed-upload-status" class="text-sm"></div>
+</div>
+</div>
 <div class="mt-5 flex justify-end gap-3">
 <button onclick="closeEditor()" class="px-6 py-3 border rounded-lg hover:bg-gray-50">Cancelar</button>
 <button onclick="saveEditor()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar y Regenerar</button>
@@ -1081,6 +1103,10 @@ async function uploadDoc() {
 
 async function openEditor() {
     document.getElementById('editor-status').innerText = '';
+    document.getElementById('ed-logo-preview').innerHTML = '';
+    document.getElementById('ed-hero-preview').innerHTML = '';
+    document.getElementById('ed-gallery-preview').innerHTML = '';
+    document.getElementById('ed-upload-status').innerText = '';
     try {
         var res = await apiRequest('/api/site-editor/' + currentTenantId);
         var data = await res.json();
@@ -1098,12 +1124,137 @@ async function openEditor() {
             document.getElementById('ed-seo-title').value = d.seo_title || '';
             document.getElementById('ed-seo-description').value = d.seo_description || '';
             document.getElementById('ed-seo-keywords').value = d.seo_keywords || '';
+            if (d.hero_image && d.hero_image.startsWith('/')) {
+                document.getElementById('ed-hero-preview').innerHTML = '<img src="' + d.hero_image + '" class="h-24 rounded-lg object-cover">';
+            }
+            loadUploadedImages();
             document.getElementById('editor-modal').classList.remove('hidden');
         } else {
             alert('No se pudo cargar el sitio para editar.');
         }
     } catch (e) {
         alert('Error: ' + e.message);
+    }
+}
+
+async function loadUploadedImages() {
+    try {
+        var res = await apiRequest('/api/uploads/' + currentTenantId);
+        var data = await res.json();
+        if (data.status === 'success' && data.images.length > 0) {
+            var html = '';
+            data.images.forEach(function(img) {
+                html += '<div class="relative inline-block mr-2 mb-2">' +
+                    '<img src="' + img.url + '" class="h-20 rounded-lg object-cover">' +
+                    '<button onclick="deleteUploadedImage(\'' + img.filename + '\')" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">&times;</button>' +
+                    '</div>';
+            });
+            document.getElementById('ed-upload-status').innerHTML = '<p class="text-gray-500 text-xs mb-1">Imágenes subidas:</p>' + html;
+        }
+    } catch (e) { /* ignore */ }
+}
+
+function previewLogo(input) {
+    var preview = document.getElementById('ed-logo-preview');
+    preview.innerHTML = '';
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = '<img src="' + e.target.result + '" class="h-16 rounded-lg object-cover">';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function previewHeroImage(input) {
+    var preview = document.getElementById('ed-hero-preview');
+    preview.innerHTML = '';
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = '<img src="' + e.target.result + '" class="h-24 rounded-lg object-cover">';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function previewGallery(input) {
+    var preview = document.getElementById('ed-gallery-preview');
+    preview.innerHTML = '';
+    if (input.files) {
+        Array.from(input.files).forEach(function(file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML += '<img src="' + e.target.result + '" class="h-20 w-full rounded-lg object-cover">';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+async function deleteUploadedImage(filename) {
+    if (!confirm('Eliminar esta imagen?')) return;
+    try {
+        await apiRequest('/api/uploads/' + currentTenantId + '/' + filename, { method: 'DELETE' });
+        loadUploadedImages();
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function uploadEditorImages() {
+    var statusEl = document.getElementById('ed-upload-status');
+    var files = [];
+    var logoFile = document.getElementById('ed-logo-file').files[0];
+    var heroFile = document.getElementById('ed-hero-file').files[0];
+    var galleryFiles = document.getElementById('ed-gallery-files').files;
+    if (logoFile) files.push(logoFile);
+    if (heroFile) files.push(heroFile);
+    if (galleryFiles) {
+        for (var i = 0; i < galleryFiles.length; i++) files.push(galleryFiles[i]);
+    }
+    if (files.length === 0) return;
+    statusEl.innerHTML = '<span class="text-blue-600">Subiendo imágenes...</span>';
+    var formData = new FormData();
+    files.forEach(function(f) { formData.append('files', f); });
+    try {
+        var res = await fetch('/api/upload/images/' + currentTenantId, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+            body: formData
+        });
+        var data = await res.json();
+        if (data.status === 'success') {
+            statusEl.innerHTML = '<span class="text-green-600">' + data.count + ' imagen(es) subida(s)</span>';
+            if (data.images.length > 0 && logoFile) {
+                var logoImg = data.images[0];
+                await apiRequest('/api/site-editor/' + currentTenantId, {
+                    method: 'POST',
+                    body: JSON.stringify({ logo_url: logoImg.url })
+                });
+            }
+            if (data.images.length > 1 && heroFile) {
+                var heroImg = data.images.find(function(i) { return i.original === heroFile.name; }) || data.images[1];
+                await apiRequest('/api/site-editor/' + currentTenantId, {
+                    method: 'POST',
+                    body: JSON.stringify({ hero_image: heroImg.url })
+                });
+            }
+            var galImgs = data.images.filter(function(i) { return i.original !== (logoFile ? logoFile.name : '') && i.original !== (heroFile ? heroFile.name : ''); });
+            if (galImgs.length > 0) {
+                var urls = galImgs.map(function(i) { return i.url; });
+                await apiRequest('/api/site-editor/' + currentTenantId, {
+                    method: 'POST',
+                    body: JSON.stringify({ gallery_images: urls })
+                });
+            }
+            loadUploadedImages();
+            document.getElementById('ed-logo-file').value = '';
+            document.getElementById('ed-hero-file').value = '';
+            document.getElementById('ed-gallery-files').value = '';
+        } else {
+            statusEl.innerHTML = '<span class="text-red-600">Error: ' + (data.detail || 'desconocido') + '</span>';
+        }
+    } catch (e) {
+        statusEl.innerHTML = '<span class="text-red-600">Error: ' + e.message + '</span>';
     }
 }
 
@@ -1115,6 +1266,7 @@ async function saveEditor() {
     var statusEl = document.getElementById('editor-status');
     statusEl.innerText = 'Guardando y regenerando...';
     statusEl.className = 'text-sm text-blue-600';
+    await uploadEditorImages();
     var payload = {
         company_name: document.getElementById('ed-company-name').value,
         brand_hex: document.getElementById('ed-brand-hex').value,

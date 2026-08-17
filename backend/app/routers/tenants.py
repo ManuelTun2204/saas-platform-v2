@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import shutil
+import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -17,12 +18,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+ALLOWED_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 EDITABLE_KEYS = {
     "company_name", "hero_title", "hero_subtitle", "hero_cta", "hero_image",
     "about_title", "about_text", "about_image", "contact_email", "contact_phone",
     "contact_address", "brand_hex", "brand_secondary", "visual_style",
-    "services", "gallery_images",
+    "services", "gallery_images", "logo_url",
     "seo_title", "seo_description", "seo_keywords",
 }
 
@@ -147,6 +150,76 @@ async def upload_document(tenant_id: str, file: UploadFile = File(...), http_req
     except Exception as e:
         logger.error(f"Error subiendo documento: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/upload/images/{tenant_id}")
+async def upload_images(
+    tenant_id: str,
+    files: list[UploadFile] = File(...),
+    current_user: dict = Depends(require_admin),
+):
+    """Subir imagenes (logo, galeria) para el sitio de un tenant.
+    Guarda en data/websites/{tenant_id}/uploads/ y devuelve las URLs."""
+    upload_dir = DATA_DIR / "websites" / tenant_id / "uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    saved = []
+    for file in files:
+        safe_name = os.path.basename(file.filename or "image.jpg")
+        ext = os.path.splitext(safe_name)[1].lower()
+        if ext not in ALLOWED_IMAGE_EXTS:
+            continue
+
+        content = b""
+        while True:
+            chunk = await file.read(1024 * 1024)
+            if not chunk:
+                break
+            content += chunk
+            if len(content) > MAX_IMAGE_BYTES:
+                break
+
+        if len(content) > MAX_IMAGE_BYTES:
+            continue
+
+        unique_name = f"{uuid.uuid4().hex[:12]}{ext}"
+        file_path = upload_dir / unique_name
+        with open(file_path, "wb") as f:
+            f.write(content)
+
+        url = f"/data/websites/{tenant_id}/uploads/{unique_name}"
+        saved.append({"filename": unique_name, "original": safe_name, "url": url})
+
+    return {"status": "success", "count": len(saved), "images": saved}
+
+
+@router.get("/api/uploads/{tenant_id}")
+async def list_uploads(tenant_id: str, current_user: dict = Depends(require_admin)):
+    """Lista las imagenes subidas para un tenant."""
+    upload_dir = DATA_DIR / "websites" / tenant_id / "uploads"
+    if not upload_dir.exists():
+        return {"status": "success", "images": []}
+
+    images = []
+    for f in sorted(upload_dir.iterdir()):
+        if f.is_file() and f.suffix.lower() in ALLOWED_IMAGE_EXTS:
+            images.append({
+                "filename": f.name,
+                "url": f"/data/websites/{tenant_id}/uploads/{f.name}",
+                "size": f.stat().st_size,
+            })
+    return {"status": "success", "images": images}
+
+
+@router.delete("/api/uploads/{tenant_id}/{filename}")
+async def delete_upload(tenant_id: str, filename: str, current_user: dict = Depends(require_admin)):
+    """Eliminar una imagen subida."""
+    safe_name = os.path.basename(filename)
+    file_path = DATA_DIR / "websites" / tenant_id / "uploads" / safe_name
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Imagen no encontrada")
+    file_path.unlink()
+    return {"status": "success"}
 
 
 @router.post("/api/chat/{tenant_id}")
@@ -310,6 +383,7 @@ async def get_site_editor_data(tenant_id: str, current_user: dict = Depends(requ
             "hero_subtitle": site_data.get("hero_subtitle", ""),
             "hero_cta": site_data.get("hero_cta", ""),
             "hero_image": site_data.get("hero_image", ""),
+            "logo_url": site_data.get("logo_url", ""),
             "about_title": site_data.get("about_title", ""),
             "about_text": site_data.get("about_text", ""),
             "about_image": site_data.get("about_image", ""),

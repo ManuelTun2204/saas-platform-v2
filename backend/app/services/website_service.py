@@ -502,9 +502,12 @@ class WebsiteService:
         site_data["seo_enabled"] = seo_enabled
         site_data["chatbot_enabled"] = chatbot_enabled
         site_data["public_url"] = PUBLIC_URL
-        site_data["hero_image"] = images["hero"]
-        site_data["about_image"] = images["about"]
-        site_data["gallery_images"] = images["gallery"]
+        if not site_data.get("hero_image"):
+            site_data["hero_image"] = images["hero"]
+        if not site_data.get("about_image"):
+            site_data["about_image"] = images["about"]
+        if not site_data.get("gallery_images"):
+            site_data["gallery_images"] = images["gallery"]
         site_data["services"] = map_icons(site_data.get("services", []))
         # Variables que necesita el template services.html (sin romper landing.html)
         site_data.setdefault("google_font", "Poppins")
