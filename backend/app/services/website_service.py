@@ -15,6 +15,22 @@ PUBLIC_URL = os.getenv("PUBLIC_URL", "http://localhost:8000").rstrip("/")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
+def _select_template(industry: str) -> str:
+    """Selecciona la plantilla adecuada segun la industria."""
+    ind = industry.lower()
+    if any(k in ind for k in ["dentista", "clinica", "medico", "salud", "hospital", "doctor", "odontologo", "oftalmologo", "psicologo", "veterinario"]):
+        return "medical.html"
+    if any(k in ind for k in ["gimnasio", "fitness", "deporte", "yoga", "crossfit", "entrenador", "personal trainer", "artes marciales", "pilates"]):
+        return "fitness.html"
+    if any(k in ind for k in ["hotel", "hospedaje", "airbnb", "resort", "posada", "hostal", "motel"]):
+        return "hotel.html"
+    if any(k in ind for k in ["tienda", "tienda online", "ecommerce", "shop", "boutique", "ropa", "moda", "accesorios", "zapatos", "calzado", "electronica", "tecnologia", "gadgets", "supermercado", "abarrotes"]):
+        return "ecommerce.html"
+    if any(k in ind for k in ["servicio", "consultoria", "asesoria", "profesional", "legal", "contable", "inmobiliaria", "construccion", "arquitectura", "fotografia", "agencia", "marketing", "diseno"]):
+        return "services.html"
+    return "landing.html"
+
+
 def _atomic_write_json(path: Path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
@@ -527,7 +543,7 @@ class WebsiteService:
     def regenerate_site(self, tenant_id: str, site_data: dict) -> dict:
         try:
             site_data["cache_buster"] = int(time.time())
-            template_name = "services.html" if "servicio" in site_data.get("industry", "").lower() else "landing.html"
+            template_name = _select_template(site_data.get("industry", ""))
             html_content = self._render_site(template_name, site_data, seo_enabled=True, chatbot_enabled=True)
             tenant_dir = WEBSITES_DIR / tenant_id
             tenant_dir.mkdir(exist_ok=True)
@@ -578,17 +594,7 @@ class WebsiteService:
         deliverables = []
         preview_url = "#"
         try:
-            # Determinar template basado en el tipo de página
-            if page_type == "services":
-                template_name = "services.html"
-            elif page_type == "portfolio":
-                template_name = "landing.html"
-            elif page_type == "blog":
-                template_name = "landing.html"
-            elif page_type == "ecommerce":
-                template_name = "landing.html"
-            else:
-                template_name = "landing.html" if "servicio" not in industry.lower() else "services.html"
+            template_name = _select_template(industry)
             
             # Aplicar colores según el tema visual
             theme_colors = {
@@ -607,7 +613,7 @@ class WebsiteService:
             
             if package == "full":
                 logger.info("Ejecutando: SERVICIO COMPLETO")
-                template_name = "services.html" if "servicio" in industry.lower() else "landing.html"
+                template_name = _select_template(industry)
                 html_content = self._render_site(template_name, site_data, seo_enabled=True, chatbot_enabled=True)
                 tenant_dir = WEBSITES_DIR / tenant_id
                 tenant_dir.mkdir(exist_ok=True)
@@ -666,7 +672,7 @@ class WebsiteService:
                 preview_url = f"/data/websites/{tenant_id}/index.html?v={site_data['cache_buster']}"
                 deliverables = ["Sitio Web Profesional", "Chatbot RAG", "SEO Completo", "Reporte SEO"]
             elif package == "web_chat":
-                template_name = "services.html" if "servicio" in industry.lower() else "landing.html"
+                template_name = _select_template(industry)
                 html_content = self._render_site(template_name, site_data, seo_enabled=False, chatbot_enabled=True)
                 tenant_dir = WEBSITES_DIR / tenant_id
                 tenant_dir.mkdir(exist_ok=True)

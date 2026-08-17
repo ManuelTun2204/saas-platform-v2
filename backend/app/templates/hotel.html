@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="{{ language | default('es') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ seo_title or (hero_title ~ ' | Hotel & Hospedaje') }}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='{{ brand_hex | urlencode }}'/><text x='50' y='68' font-size='55' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial,sans-serif'>{{ company_name[0] | upper }}</text></svg>">
+    <meta name="description" content="{{ seo_description or hero_subtitle }}">
+    <meta name="keywords" content="{{ seo_keywords or (company_name ~ ', hotel, hospedaje, reservaciones') }}">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="{{ seo_title or hero_title }}">
+    <meta property="og:description" content="{{ seo_description or hero_subtitle }}">
+    <meta property="og:type" content="website">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family={{ google_font }}:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['{{ google_font }}', 'sans-serif'] },
+                    colors: { brand: '{{ brand_hex }}' }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --brand-primary: {{ brand_hex }};
+            --brand-secondary: {{ brand_secondary }};
+            --gradient-primary: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-xl: 0 16px 40px rgba(0,0,0,0.2);
+            --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: var(--shadow-md); }
+        .glass-dark { background: rgba(17, 24, 39, 0.9); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
+
+        .btn-premium {
+            background: var(--gradient-primary);
+            color: #ffffff;
+            font-weight: 700;
+            padding: 16px 36px;
+            border-radius: 50px;
+            border: 2px solid rgba(255,255,255,0.2);
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            text-decoration: none;
+            text-align: center;
+        }
+        .btn-premium:hover { transform: translateY(-3px); box-shadow: var(--shadow-xl); filter: brightness(1.05); }
+
+        .card-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-base);
+        }
+        .card-glass:hover { transform: translateY(-8px); box-shadow: var(--shadow-xl); }
+
+        .heading-premium {
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .badge-premium {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.9);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--brand-primary);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-md);
+        }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-on-scroll { animation: fadeInUp 0.8s ease-out forwards; }
+        .hover-lift { transition: all var(--transition-base); }
+        .hover-lift:hover { transform: translateY(-8px); box-shadow: var(--shadow-xl); }
+        .gradient-text { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .section-premium { padding: 100px 0; }
+        @media (min-width: 768px) { .section-premium { padding: 120px 0; } }
+
+        .room-card { position: relative; overflow: hidden; border-radius: 24px; }
+        .room-card .room-image { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .room-card:hover .room-image { transform: scale(1.08); }
+        .room-card .room-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 24px; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%); }
+
+        .amenity-icon { width: 72px; height: 72px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; transition: all var(--transition-base); }
+        .amenity-icon:hover { transform: translateY(-6px) scale(1.05); }
+
+        .gallery-item { border-radius: 16px; overflow: hidden; position: relative; }
+        .gallery-item img { transition: transform 0.6s ease; width: 100%; height: 100%; object-fit: cover; }
+        .gallery-item:hover img { transform: scale(1.1); }
+        .gallery-item::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 40%); opacity: 0; transition: opacity 0.3s; }
+        .gallery-item:hover::after { opacity: 1; }
+
+        .price-tag {
+            background: var(--gradient-primary);
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            display: inline-block;
+        }
+
+        .amenity-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.9);
+            font-weight: 500;
+        }
+
+{% if visual_style == 'glassmorphism' %}
+        body { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%) !important; min-height: 100vh; }
+        .glass-card { background: rgba(255,255,255,0.08); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        .glass-card:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
+        section { background: transparent !important; }
+        nav { background: rgba(255,255,255,0.05) !important; backdrop-filter: blur(20px) !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; }
+        nav a { color: rgba(255,255,255,0.8) !important; }
+        nav a:hover { color: #ffffff !important; }
+        h1, h2, h3, p, span, li, td, th, label { color: rgba(255,255,255,0.9) !important; }
+        .text-gray-600, .text-gray-500 { color: rgba(255,255,255,0.6) !important; }
+        .bg-white { background: rgba(255,255,255,0.06) !important; }
+        .bg-gray-50 { background: rgba(255,255,255,0.03) !important; }
+        .border-gray-200, .border { border-color: rgba(255,255,255,0.1) !important; }
+        .shadow-xl, .shadow-2xl { box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important; }
+        .gradient-text { background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
+        footer { background: rgba(0,0,0,0.3) !important; backdrop-filter: blur(10px); }
+{% endif %}
+    </style>
+</head>
+<body class="font-sans text-gray-800 antialiased bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+
+    <!-- NAVBAR -->
+    <nav class="fixed w-full z-50 top-0 start-0 glass shadow-lg">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between px-6 py-4">
+            {% if logo_url %}<img src="{{ logo_url }}" alt="" class="h-10 object-contain">{% else %}<span class="text-2xl font-extrabold gradient-text">{{ hero_title.split(' ')[0] }}</span>{% endif %}
+            <div class="flex gap-4">
+                <a href="#habitaciones" class="hidden md:block text-gray-700 hover:text-brand font-semibold py-2 transition">Habitaciones</a>
+                <a href="#amenidades" class="hidden md:block text-gray-700 hover:text-brand font-semibold py-2 transition">Servicios</a>
+                <a href="#galeria" class="hidden md:block text-gray-700 hover:text-brand font-semibold py-2 transition">Galería</a>
+                <a href="#contacto" class="hidden md:block text-gray-700 hover:text-brand font-semibold py-2 transition">Contacto</a>
+                {% if calendly_url %}
+                    <a href="{{ calendly_url }}" target="_blank" class="btn-premium text-base px-6 py-2.5">Reservar</a>
+                {% else %}
+                    <a href="#contacto" class="btn-premium text-base px-6 py-2.5">Reservar</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden min-h-[90vh] flex items-center">
+        <div class="absolute inset-0 z-0">
+            <img src="https://image.pollinations.ai/prompt/luxury%20hotel%20resort%20lobby%20elegant%20hospitality%20{{ hero_image_keyword }}?width=1920&height=1080&nologo=true&seed={{ tenant_id }}" alt="Fondo" class="w-full h-full object-cover" loading="eager">
+            <video class="absolute inset-0 w-full h-full object-cover" autoplay muted loop playsinline
+                   poster="https://image.pollinations.ai/prompt/luxury%20hotel%20resort%20elegant%20hospitality%20{{ hero_image_keyword }}?width=1920&height=1080&nologo=true&seed={{ tenant_id }}">
+                <source src="https://videos.pexels.com/video-files/3297314/3297314-hd_1920_1080_25fps.mp4" type="video/mp4">
+            </video>
+            <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70"></div>
+        </div>
+        <div class="relative z-10 max-w-5xl mx-auto text-center px-6 animate-on-scroll">
+            <span class="badge-premium">🏨 Hospedaje de Lujo</span>
+            <h1 class="text-5xl md:text-7xl font-extrabold mb-8 text-white leading-tight">{{ hero_title }}</h1>
+            <p class="text-xl md:text-2xl text-gray-200 mb-12 max-w-3xl mx-auto leading-relaxed">{{ hero_subtitle }}</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                {% if calendly_url %}
+                    <a href="{{ calendly_url }}" target="_blank" class="btn-premium text-lg px-10 py-4">Reservar Ahora</a>
+                {% else %}
+                    <a href="#contacto" class="btn-premium text-lg px-10 py-4">Reservar Ahora</a>
+                {% endif %}
+                <a href="#habitaciones" class="inline-block text-white glass hover:bg-white/20 font-semibold rounded-full px-8 py-4 text-lg transition-all shadow-md hover:shadow-lg">Ver Habitaciones</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ROOMS SECTION -->
+    <section id="habitaciones" class="section-premium bg-white/50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 gradient-text">Nuestras Habitaciones</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Espacios diseñados para tu comodidad y descanso.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Individual Room -->
+                <div class="card-glass hover-lift flex flex-col">
+                    <div class="room-card h-64 bg-gray-200">
+                        <img src="https://image.pollinations.ai/prompt/luxury%20single%20hotel%20room%20modern%20cozy%20bed?width=600&height=400&nologo=true&seed={{ tenant_id }}10" alt="Habitación Individual" class="room-image w-full h-full object-cover" loading="lazy">
+                        <div class="room-overlay">
+                            <span class="price-tag">$89 / noche</span>
+                        </div>
+                    </div>
+                    <div class="p-8 flex-grow flex flex-col">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2 gradient-text">Individual</h3>
+                        <p class="text-gray-600 mb-4 flex-grow">Perfecta para viajeros en solitario. Cama king, baño privado y todas las comodidades esenciales.</p>
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fas fa-user text-gray-400"></i>
+                            <span class="text-sm text-gray-500">1 huésped</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <span class="amenity-pill"><i class="fas fa-wifi"></i> WiFi</span>
+                            <span class="amenity-pill"><i class="fas fa-tv"></i> Smart TV</span>
+                            <span class="amenity-pill"><i class="fas fa-shower"></i> Baño privado</span>
+                            <span class="amenity-pill"><i class="fas fa-snowflake"></i> A/C</span>
+                        </div>
+                        {% if calendly_url %}
+                            <a href="{{ calendly_url }}" target="_blank" class="btn-premium text-center text-base px-6 py-3">Reservar</a>
+                        {% else %}
+                            <a href="#contacto" class="btn-premium text-center text-base px-6 py-3">Reservar</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Double Room -->
+                <div class="card-glass hover-lift flex flex-col">
+                    <div class="room-card h-64 bg-gray-200">
+                        <img src="https://image.pollinations.ai/prompt/luxury%20double%20hotel%20room%20elegant%20two%20beds?width=600&height=400&nologo=true&seed={{ tenant_id }}20" alt="Habitación Doble" class="room-image w-full h-full object-cover" loading="lazy">
+                        <div class="room-overlay">
+                            <span class="price-tag">$139 / noche</span>
+                        </div>
+                    </div>
+                    <div class="p-8 flex-grow flex flex-col">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2 gradient-text">Doble</h3>
+                        <p class="text-gray-600 mb-4 flex-grow">Ideal para parejas o amigos. Dos camas dobles, baño completo y balcón con vista.</p>
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fas fa-users text-gray-400"></i>
+                            <span class="text-sm text-gray-500">2 huéspedes</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <span class="amenity-pill"><i class="fas fa-wifi"></i> WiFi</span>
+                            <span class="amenity-pill"><i class="fas fa-tv"></i> Smart TV</span>
+                            <span class="amenity-pill"><i class="fas fa-mug-hot"></i> Minibar</span>
+                            <span class="amenity-pill"><i class="fas fa-mountain-sun"></i> Balcón</span>
+                            <span class="amenity-pill"><i class="fas fa-snowflake"></i> A/C</span>
+                        </div>
+                        {% if calendly_url %}
+                            <a href="{{ calendly_url }}" target="_blank" class="btn-premium text-center text-base px-6 py-3">Reservar</a>
+                        {% else %}
+                            <a href="#contacto" class="btn-premium text-center text-base px-6 py-3">Reservar</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Suite Room -->
+                <div class="card-glass hover-lift flex flex-col">
+                    <div class="room-card h-64 bg-gray-200 relative">
+                        <img src="https://image.pollinations.ai/prompt/luxury%20hotel%20suite%20panoramic%20view%20elegant%20living%20room?width=600&height=400&nologo=true&seed={{ tenant_id }}30" alt="Suite" class="room-image w-full h-full object-cover" loading="lazy">
+                        <div class="room-overlay flex items-center gap-2">
+                            <span class="price-tag">$249 / noche</span>
+                            <span class="bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full">Premium</span>
+                        </div>
+                    </div>
+                    <div class="p-8 flex-grow flex flex-col">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2 gradient-text">Suite Premium</h3>
+                        <p class="text-gray-600 mb-4 flex-grow">La experiencia definitiva. Sala de estar, jacuzzi privado, vista panorámica y servicio de mayordomo.</p>
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fas fa-crown text-gray-400"></i>
+                            <span class="text-sm text-gray-500">2-4 huéspedes</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <span class="amenity-pill"><i class="fas fa-wifi"></i> WiFi</span>
+                            <span class="amenity-pill"><i class="fas fa-hot-tub-person"></i> Jacuzzi</span>
+                            <span class="amenity-pill"><i class="fas fa-concierge-bell"></i> Mayordomo</span>
+                            <span class="amenity-pill"><i class="fas fa-mountain-sun"></i> Terraza</span>
+                            <span class="amenity-pill"><i class="fas fa-champagne-glasses"></i> Room Service</span>
+                        </div>
+                        {% if calendly_url %}
+                            <a href="{{ calendly_url }}" target="_blank" class="btn-premium text-center text-base px-6 py-3">Reservar</a>
+                        {% else %}
+                            <a href="#contacto" class="btn-premium text-center text-base px-6 py-3">Reservar</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AMENITIES SECTION -->
+    <section id="amenidades" class="section-premium">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 gradient-text">Servicios del Hotel</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Todo lo que necesitas para una estancia inolvidable.</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                <!-- Pool -->
+                <div class="glass-card p-6 rounded-2xl text-center hover-lift">
+                    <div class="amenity-icon mx-auto mb-4" style="background: var(--gradient-primary); color: white;">
+                        <i class="fas fa-person-swimming"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-900 mb-1">Piscina</h3>
+                    <p class="text-xs text-gray-500">Al aire libre</p>
+                </div>
+
+                <!-- WiFi -->
+                <div class="glass-card p-6 rounded-2xl text-center hover-lift">
+                    <div class="amenity-icon mx-auto mb-4" style="background: var(--gradient-primary); color: white;">
+                        <i class="fas fa-wifi"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-900 mb-1">WiFi</h3>
+                    <p class="text-xs text-gray-500">Alta velocidad</p>
+                </div>
+
+                <!-- Parking -->
+                <div class="glass-card p-6 rounded-2xl text-center hover-lift">
+                    <div class="amenity-icon mx-auto mb-4" style="background: var(--gradient-primary); color: white;">
+                        <i class="fas fa-square-parking"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-900 mb-1">Estacionamiento</h3>
+                    <p class="text-xs text-gray-500">Vigilado 24h</p>
+                </div>
+
+                <!-- Restaurant -->
+                <div class="glass-card p-6 rounded-2xl text-center hover-lift">
+                    <div class="amenity-icon mx-auto mb-4" style="background: var(--gradient-primary); color: white;">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-900 mb-1">Restaurante</h3>
+                    <p class="text-xs text-gray-500">Cocina gourmet</p>
+                </div>
+
+                <!-- Spa -->
+                <div class="glass-card p-6 rounded-2xl text-center hover-lift">
+                    <div class="amenity-icon mx-auto mb-4" style="background: var(--gradient-primary); color: white;">
+                        <i class="fas fa-spa"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-900 mb-1">Spa</h3>
+                    <p class="text-xs text-gray-500">Masajes y tratamientos</p>
+                </div>
+
+                <!-- Gym -->
+                <div class="glass-card p-6 rounded-2xl text-center hover-lift">
+                    <div class="amenity-icon mx-auto mb-4" style="background: var(--gradient-primary); color: white;">
+                        <i class="fas fa-dumbbell"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-900 mb-1">Gimnasio</h3>
+                    <p class="text-xs text-gray-500">Equipamiento completo</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GALLERY SECTION -->
+    <section id="galeria" class="section-premium bg-white/50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 gradient-text">Galería</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Descubre la elegancia y confort de nuestros espacios.</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {% if gallery_images %}
+                    {% for image in gallery_images %}
+                    <div class="gallery-item {% if loop.index0 == 0 %}col-span-2 row-span-2{% endif %} h-48 md:h-full">
+                        <img src="{{ image }}" alt="Galería {{ loop.index }}" class="w-full h-full object-cover" loading="lazy">
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="gallery-item col-span-2 row-span-2 h-48 md:h-full">
+                        <img src="https://image.pollinations.ai/prompt/luxury%20hotel%20swimming%20pool%20turquoise%20water%20resort?width=800&height=600&nologo=true&seed={{ tenant_id }}41" alt="Piscina del hotel" class="w-full h-full object-cover" loading="lazy">
+                    </div>
+                    <div class="gallery-item h-48 md:h-full">
+                        <img src="https://image.pollinations.ai/prompt/luxury%20hotel%20suite%20bedroom%20elegant%20decor?width=400&height=400&nologo=true&seed={{ tenant_id }}42" alt="Suite del hotel" class="w-full h-full object-cover" loading="lazy">
+                    </div>
+                    <div class="gallery-item h-48 md:h-full">
+                        <img src="https://image.pollinations.ai/prompt/hotel%20gourmet%20restaurant%20fine%20dining%20ambiance?width=400&height=400&nologo=true&seed={{ tenant_id }}43" alt="Restaurante" class="w-full h-full object-cover" loading="lazy">
+                    </div>
+                    <div class="gallery-item h-48 md:h-full">
+                        <img src="https://image.pollinations.ai/prompt/luxury%20spa%20massage%20room%20candles%20relaxation?width=400&height=400&nologo=true&seed={{ tenant_id }}44" alt="Spa" class="w-full h-full object-cover" loading="lazy">
+                    </div>
+                    <div class="gallery-item h-48 md:h-full">
+                        <img src="https://image.pollinations.ai/prompt/hotel%20lobby%20elegant%20chandelier%20marble%20floor?width=400&height=400&nologo=true&seed={{ tenant_id }}45" alt="Lobby" class="w-full h-full object-cover" loading="lazy">
+                    </div>
+                    <div class="gallery-item h-48 md:h-full">
+                        <img src="https://image.pollinations.ai/prompt/hotel%20gym%20modern%20fitness%20center%20equipment?width=400&height=400&nologo=true&seed={{ tenant_id }}46" alt="Gimnasio" class="w-full h-full object-cover" loading="lazy">
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    {% if testimonials %}
+    <section class="section-premium">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6">Lo que dicen nuestros <span class="gradient-text">huéspedes</span></h2>
+                <p class="text-gray-400 text-xl">Experiencias reales de quienes nos visitaron.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                {% for testimonial in testimonials %}
+                <div class="glass-card p-8 rounded-2xl">
+                    <div class="flex mb-4">
+                        {% for i in range(testimonial.rating | int) %}
+                        <i class="fas fa-star text-yellow-400"></i>
+                        {% endfor %}
+                    </div>
+                    <p class="text-gray-300 mb-6 italic">"{{ testimonial.text }}"</p>
+                    <div class="flex items-center gap-4">
+                        {% if testimonial.photo %}
+                        <img src="{{ testimonial.photo }}" alt="{{ testimonial.name }}" class="w-12 h-12 rounded-full object-cover shadow-md" loading="lazy">
+                        {% else %}
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                            {{ testimonial.name[0] }}
+                        </div>
+                        {% endif %}
+                        <div>
+                            <p class="font-bold text-white">{{ testimonial.name }}</p>
+                            <p class="text-sm text-gray-400">{{ testimonial.role }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- CONTACT SECTION -->
+    <section id="contacto" class="section-premium bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6">Reserva tu Estancia</h2>
+                <p class="text-gray-400 text-xl">Contáctanos para disponibilidad o personaliza tu visita.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center mb-12">
+                {% if contact_email %}
+                <div class="glass-dark p-8 rounded-2xl hover-lift">
+                    <div class="text-4xl mb-4">📧</div>
+                    <h3 class="font-bold text-xl mb-3">Email</h3>
+                    <a href="mailto:{{ contact_email }}" class="text-blue-400 hover:underline break-all">{{ contact_email }}</a>
+                </div>
+                {% endif %}
+                {% if contact_phone %}
+                <div class="glass-dark p-8 rounded-2xl hover-lift">
+                    <div class="text-4xl mb-4">📱</div>
+                    <h3 class="font-bold text-xl mb-3">WhatsApp</h3>
+                    <a href="https://wa.me/{{ contact_phone | replace(' ', '') | replace('+', '') | replace('-', '') }}" target="_blank" class="text-green-400 hover:underline">{{ contact_phone }}</a>
+                </div>
+                {% endif %}
+                {% if contact_address %}
+                <div class="glass-dark p-8 rounded-2xl hover-lift">
+                    <div class="text-4xl mb-4">📍</div>
+                    <h3 class="font-bold text-xl mb-3">Ubicación</h3>
+                    <p class="text-gray-400">{{ contact_address }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Contact Form -->
+            <div class="max-w-2xl mx-auto glass-dark rounded-2xl p-8">
+                <form id="contact-form" class="space-y-5">
+                    <input type="hidden" id="contact-tenant" value="{{ tenant_id }}">
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold mb-1 text-gray-300">Nombre</label>
+                            <input type="text" id="contact-name" required
+                                   class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="Tu nombre">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1 text-gray-300">Email *</label>
+                            <input type="email" id="contact-email-input" required
+                                   class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="tu@email.com">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1 text-gray-300">Teléfono (opcional)</label>
+                        <input type="tel" id="contact-phone-input"
+                               class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="+52 999 123 4567">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1 text-gray-300">Mensaje *</label>
+                        <textarea id="contact-message" required rows="4"
+                                  class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                  placeholder="Cuéntanos sobre tu estancia..."></textarea>
+                    </div>
+                    <button type="submit" id="contact-submit"
+                            class="w-full btn-premium font-bold py-4 rounded-xl text-lg">
+                        Enviar Mensaje
+                    </button>
+                </form>
+                <div id="contact-success" class="hidden text-center py-8">
+                    <div class="text-5xl mb-4">✅</div>
+                    <p class="text-xl font-bold mb-2">¡Mensaje enviado!</p>
+                    <p class="text-gray-400">Te contactaremos pronto.</p>
+                </div>
+                <div id="contact-error" class="hidden text-center py-4">
+                    <p class="text-red-400 font-semibold"></p>
+                </div>
+            </div>
+
+            {% if calendly_url %}
+            <div class="mt-16 text-center">
+                <a href="{{ calendly_url }}" target="_blank" class="inline-block btn-premium text-lg px-12 py-4">📅 Reservar Directamente</a>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-950 text-gray-500 py-12 text-center text-sm border-t border-gray-800">
+        <p class="mb-4">&copy; 2026 {{ hero_title.split(' ')[0] }}. {% if language == 'en' %}All rights reserved.{% else %}Todos los derechos reservados.{% endif %}</p>
+        {% set social = social_media or {} %}
+        {% if social.facebook or social.instagram or social.tiktok or social.youtube or social.twitter %}
+        <div class="flex justify-center gap-3">
+            {% if social.facebook %}<a href="{{ social.facebook }}" target="_blank" rel="noopener" class="w-9 h-9 bg-gray-800 hover:bg-blue-600 rounded-full flex items-center justify-center transition"><i class="fab fa-facebook-f text-white text-sm"></i></a>{% endif %}
+            {% if social.instagram %}<a href="{{ social.instagram }}" target="_blank" rel="noopener" class="w-9 h-9 bg-gray-800 hover:bg-pink-600 rounded-full flex items-center justify-center transition"><i class="fab fa-instagram text-white text-sm"></i></a>{% endif %}
+            {% if social.tiktok %}<a href="{{ social.tiktok }}" target="_blank" rel="noopener" class="w-9 h-9 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition"><i class="fab fa-tiktok text-white text-sm"></i></a>{% endif %}
+            {% if social.youtube %}<a href="{{ social.youtube }}" target="_blank" rel="noopener" class="w-9 h-9 bg-gray-800 hover:bg-red-600 rounded-full flex items-center justify-center transition"><i class="fab fa-youtube text-white text-sm"></i></a>{% endif %}
+            {% if social.twitter %}<a href="{{ social.twitter }}" target="_blank" rel="noopener" class="w-9 h-9 bg-gray-800 hover:bg-blue-400 rounded-full flex items-center justify-center transition"><i class="fab fa-x-twitter text-white text-sm"></i></a>{% endif %}
+        </div>
+        {% endif %}
+    </footer>
+
+    <!-- CHATBOT -->
+    {% if chatbot_enabled %}
+    <script>
+        var CHATBOT_TENANT_ID = '{{ tenant_id }}';
+        var CHATBOT_TITLE = 'Asistente {{ company_name }}';
+        var CHATBOT_PRIMARY_COLOR = '{{ brand_hex }}';
+        var CHATBOT_SECONDARY_COLOR = '{{ brand_secondary }}';
+    </script>
+    <script src="{{ public_url }}/static/widget/widget.js"></script>
+    {% endif %}
+
+    <!-- AUTO CONTRAST SCRIPT -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const color = getComputedStyle(document.documentElement).getPropertyValue('--brand-primary').trim();
+            if (color && color.length === 7) {
+                const r = parseInt(color.substr(1,2), 16);
+                const g = parseInt(color.substr(3,2), 16);
+                const b = parseInt(color.substr(5,2), 16);
+                const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                if (luminance > 0.65) {
+                    document.querySelectorAll('.btn-premium').forEach(btn => {
+                        btn.style.color = '#000000';
+                        btn.style.borderColor = 'rgba(0,0,0,0.3)';
+                        btn.style.textShadow = 'none';
+                    });
+                }
+            }
+        });
+    </script>
+
+    <!-- CONTACT FORM JS -->
+    <script>
+    (function() {
+        const form = document.getElementById('contact-form');
+        if (!form) return;
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('contact-submit');
+            const originalText = btn.textContent;
+            btn.textContent = 'Enviando...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('contact-name').value,
+                        email: document.getElementById('contact-email-input').value,
+                        phone: document.getElementById('contact-phone-input').value,
+                        message: document.getElementById('contact-message').value,
+                        tenant_id: document.getElementById('contact-tenant').value
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    form.classList.add('hidden');
+                    document.getElementById('contact-success').classList.remove('hidden');
+                } else {
+                    const errDiv = document.getElementById('contact-error');
+                    errDiv.classList.remove('hidden');
+                    errDiv.querySelector('p').textContent = data.detail || 'Error al enviar.';
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
+            } catch(err) {
+                const errDiv = document.getElementById('contact-error');
+                errDiv.classList.remove('hidden');
+                errDiv.querySelector('p').textContent = 'Error de conexion.';
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+    })();
+    </script>
+
+    <!-- WHATSAPP FLOATING -->
+    {% if contact_phone %}
+    <a href="https://wa.me/{{ contact_phone | replace(' ','') | replace('+','') | replace('-','') }}?text=Hola,%20me%20interesa%20una%20habitación"
+       target="_blank" rel="noopener noreferrer"
+       class="fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-2xl transition-all hover:scale-110 flex items-center justify-center"
+       aria-label="Contactar por WhatsApp"
+       style="box-shadow: 0 4px 20px rgba(37,211,102,0.4);">
+        <i class="fab fa-whatsapp text-3xl"></i>
+    </a>
+    {% endif %}
+</body>
+</html>
