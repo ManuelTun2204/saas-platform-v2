@@ -40,8 +40,8 @@ def _enrich_lead(lead: dict, company_map: dict) -> dict:
 
 
 @router.get("/api/leads")
-async def list_leads(q: str = "", status: str = "", current_user: dict = Depends(require_admin)):
-    """Listar leads con busqueda y filtro por estado (solo admin)"""
+async def list_leads(q: str = "", status: str = "", page: int = 1, per_page: int = 20, current_user: dict = Depends(require_admin)):
+    """Listar leads con busqueda, filtro por estado y paginacion (solo admin)"""
     try:
         leads = read_json_file(LEADS_FILE, [])
         tenants = read_json_file(TENANTS_FILE, [])
@@ -51,6 +51,13 @@ async def list_leads(q: str = "", status: str = "", current_user: dict = Depends
         }
 
         result = [_enrich_lead(l, company_map) for l in leads]
+
+        counts = {
+            "total": len(result),
+            "nuevo": sum(1 for l in result if l["status"] == "nuevo"),
+            "contactado": sum(1 for l in result if l["status"] == "contactado"),
+            "convertido": sum(1 for l in result if l["status"] == "convertido"),
+        }
 
         if status:
             result = [l for l in result if l["status"] == status]
@@ -64,15 +71,23 @@ async def list_leads(q: str = "", status: str = "", current_user: dict = Depends
 
         result.sort(key=lambda l: l.get("timestamp", ""), reverse=True)
 
+        total_filtered = len(result)
+        page = max(1, page)
+        per_page = min(max(1, per_page), 100)
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated = result[start:end]
+
         return {
             "status": "success",
-            "leads": result,
-            "counts": {
-                "total": len(leads),
-                "nuevo": sum(1 for l in result if l["status"] == "nuevo"),
-                "contactado": sum(1 for l in result if l["status"] == "contactado"),
-                "convertido": sum(1 for l in result if l["status"] == "convertido"),
+            "leads": paginated,
+            "pagination": {
+                "page": page,
+                "per_page": per_page,
+                "total": total_filtered,
+                "total_pages": max(1, -(-total_filtered // per_page)),
             },
+            "counts": counts,
         }
     except HTTPException:
         raise

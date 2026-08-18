@@ -1415,11 +1415,15 @@ async function setLeadStatus(leadId, status) {
     }
 }
 
-async function loadLeads() {
+var leadsPage = 1;
+var leadsPerPage = 20;
+
+async function loadLeads(page) {
+    if (page) leadsPage = page;
     var q = document.getElementById('lead-search').value.trim();
     var status = document.getElementById('lead-status-filter').value;
     try {
-        var url = '/api/leads?q=' + encodeURIComponent(q) + '&status=' + encodeURIComponent(status);
+        var url = '/api/leads?q=' + encodeURIComponent(q) + '&status=' + encodeURIComponent(status) + '&page=' + leadsPage + '&per_page=' + leadsPerPage;
         var res = await apiRequest(url);
         var data = await res.json();
         var container = document.getElementById('leads-list');
@@ -1444,6 +1448,15 @@ async function loadLeads() {
                 html += '</tr>';
             }
             html += '</tbody></table></div>';
+            var p = data.pagination;
+            if (p.total_pages > 1) {
+                html += '<div class="flex items-center justify-between mt-4">';
+                html += '<span class="text-sm text-gray-500">Pagina ' + p.page + ' de ' + p.total_pages + ' (' + p.total + ' leads)</span>';
+                html += '<div class="flex gap-2">';
+                if (p.page > 1) html += '<button onclick="loadLeads(' + (p.page - 1) + ')" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Anterior</button>';
+                if (p.page < p.total_pages) html += '<button onclick="loadLeads(' + (p.page + 1) + ')" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm">Siguiente</button>';
+                html += '</div></div>';
+            }
             container.innerHTML = html;
         } else {
             container.innerHTML = '<p class="text-gray-500">No hay leads' + (q || status ? ' con ese filtro' : '') + '</p>';
