@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from app.deps import BASE_DIR, DATA_DIR
-from app.routers import auth, tenants, payments, analytics, leads, blog
+from app.routers import auth, tenants, payments, analytics, leads, blog, ecommerce
 
 # Mostrar en consola los logs de la app (costos de IA, errores, etc.)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -38,6 +38,7 @@ app.include_router(payments.router)
 app.include_router(analytics.router)
 app.include_router(leads.router)
 app.include_router(blog.router)
+app.include_router(ecommerce.router)
 
 
 @app.get("/")

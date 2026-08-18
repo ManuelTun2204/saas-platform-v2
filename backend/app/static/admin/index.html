@@ -221,6 +221,7 @@
 <button id="export-btn" onclick="exportSite()" class="block w-full bg-amber-600 text-white px-4 py-3 rounded-lg hover:bg-amber-700">Exportar ZIP</button>
 <button id="editor-btn" onclick="openEditor()" class="block w-full bg-gray-800 text-white px-4 py-3 rounded-lg hover:bg-gray-900">Editar Sitio</button>
 <button id="blog-btn" onclick="openBlog()" class="block w-full bg-indigo-600 text-white px-4 py-3 rounded-lg hover:bg-indigo-700"><i class="fa-solid fa-pen-nib mr-1"></i>Gestionar Blog</button>
+<button id="store-btn" onclick="openStore()" class="block w-full bg-orange-600 text-white px-4 py-3 rounded-lg hover:bg-orange-700"><i class="fa-solid fa-store mr-1"></i>Gestionar Tienda</button>
 </div>
 <div id="widget-section" class="bg-white p-6 rounded-xl shadow-sm border space-y-3">
 <h3 class="font-bold">Chatbot para tu Pagina</h3>
@@ -348,6 +349,78 @@
 <div class="mt-6 flex justify-end gap-3">
 <button onclick="closeBlogEditor()" class="px-6 py-3 border rounded-lg hover:bg-gray-50">Cancelar</button>
 <button onclick="saveBlogPost()" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold">Guardar</button>
+</div>
+</div>
+</div>
+
+<!-- VISTA TIENDA -->
+<div id="view-store" class="view-content hidden max-w-5xl mx-auto px-4 py-8">
+<button onclick="showView('company-detail')" class="mb-4 text-blue-600 hover:underline">&larr; Volver al Sitio</button>
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-2xl font-bold">Tienda: <span id="store-tenant-name"></span></h2>
+<div class="flex gap-3">
+<a id="store-public-link" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-semibold text-sm"><i class="fa-solid fa-external-link mr-1"></i>Ver Tienda</a>
+<button onclick="openProductEditor()" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 font-semibold text-sm"><i class="fa-solid fa-plus mr-1"></i>Nuevo Producto</button>
+</div>
+</div>
+<!-- Stats -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+<div class="bg-white p-4 rounded-xl shadow-sm border text-center">
+<p class="text-2xl font-bold text-gray-900" id="store-total-products">0</p>
+<p class="text-xs text-gray-500">Productos</p>
+</div>
+<div class="bg-white p-4 rounded-xl shadow-sm border text-center">
+<p class="text-2xl font-bold text-gray-900" id="store-total-orders">0</p>
+<p class="text-xs text-gray-500">Pedidos</p>
+</div>
+<div class="bg-white p-4 rounded-xl shadow-sm border text-center">
+<p class="text-2xl font-bold text-green-600" id="store-revenue">$0</p>
+<p class="text-xs text-gray-500">Ingresos</p>
+</div>
+<div class="bg-white p-4 rounded-xl shadow-sm border text-center">
+<p class="text-2xl font-bold text-amber-600" id="store-pending-orders">0</p>
+<p class="text-xs text-gray-500">Pendientes</p>
+</div>
+</div>
+<!-- Tabs -->
+<div class="flex gap-2 mb-6">
+<button onclick="showStoreTab('products')" class="store-tab px-4 py-2 rounded-lg font-semibold text-sm bg-orange-100 text-orange-800">Productos</button>
+<button onclick="showStoreTab('orders')" class="store-tab px-4 py-2 rounded-lg font-semibold text-sm bg-gray-100 text-gray-600">Pedidos</button>
+</div>
+<!-- Productos -->
+<div id="store-tab-products" class="space-y-3"></div>
+<!-- Pedidos -->
+<div id="store-tab-orders" class="space-y-3 hidden"></div>
+</div>
+
+<!-- MODAL PRODUCTO -->
+<div id="product-editor-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+<div class="bg-white rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-xl font-bold" id="prod-editor-title">Nuevo Producto</h3>
+<button onclick="closeProductEditor()" class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+</div>
+<div class="space-y-4">
+<div><label class="block text-sm font-semibold mb-1">Nombre</label><input type="text" id="prod-name" class="w-full p-3 border rounded-lg" placeholder="Zapatillas Deportivas"></div>
+<div><label class="block text-sm font-semibold mb-1">Descripcion</label><textarea id="prod-desc" rows="3" class="w-full p-3 border rounded-lg" placeholder="Descripcion del producto..."></textarea></div>
+<div class="grid grid-cols-2 gap-4">
+<div><label class="block text-sm font-semibold mb-1">Precio ($)</label><input type="number" step="0.01" id="prod-price" class="w-full p-3 border rounded-lg" placeholder="29.99"></div>
+<div><label class="block text-sm font-semibold mb-1">Precio anterior ($)</label><input type="number" step="0.01" id="prod-compare" class="w-full p-3 border rounded-lg" placeholder="49.99"></div>
+</div>
+<div><label class="block text-sm font-semibold mb-1">URL de imagen</label><input type="text" id="prod-image" class="w-full p-3 border rounded-lg" placeholder="https://..."></div>
+<div class="grid grid-cols-2 gap-4">
+<div><label class="block text-sm font-semibold mb-1">Categoria</label><input type="text" id="prod-category" class="w-full p-3 border rounded-lg" placeholder="Ropa, Electronica..."></div>
+<div><label class="block text-sm font-semibold mb-1">Stock</label><input type="number" id="prod-stock" class="w-full p-3 border rounded-lg" placeholder="999"></div>
+</div>
+<div class="flex items-center gap-3">
+<input type="checkbox" id="prod-active" class="w-5 h-5 rounded" checked>
+<label for="prod-active" class="text-sm font-semibold">Activo (visible en tienda)</label>
+</div>
+<div id="prod-editor-status" class="text-sm"></div>
+</div>
+<div class="mt-6 flex justify-end gap-3">
+<button onclick="closeProductEditor()" class="px-6 py-3 border rounded-lg hover:bg-gray-50">Cancelar</button>
+<button onclick="saveProduct()" class="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-semibold">Guardar</button>
 </div>
 </div>
 </div>
@@ -991,6 +1064,7 @@ async function viewCompanyDetails(tenantId, name) {
     document.getElementById('export-btn').style.display = 'none';
     document.getElementById('editor-btn').style.display = 'none';
     document.getElementById('blog-btn').style.display = 'none';
+    document.getElementById('store-btn').style.display = 'none';
     var previewEl = document.getElementById('site-preview');
     var iframeSrc = '/data/websites/' + tenantId + '/index.html';
     try {
@@ -1024,6 +1098,7 @@ async function viewCompanyDetails(tenantId, name) {
                     document.getElementById('export-btn').style.display = '';
                     document.getElementById('editor-btn').style.display = '';
                     document.getElementById('blog-btn').style.display = '';
+                    document.getElementById('store-btn').style.display = '';
                 } else {
                     iframeSrc = '/data/websites/' + tenantId + '/chatbot-install.html';
                 }
@@ -1797,6 +1872,207 @@ async function deleteBlogPost(postId) {
         var res = await apiRequest('/api/blog/' + currentTenantId + '/' + postId, { method: 'DELETE' });
         var data = await res.json();
         if (data.status === 'success') loadBlogPosts();
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+var storeEditingId = null;
+
+function openStore() {
+    document.getElementById('store-tenant-name').innerText = document.getElementById('detail-name').innerText;
+    document.getElementById('store-public-link').href = '/store/' + currentTenantId;
+    showView('store');
+    loadStoreData();
+}
+
+function showStoreTab(tab) {
+    document.getElementById('store-tab-products').classList.toggle('hidden', tab !== 'products');
+    document.getElementById('store-tab-orders').classList.toggle('hidden', tab !== 'orders');
+    document.querySelectorAll('.store-tab').forEach(function(b) {
+        b.classList.remove('bg-orange-100', 'text-orange-800');
+        b.classList.add('bg-gray-100', 'text-gray-600');
+    });
+    event.target.classList.remove('bg-gray-100', 'text-gray-600');
+    event.target.classList.add('bg-orange-100', 'text-orange-800');
+}
+
+async function loadStoreData() {
+    try {
+        var resP = await apiRequest('/api/store/' + currentTenantId + '/products/all');
+        var dataP = await resP.json();
+        var products = dataP.status === 'success' ? dataP.products : [];
+        document.getElementById('store-total-products').innerText = products.length;
+        renderStoreProducts(products);
+
+        var resO = await apiRequest('/api/store/' + currentTenantId + '/orders');
+        var dataO = await resO.json();
+        var orders = dataO.status === 'success' ? dataO.orders : [];
+        document.getElementById('store-total-orders').innerText = orders.length;
+        var revenue = orders.reduce(function(s, o) { return s + (o.payment_status === 'paid' ? o.total : 0); }, 0);
+        var pending = orders.filter(function(o) { return o.status === 'pending'; }).length;
+        document.getElementById('store-revenue').innerText = '$' + revenue.toFixed(2);
+        document.getElementById('store-pending-orders').innerText = pending;
+        renderStoreOrders(orders);
+    } catch (e) {
+        console.error('Error loading store:', e);
+    }
+}
+
+function renderStoreProducts(products) {
+    var el = document.getElementById('store-tab-products');
+    if (!products.length) {
+        el.innerHTML = '<p class="text-gray-500 text-center py-8">No hay productos todavia.</p>';
+        return;
+    }
+    var html = '';
+    for (var i = 0; i < products.length; i++) {
+        var p = products[i];
+        var statusBadge = p.active !== false
+            ? '<span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">Activo</span>'
+            : '<span class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">Inactivo</span>';
+        html += '<div class="bg-white p-4 rounded-xl shadow-sm border flex items-center gap-4">';
+        if (p.image) html += '<img src="' + p.image + '" class="w-16 h-16 rounded-lg object-cover shrink-0">';
+        else html += '<div class="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center shrink-0"><i class="fa-solid fa-image text-gray-300"></i></div>';
+        html += '<div class="flex-1 min-w-0">';
+        html += '<div class="flex items-center gap-2">' + statusBadge + '<span class="text-xs text-gray-400">' + (p.category || 'Sin cat.') + '</span></div>';
+        html += '<h4 class="font-bold text-sm truncate">' + escapeHtml(p.name) + '</h4>';
+        html += '<p class="text-sm">$' + p.price.toFixed(2) + (p.compare_price > p.price ? ' <span class="text-gray-400 line-through text-xs">$' + p.compare_price.toFixed(2) + '</span>' : '') + '</p>';
+        html += '</div>';
+        html += '<div class="flex gap-2 shrink-0">';
+        html += '<button onclick="editProduct(\'' + p.id + '\')" class="text-amber-600 hover:text-amber-800 text-sm px-2 py-1"><i class="fa-solid fa-pen"></i></button>';
+        html += '<button onclick="deleteProduct(\'' + p.id + '\')" class="text-red-600 hover:text-red-800 text-sm px-2 py-1"><i class="fa-solid fa-trash"></i></button>';
+        html += '</div></div>';
+    }
+    el.innerHTML = html;
+}
+
+function renderStoreOrders(orders) {
+    var el = document.getElementById('store-tab-orders');
+    if (!orders.length) {
+        el.innerHTML = '<p class="text-gray-500 text-center py-8">No hay pedidos todavia.</p>';
+        return;
+    }
+    var statusColors = { pending: 'bg-yellow-100 text-yellow-800', confirmed: 'bg-blue-100 text-blue-800', shipped: 'bg-purple-100 text-purple-800', delivered: 'bg-green-100 text-green-800', cancelled: 'bg-red-100 text-red-800' };
+    var html = '';
+    for (var i = 0; i < orders.length; i++) {
+        var o = orders[i];
+        var sc = statusColors[o.status] || 'bg-gray-100 text-gray-800';
+        html += '<div class="bg-white p-4 rounded-xl shadow-sm border">';
+        html += '<div class="flex justify-between items-start mb-2">';
+        html += '<div><span class="font-mono font-bold text-sm">' + o.id + '</span> <span class="ml-2 text-xs px-2 py-0.5 rounded-full ' + sc + '">' + o.status + '</span></div>';
+        html += '<span class="text-sm text-gray-500">' + (o.created_at || '').slice(0, 10) + '</span>';
+        html += '</div>';
+        html += '<p class="text-sm text-gray-700">' + escapeHtml(o.customer_name || 'Sin nombre') + ' — ' + escapeHtml(o.customer_email || '') + '</p>';
+        html += '<p class="text-sm text-gray-500">' + o.items.length + ' producto(s) — <strong class="text-gray-900">$' + o.total.toFixed(2) + '</strong></p>';
+        html += '<div class="flex gap-2 mt-3">';
+        if (o.status === 'pending') {
+            html += '<button onclick="updateOrderStatus(\'' + o.id + '\',\'confirmed\')" class="bg-blue-600 text-white text-xs px-3 py-1 rounded-lg hover:bg-blue-700">Confirmar</button>';
+            html += '<button onclick="updateOrderStatus(\'' + o.id + '\',\'cancelled\')" class="bg-red-600 text-white text-xs px-3 py-1 rounded-lg hover:bg-red-700">Cancelar</button>';
+        } else if (o.status === 'confirmed') {
+            html += '<button onclick="updateOrderStatus(\'' + o.id + '\',\'shipped\')" class="bg-purple-600 text-white text-xs px-3 py-1 rounded-lg hover:bg-purple-700">Enviar</button>';
+        } else if (o.status === 'shipped') {
+            html += '<button onclick="updateOrderStatus(\'' + o.id + '\',\'delivered\')" class="bg-green-600 text-white text-xs px-3 py-1 rounded-lg hover:bg-green-700">Entregado</button>';
+        }
+        html += '</div></div>';
+    }
+    el.innerHTML = html;
+}
+
+async function updateOrderStatus(orderId, status) {
+    try {
+        await apiRequest('/api/store/' + currentTenantId + '/orders/' + orderId, {
+            method: 'PUT',
+            body: JSON.stringify({ status: status })
+        });
+        loadStoreData();
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+function openProductEditor(productId) {
+    storeEditingId = productId || null;
+    document.getElementById('prod-name').value = '';
+    document.getElementById('prod-desc').value = '';
+    document.getElementById('prod-price').value = '';
+    document.getElementById('prod-compare').value = '';
+    document.getElementById('prod-image').value = '';
+    document.getElementById('prod-category').value = '';
+    document.getElementById('prod-stock').value = '999';
+    document.getElementById('prod-active').checked = true;
+    document.getElementById('prod-editor-title').innerText = productId ? 'Editar Producto' : 'Nuevo Producto';
+    document.getElementById('prod-editor-status').innerText = '';
+    document.getElementById('product-editor-modal').classList.remove('hidden');
+}
+
+async function editProduct(productId) {
+    try {
+        var res = await apiRequest('/api/store/' + currentTenantId + '/products/all');
+        var data = await res.json();
+        var p = data.products.find(function(x) { return x.id === productId; });
+        if (p) {
+            openProductEditor(productId);
+            document.getElementById('prod-name').value = p.name || '';
+            document.getElementById('prod-desc').value = p.description || '';
+            document.getElementById('prod-price').value = p.price || '';
+            document.getElementById('prod-compare').value = p.compare_price || '';
+            document.getElementById('prod-image').value = p.image || '';
+            document.getElementById('prod-category').value = p.category || '';
+            document.getElementById('prod-stock').value = p.stock || 999;
+            document.getElementById('prod-active').checked = p.active !== false;
+        }
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+function closeProductEditor() {
+    document.getElementById('product-editor-modal').classList.add('hidden');
+    storeEditingId = null;
+}
+
+async function saveProduct() {
+    var statusEl = document.getElementById('prod-editor-status');
+    var price = parseFloat(document.getElementById('prod-price').value);
+    if (!document.getElementById('prod-name').value.trim() || isNaN(price) || price <= 0) {
+        statusEl.innerHTML = '<span class="text-red-600">Nombre y precio validos son obligatorios</span>';
+        return;
+    }
+    statusEl.innerHTML = '<span class="text-blue-600">Guardando...</span>';
+    var payload = {
+        name: document.getElementById('prod-name').value.trim(),
+        description: document.getElementById('prod-desc').value,
+        price: price,
+        compare_price: document.getElementById('prod-compare').value ? parseFloat(document.getElementById('prod-compare').value) : 0,
+        image: document.getElementById('prod-image').value,
+        category: document.getElementById('prod-category').value.trim(),
+        stock: parseInt(document.getElementById('prod-stock').value) || 999,
+        active: document.getElementById('prod-active').checked
+    };
+    try {
+        var url = storeEditingId
+            ? '/api/store/' + currentTenantId + '/products/' + storeEditingId
+            : '/api/store/' + currentTenantId + '/products';
+        var res = await apiRequest(url, { method: storeEditingId ? 'PUT' : 'POST', body: JSON.stringify(payload) });
+        var data = await res.json();
+        if (data.status === 'success') {
+            statusEl.innerHTML = '<span class="text-green-600">Guardado!</span>';
+            loadStoreData();
+            setTimeout(closeProductEditor, 800);
+        } else {
+            statusEl.innerHTML = '<span class="text-red-600">' + (data.detail || 'Error') + '</span>';
+        }
+    } catch (e) {
+        statusEl.innerHTML = '<span class="text-red-600">' + e.message + '</span>';
+    }
+}
+
+async function deleteProduct(productId) {
+    if (!confirm('Eliminar este producto?')) return;
+    try {
+        await apiRequest('/api/store/' + currentTenantId + '/products/' + productId, { method: 'DELETE' });
+        loadStoreData();
     } catch (e) {
         alert('Error: ' + e.message);
     }
