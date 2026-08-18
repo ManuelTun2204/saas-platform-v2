@@ -222,6 +222,15 @@
 <button id="editor-btn" onclick="openEditor()" class="block w-full bg-gray-800 text-white px-4 py-3 rounded-lg hover:bg-gray-900">Editar Sitio</button>
 <button id="blog-btn" onclick="openBlog()" class="block w-full bg-indigo-600 text-white px-4 py-3 rounded-lg hover:bg-indigo-700"><i class="fa-solid fa-pen-nib mr-1"></i>Gestionar Blog</button>
 <button id="store-btn" onclick="openStore()" class="block w-full bg-orange-600 text-white px-4 py-3 rounded-lg hover:bg-orange-700"><i class="fa-solid fa-store mr-1"></i>Gestionar Tienda</button>
+<div class="border-t pt-3 mt-2">
+<h4 class="font-bold text-sm mb-2 text-gray-700">Cuenta del Cliente (App Movil)</h4>
+<div id="client-user-info" class="text-sm text-gray-500 mb-2"></div>
+<div id="client-user-create" class="space-y-2">
+<input type="text" id="client-username" class="w-full p-2 border rounded-lg text-sm" placeholder="Usuario (ej: mi-empresa)">
+<input type="text" id="client-password" class="w-full p-2 border rounded-lg text-sm" placeholder="Contrasena (ej: 123456)">
+<button onclick="createClientUser()" class="w-full bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 text-sm font-semibold"><i class="fa-solid fa-user-plus mr-1"></i>Crear Cuenta Cliente</button>
+<div id="client-user-status" class="text-xs"></div>
+</div>
 </div>
 <div id="widget-section" class="bg-white p-6 rounded-xl shadow-sm border space-y-3">
 <h3 class="font-bold">Chatbot para tu Pagina</h3>
@@ -1111,6 +1120,7 @@ async function viewCompanyDetails(tenantId, name) {
     document.getElementById('seo-link').href = '/data/websites/' + tenantId + '/seo-report.html';
     previewEl.src = iframeSrc + '?v=' + Date.now();
     showView('company-detail');
+    loadClientUserInfo();
 }
 
 function copyWidgetCode() {
@@ -2075,6 +2085,56 @@ async function deleteProduct(productId) {
         loadStoreData();
     } catch (e) {
         alert('Error: ' + e.message);
+    }
+}
+
+async function createClientUser() {
+    var user = document.getElementById('client-username').value.trim();
+    var pass = document.getElementById('client-password').value.trim();
+    var statusEl = document.getElementById('client-user-status');
+    if (!user || !pass) {
+        statusEl.innerHTML = '<span class="text-red-600">Completa usuario y contrasena</span>';
+        return;
+    }
+    statusEl.innerHTML = '<span class="text-blue-600">Creando...</span>';
+    try {
+        var res = await apiRequest('/api/users', {
+            method: 'POST',
+            body: JSON.stringify({ username: user, password: pass, role: 'user' })
+        });
+        var data = await res.json();
+        if (data.status === 'success') {
+            statusEl.innerHTML = '<span class="text-green-600">Cuenta creada! Usuario: ' + user + '</span>';
+            document.getElementById('client-username').value = '';
+            document.getElementById('client-password').value = '';
+            loadClientUserInfo();
+        } else {
+            statusEl.innerHTML = '<span class="text-red-600">' + (data.detail || 'Error') + '</span>';
+        }
+    } catch (e) {
+        statusEl.innerHTML = '<span class="text-red-600">' + e.message + '</span>';
+    }
+}
+
+async function loadClientUserInfo() {
+    var infoEl = document.getElementById('client-user-info');
+    var createEl = document.getElementById('client-user-create');
+    try {
+        var res = await apiRequest('/api/users');
+        var data = await res.json();
+        if (data.status === 'success') {
+            var tenantUser = data.users.find(function(u) { return u.username === currentTenantId; });
+            if (tenantUser) {
+                infoEl.innerHTML = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs"><i class="fa-solid fa-check mr-1"></i>Cuenta activa: <strong>' + tenantUser.username + '</strong></span>' +
+                    '<br><a href="/app/' + currentTenantId + '" target="_blank" class="text-blue-600 hover:underline text-xs mt-1 inline-block"><i class="fa-solid fa-external-link mr-1"></i>Abrir App Movil</a>';
+                createEl.classList.add('hidden');
+            } else {
+                infoEl.innerHTML = '<span class="text-xs text-gray-400">Sin cuenta de cliente</span>';
+                createEl.classList.remove('hidden');
+            }
+        }
+    } catch(e) {
+        console.error(e);
     }
 }
 </script>
