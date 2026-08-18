@@ -466,6 +466,25 @@
         var CHATBOT_SECONDARY_COLOR = '{{ brand_secondary }}';
     </script>
     <script src="{{ public_url }}/static/widget/widget.js"></script>
+    <div id="chatbot-tooltip" class="fixed bottom-6 right-6 z-[10000] pointer-events-none">
+        <div class="bg-gray-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg opacity-0 transition-opacity duration-300" style="position:absolute; bottom:70px; right:0; white-space:nowrap;" id="chatbot-tooltip-text">Pregúntame lo que quieras</div>
+    </div>
+    <script>
+    (function(){
+        var tooltip = document.getElementById('chatbot-tooltip-text');
+        if (!tooltip) return;
+        var shown = false;
+        function checkWidget() {
+            var btn = document.getElementById('chatbot-toggle') || document.querySelector('[id*="chatbot"] button') || document.querySelector('.chatbot-bubble');
+            if (btn && !shown) {
+                btn.addEventListener('mouseenter', function(){ tooltip.style.opacity='1'; });
+                btn.addEventListener('mouseleave', function(){ tooltip.style.opacity='0'; });
+                shown = true;
+            }
+        }
+        setInterval(checkWidget, 1000);
+    })();
+    </script>
     {% endif %}
 
     <script>
@@ -532,13 +551,14 @@
     </script>
 
     {% if contact_phone %}
-    <a href="https://wa.me/{{ contact_phone | replace(' ','') | replace('+','') | replace('-','') }}?text=Hola,%20me%20interesan%20sus%20productos"
-       target="_blank" rel="noopener noreferrer"
-       class="fixed bottom-6 left-6 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-2xl transition-all hover:scale-110 flex items-center justify-center"
-       aria-label="Contactar por WhatsApp"
-       style="box-shadow: 0 4px 20px rgba(37,211,102,0.4);">
-        <i class="fab fa-whatsapp text-3xl"></i>
-    </a>
+<a href="https://wa.me/{{ contact_phone | replace(' ','') | replace('+','') | replace('-','') }}?text=Hola,%20me%20interesan%20sus%20productos"
+   target="_blank" rel="noopener noreferrer"
+   class="fixed bottom-6 right-20 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-2xl transition-all hover:scale-110 flex items-center justify-center group"
+   aria-label="Contactar por WhatsApp"
+   style="box-shadow: 0 4px 20px rgba(37,211,102,0.4);">
+    <i class="fab fa-whatsapp text-3xl"></i>
+    <span class="absolute right-full mr-3 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none shadow-lg">Escríbenos al WhatsApp</span>
+</a>
     {% endif %}
 </body>
 </html>
