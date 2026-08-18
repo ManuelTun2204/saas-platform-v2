@@ -51,7 +51,7 @@ async def icon(tenant_id: str):
 
 
 @router.get("/app/{tenant_id}", response_class=HTMLResponse)
-async def mobile_dashboard(tenant_id: str, current_user: dict = Depends(require_admin)):
+async def mobile_dashboard(tenant_id: str):
     site_data = read_json_file(WEBSITES_DIR / tenant_id / "site_data.json", {})
     brand_hex = site_data.get("brand_hex", "#2563eb")
     brand_secondary = site_data.get("brand_secondary", "#764ba2")
@@ -80,6 +80,24 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="min-h-screen flex items-center justify-center p-6" style="background:linear-gradient(135deg,{brand_hex},{brand_secondary});">
+<div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm">
+<div class="text-center mb-6">
+<div class="w-16 h-16 rounded-2xl mx-auto mb-3 flex items-center justify-center text-white text-2xl font-bold" style="background:{brand_hex}">{company_name[0]}</div>
+<h1 class="text-xl font-bold text-gray-900">{company_name}</h1>
+<p class="text-sm text-gray-500 mt-1">Panel de control</p>
+</div>
+<input type="text" id="login-user" class="w-full p-3 border rounded-xl mb-3 text-sm" placeholder="Usuario" autocomplete="username">
+<input type="password" id="login-pass" class="w-full p-3 border rounded-xl mb-4 text-sm" placeholder="Contrasena" autocomplete="current-password">
+<button onclick="doLogin()" class="w-full py-3 rounded-xl text-white font-bold text-sm" style="background:{brand_hex}">Ingresar</button>
+<p id="login-error" class="text-red-500 text-xs mt-3 text-center hidden"></p>
+</div>
+</div>
+
+<!-- APP (hidden until logged in) -->
+<div id="app-screen" class="hidden">
 
 <!-- HEADER -->
 <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md shadow-sm px-4 py-3">
@@ -167,6 +185,7 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 </div>
 <div id="blog-list" class="space-y-2"></div>
 </div>
+</div><!-- /app-screen -->
 
 <script>
 var TENANT = '{tenant_id}';
@@ -184,6 +203,50 @@ async function apiFetch(url, opts) {{
     opts.headers = Object.assign({{}}, authHeaders(), opts.headers || {{}});
     return fetch(url, opts);
 }}
+
+async function doLogin() {{
+    var user = document.getElementById('login-user').value.trim();
+    var pass = document.getElementById('login-pass').value;
+    var errEl = document.getElementById('login-error');
+    if (!user || !pass) {{ errEl.textContent = 'Completa todos los campos'; errEl.classList.remove('hidden'); return; }}
+    try {{
+        var res = await fetch('/api/auth/login', {{
+            method: 'POST',
+            headers: {{ 'Content-Type': 'application/json' }},
+            body: JSON.stringify({{ username: user, password: pass }})
+        }});
+        var data = await res.json();
+        if (data.access_token) {{
+            TOKEN = data.access_token;
+            localStorage.setItem('saas_token', TOKEN);
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            refreshData();
+        }} else {{
+            errEl.textContent = data.detail || 'Credenciales incorrectas';
+            errEl.classList.remove('hidden');
+        }}
+    }} catch(e) {{
+        errEl.textContent = 'Error de conexion';
+        errEl.classList.remove('hidden');
+    }}
+}}
+
+document.getElementById('login-pass').addEventListener('keydown', function(e) {{ if (e.key === 'Enter') doLogin(); }});
+document.getElementById('login-user').addEventListener('keydown', function(e) {{ if (e.key === 'Enter') doLogin(); }});
+
+// Check if already logged in
+(function() {{
+    if (TOKEN) {{
+        fetch('/api/auth/me', {{ headers: {{ 'Authorization': 'Bearer ' + TOKEN }} }})
+            .then(function(r) {{ if (r.ok) {{
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                refreshData();
+            }} else {{ localStorage.removeItem('saas_token'); TOKEN = ''; }}}})
+            .catch(function(){{}});
+    }}
+}})();
 
 function showTab(tab) {{
     document.querySelectorAll('[id^="tab-"]').forEach(function(el) {{ el.classList.add('hidden'); }});
