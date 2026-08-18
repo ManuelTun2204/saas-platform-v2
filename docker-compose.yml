@@ -13,7 +13,6 @@
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       PUBLIC_URL: ${PUBLIC_URL}
-      DATABASE_URL: ${DATABASE_URL}
       PAYMENT_PROVIDERS: ${PAYMENT_PROVIDERS:-all}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
@@ -25,8 +24,6 @@
       PRICE_FULL: ${PRICE_FULL:-399}
       PRICE_WEB_CHAT: ${PRICE_WEB_CHAT:-249}
       PRICE_CHAT_ONLY: ${PRICE_CHAT_ONLY:-99}
-      PRICE_SEO_ONLY: ${PRICE_SEO_ONLY:-99}
-      # Modelos LLM (bloque de costos): Qwen3 baratos via OpenRouter, configurables sin tocar codigo
       LLM_SITE_MODEL: ${LLM_SITE_MODEL:-qwen/qwen3-30b-a3b-instruct-2507}
       LLM_CHAT_MODEL: ${LLM_CHAT_MODEL:-qwen/qwen3-30b-a3b-instruct-2507}
       LLM_FALLBACK_MODEL: ${LLM_FALLBACK_MODEL:-meta-llama/llama-3.1-8b-instruct}
@@ -37,32 +34,6 @@
     restart: always
     networks:
       - saas-network
-
-  # Base de datos Postgres (Fase 3 - migracion de JSON). 
-  # No se inicia por defecto: usar `docker compose --profile postgres up -d`
-  db:
-    image: postgres:16-alpine
-    container_name: saas-db
-    profiles: ["postgres"]
-    restart: always
-    environment:
-      POSTGRES_USER: ${DB_USER:-saas}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME:-saas}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-saas} -d ${DB_NAME:-saas}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - saas-network
-
-volumes:
-  postgres_data:
 
 networks:
   saas-network:
