@@ -17,16 +17,42 @@ PUBLIC_URL = os.getenv("PUBLIC_URL", "http://localhost:8000")
 CURRENCY = "USD"
 
 PRICES = {
-    "full": int(os.getenv("PRICE_FULL", "399")),
-    "web_chat": int(os.getenv("PRICE_WEB_CHAT", "249")),
-    "chat_only": int(os.getenv("PRICE_CHAT_ONLY", "99")),
-    "seo_only": int(os.getenv("PRICE_SEO_ONLY", "99")),
+    "basic": int(os.getenv("PRICE_BASIC", "29")),
+    "pro": int(os.getenv("PRICE_PRO", "79")),
+    "premium": int(os.getenv("PRICE_PREMIUM", "149")),
 }
 PACKAGES = {
-    "full": "Full Service",
-    "web_chat": "Web + Chat",
-    "chat_only": "Solo Chatbot",
-    "seo_only": "SEO Only",
+    "basic": "Basico - Chatbot IA",
+    "pro": "Pro - Sitio Web + Chatbot",
+    "premium": "Premium - Todo Incluido",
+}
+PACKAGE_FEATURES = {
+    "basic": [
+        "Chatbot IA para tu pagina web",
+        "Responde con datos de tu negocio",
+        "Captura de leads por email",
+        "Widget personalizable",
+        "Soporte por email",
+    ],
+    "pro": [
+        "Todo lo del plan Basico",
+        "Sitio web profesional con IA",
+        "Galeria de fotos real",
+        "Formulario de contacto",
+        "Google Maps integrado",
+        "WhatsApp flotante",
+        "Multi-idioma (ES/EN)",
+        "SEO basico",
+    ],
+    "premium": [
+        "Todo lo del plan Pro",
+        "Dominio personalizado (tudominio.com)",
+        "SSL gratuito (HTTPS)",
+        "Analytics de visitas",
+        "Paginas adicionales",
+        "Soporte prioritario 24/7",
+        "Backup automatico",
+    ],
 }
 
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
@@ -122,9 +148,9 @@ class PaymentService:
 
     def get_packages(self):
         return [
-            {"id": "full", "name": PACKAGES["full"], "price": PRICES["full"]},
-            {"id": "web_chat", "name": PACKAGES["web_chat"], "price": PRICES["web_chat"]},
-            {"id": "chat_only", "name": PACKAGES["chat_only"], "price": PRICES["chat_only"]},
+            {"id": "basic", "name": PACKAGES["basic"], "price": PRICES["basic"], "features": PACKAGE_FEATURES["basic"]},
+            {"id": "pro", "name": PACKAGES["pro"], "price": PRICES["pro"], "features": PACKAGE_FEATURES["pro"]},
+            {"id": "premium", "name": PACKAGES["premium"], "price": PRICES["premium"], "features": PACKAGE_FEATURES["premium"]},
         ]
 
     def create_order(self, tenant_id, package, provider, site_config):
@@ -567,9 +593,20 @@ class PaymentService:
         if order.get("generated"):
             return {"status": "success", "generated": True, "preview_url": order.get("preview_url", ""), "order_id": order_id}
 
+        package = order["package"]
+        cfg = order.get("site_config", {})
+
+        if package == "basic":
+            _update_order(order_id, {"generated": True, "preview_url": "#widget-only"})
+            try:
+                self._mark_tenant_paid(order["tenant_id"], order_id)
+            except Exception as e:
+                logger.warning(f"No se pudo marcar tenant como pagado: {e}")
+            widget_code = f'<script src="http://localhost:8000/static/widget/widget.js" data-tenant="{order["tenant_id"]}"></script>'
+            return {"status": "success", "generated": True, "preview_url": "#widget-only", "order_id": order_id, "widget_code": widget_code}
+
         from app.services.website_service import WebsiteService
         website_service = WebsiteService()
-        cfg = order.get("site_config", {})
         try:
             result = await website_service.generate_modular_service(
                 tenant_id=order["tenant_id"],

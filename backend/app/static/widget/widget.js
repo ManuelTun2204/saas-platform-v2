@@ -50,6 +50,15 @@
         return '';
     })();
 
+    try {
+        var trackUrl = widgetApiBase + '/api/analytics/track';
+        fetch(trackUrl, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({tenant_id: CONFIG.tenantId, type: 'page_view', page: window.location.pathname})
+        }).catch(function(){});
+    } catch(e) {}
+
     function grad() {
         return 'linear-gradient(135deg, ' + CONFIG.primaryColor + ' 0%, ' + CONFIG.secondaryColor + ' 100%)';
     }

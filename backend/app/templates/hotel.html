@@ -155,6 +155,17 @@
 </head>
 <body class="font-sans text-gray-800 antialiased bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
 
+    {% if not site_active %}
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;">
+        <div style="background:white;border-radius:20px;padding:48px;max-width:500px;text-align:center;box-shadow:0 25px 80px rgba(0,0,0,0.4);">
+            <div style="font-size:64px;margin-bottom:16px;">⏸️</div>
+            <h2 style="font-size:28px;font-weight:800;color:#1f2937;margin-bottom:12px;">Sitio Pausado</h2>
+            <p style="color:#6b7280;font-size:16px;margin-bottom:24px;">Tu suscripcion ha expirado. Para reactivar tu sitio y chatbot, contacta a tu proveedor.</p>
+            <p style="color:#9ca3af;font-size:14px;">Una vez que renueves tu plan, tu sitio volvera a estar disponible automaticamente.</p>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- NAVBAR -->
     <nav class="fixed w-full z-50 top-0 start-0 glass shadow-lg">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between px-6 py-4">

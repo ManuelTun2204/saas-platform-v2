@@ -515,8 +515,14 @@ class WebsiteService:
         dummy_request = Request(scope={"type": "http", "method": "GET", "headers": [], "path": "/"})
         industry_key = detect_industry_key(site_data.get("industry", ""))
         images = INDUSTRY_IMAGES.get(industry_key, INDUSTRY_IMAGES["default"])
+
+        tenant_id = site_data.get("tenant_id", "")
+        payment_status = self._get_payment_status(tenant_id)
+        site_data["site_active"] = payment_status != "expired"
+        site_data["payment_status"] = payment_status
+
         site_data["seo_enabled"] = seo_enabled
-        site_data["chatbot_enabled"] = chatbot_enabled
+        site_data["chatbot_enabled"] = chatbot_enabled and payment_status != "expired"
         site_data["public_url"] = PUBLIC_URL
         if not site_data.get("hero_image"):
             site_data["hero_image"] = images["hero"]
@@ -539,6 +545,20 @@ class WebsiteService:
         except Exception as e:
             logger.warning(f"No se pudo guardar site_data.json: {e}")
         return templates.get_template(template_name).render(request=dummy_request, **site_data)
+
+    def _get_payment_status(self, tenant_id: str) -> str:
+        tenants_file = DATA_DIR / "tenants.json"
+        if not tenants_file.exists():
+            return "active"
+        try:
+            with open(tenants_file, "r", encoding="utf-8-sig") as f:
+                tenants = json.load(f)
+            for t in tenants:
+                if (t.get("tenant_id") == tenant_id or t.get("id") == tenant_id):
+                    return t.get("payment_status", "active")
+        except Exception:
+            pass
+        return "active"
 
     def regenerate_site(self, tenant_id: str, site_data: dict) -> dict:
         try:

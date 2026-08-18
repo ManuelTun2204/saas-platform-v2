@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 
 from app.schemas import ChatConfigRequest, ChatRequest, TenantCreateRequest, WebsiteGenerationRequest
 from app.deps import DATA_DIR, check_rate_limit, create_tenant_record, export_service, rag_service, read_json_file, require_admin, website_service, write_json_atomic
+from app.services.domain_service import domain_service
 
 logger = logging.getLogger(__name__)
 
@@ -235,6 +236,9 @@ async def chat_endpoint(tenant_id: str, request: ChatRequest, http_request: Requ
         user_email = request.email
         source = request.source
 
+        from app.services.analytics_service import analytics_service
+        analytics_service.track_chat(tenant_id, session_id=session_id)
+
         answer = await rag_service.query(tenant_id, question, session_id=session_id)
 
         email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
@@ -433,5 +437,46 @@ async def save_site_editor_data(tenant_id: str, data: dict, current_user: dict =
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error guardando cambios: {e}")
+        logger.error(f"Error en editor: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/domain/{tenant_id}")
+async def register_domain(tenant_id: str, body: dict, current_user: dict = Depends(require_admin)):
+    """Registrar dominio personalizado para un tenant (solo admin)"""
+    try:
+        domain = body.get("domain", "").strip()
+        if not domain:
+            raise HTTPException(status_code=400, detail="Dominio requerido")
+        result = domain_service.register_domain(tenant_id, domain)
+        if result["status"] == "error":
+            raise HTTPException(status_code=400, detail=result["detail"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error registrando dominio: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/domain/{tenant_id}")
+async def get_domain(tenant_id: str, current_user: dict = Depends(require_admin)):
+    """Obtener dominio de un tenant"""
+    domain = domain_service.get_domain_for_tenant(tenant_id)
+    return {"status": "success", "domain": domain}
+
+
+@router.get("/api/domains")
+async def list_domains(current_user: dict = Depends(require_admin)):
+    """Listar todos los dominios registrados"""
+    domains = domain_service.list_domains()
+    return {"status": "success", "domains": domains}
+
+
+@router.post("/api/domain/verify/{domain}")
+async def verify_domain(domain: str, current_user: dict = Depends(require_admin)):
+    """Verificar un dominio"""
+    result = domain_service.verify_domain(domain)
+    if result["status"] == "error":
+        raise HTTPException(status_code=400, detail=result["detail"])
+    return result

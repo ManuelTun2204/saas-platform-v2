@@ -4,10 +4,49 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.deps import DATA_DIR, PRICES, read_json_file, require_admin
+from app.services.analytics_service import analytics_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+@router.get("/api/analytics/tenant/{tenant_id}")
+async def get_tenant_analytics(tenant_id: str, days: int = 30, current_user: dict = Depends(require_admin)):
+    """Obtener analytics de un tenant especifico (solo admin)"""
+    try:
+        dashboard = analytics_service.get_dashboard(tenant_id, days=days)
+        return {"status": "success", "data": dashboard}
+    except Exception as e:
+        logger.error(f"Error obteniendo analytics del tenant: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/analytics/track")
+async def track_event(request_body: dict):
+    """Endpoint publico para registrar eventos de analytics"""
+    try:
+        tenant_id = request_body.get("tenant_id", "")
+        event_type = request_body.get("type", "")
+        if not tenant_id or not event_type:
+            raise HTTPException(status_code=400, detail="tenant_id y type son requeridos")
+        if event_type == "page_view":
+            analytics_service.track_page_view(
+                tenant_id,
+                page=request_body.get("page", "/"),
+                referrer=request_body.get("referrer", ""),
+            )
+        elif event_type == "chat":
+            analytics_service.track_chat(
+                tenant_id,
+                session_id=request_body.get("session_id", ""),
+            )
+        return {"status": "success"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error tracking event: {e}")
+        return {"status": "error"}
 
 
 @router.get("/api/analytics/global")
@@ -29,7 +68,7 @@ async def get_global_analytics(current_user: dict = Depends(require_admin)):
             ind = t.get("industry", "Sin especificar")
             industries_count[ind] = industries_count.get(ind, 0) + 1
 
-        packages_count = {"full": 0, "web_chat": 0, "chat_only": 0, "seo_only": 0}
+        packages_count = {"basic": 0, "pro": 0, "premium": 0}
         for t in tenants:
             pkg = t.get("package", "sin_paquete")
             if pkg in packages_count:
