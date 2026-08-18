@@ -107,7 +107,7 @@ class RAGService:
             # Buscar información relevante
             retriever = vectorstore.as_retriever(
                 search_type="similarity",
-                search_kwargs={"k": 3}
+                search_kwargs={"k": 5}
             )
             
             # Obtener contexto
