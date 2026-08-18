@@ -1,7 +1,7 @@
 # Estado del Proyecto — SaaS Platform v2
 
 > Última actualización: 2026-08-17
-> Commit HEAD: `f4f39d5`
+> Commit HEAD: `9f63a61`
 > Repo: https://github.com/ManuelTun2204/saas-platform-v2
 
 ---
@@ -27,7 +27,7 @@
 | Contraseña admin | `admin123` |
 | OPENROUTER_API_KEY | En `.env` (no subir a GitHub) |
 | JWT_SECRET_KEY | En `.env` |
-| RESEND_API_KEY | Vacía (emails se omiten sin error) |
+| RESEND_API_KEY | Configurada en `.env` (funcional con `re_fdYSq8SW_GcPAddaSFPiEtnjp8PXPXa`) |
 
 ---
 
@@ -36,8 +36,9 @@
 ### Pagos
 - Checkout con proveedor demo (pago simulado) → genera sitio completo con IA → entrega lista.
 - También soporta Stripe, Mercado Pago y PayPal (configurar keys en `.env`).
-- 3 paquetes: Full Service ($399), Web + Chat ($249), Solo Chatbot ($99).
+- **3 paquetes SaaS**: Básico ($29/mes, solo chatbot), Pro ($79/mes, sitio+chatbot), Premium ($149/mes, todo incluido+dominio).
 - Checkout return/cancel pages con feedback visual.
+- Modo widget-only para plan Básico (no genera sitio, solo chatbot embebible).
 
 ### Generación de sitios web con IA
 - Genera landing pages y páginas de servicios completas con texto, imágenes (Unsplash/Pollinations), galería, CTA, chatbot y SEO.
@@ -57,6 +58,7 @@
 ### Chatbot
 - Widget premium instalable con una línea de código en cualquier página web.
 - **Widget con colores de marca** — Avatar con iniciales del negocio, estado "en línea", quick replies, typing indicator, timestamps, branding configurable.
+- **Widget tracking** — Auto-registra page_view al cargar el widget.
 - Configuración por tenant (título, colores, bienvenida, respuestas rápidas).
 - RAG: subir documentos .txt/.pdf para que el chatbot responda con datos reales.
 - Captura de leads cuando el usuario da su email.
@@ -74,6 +76,8 @@
 
 ### Panel admin
 - Dashboard con métricas reales (leads, ingresos, costo de IA basado en paquetes).
+- **Analytics por tenant** — Endpoint `/api/analytics/tenant/{id}` con page views, chat sessions.
+- **Analytics global** — Endpoint `/api/analytics/global` con métricas globales de la plataforma.
 - Editor visual del sitio (hero, sobre nosotros, servicios, galería, colores, SEO).
 - Leads con búsqueda, filtro por estado y cambio de estado.
 - Leads de formulario de contacto (`POST /api/contact`, rate limit 5/min, `source: contact_form`).
@@ -107,13 +111,15 @@ saas-platform-v2/
 │   │   │   ├── auth.py          ← Login, refresh, register, usuarios, /me
 │   │   │   ├── tenants.py       ← CRUD tenants, chat, editor, export, chat config, docs
 │   │   │   ├── payments.py      ← Checkout, status, finalize, cancel, webhooks, órdenes
-│   │   │   ├── analytics.py     ← Dashboard, métricas, logs de costo IA
+│   │   │   ├── analytics.py     ← Dashboard, métricas, analytics global/por tenant
 │   │   │   └── leads.py         ← GET/PATCH leads, búsqueda, filtros, POST /api/contact
 │   │   ├── services/
 │   │   │   ├── llm_service.py   ← Llamadas a OpenRouter (Qwen3), genera JSON con social_media, photo_prompt, language
 │   │   │   ├── website_service.py  ← Generación/modular de sitios con IA, video URLs por industria
 │   │   │   ├── rag_service.py      ← ChromaDB + embeddings para RAG
-│   │   │   ├── payment_service.py  ← Lógica de pagos (demo, Stripe, MP, PayPal) con PRICES dict
+│   │   │   ├── payment_service.py  ← Lógica de pagos (demo, Stripe, MP, PayPal) con 3 tiers (basic/pro/premium)
+│   │   │   ├── analytics_service.py ← Tracking de page views, chats, dashboard por tenant
+│   │   │   ├── domain_service.py   ← Registro/verificación de dominios personalizados (premium)
 │   │   │   ├── export_service.py   ← Exportar sitio como ZIP con imágenes
 │   │   │   ├── email_service.py    ← Envío de emails via Resend
 │   │   │   ├── chat_config_service.py ← Config del widget por tenant
@@ -139,6 +145,7 @@ saas-platform-v2/
 │   │   ├── orders.json
 │   │   ├── conversations.json
 │   │   ├── chat_configs.json
+│   │   ├── domains.json          ← Dominios personalizados registrados
 │   │   └── llm_usage.json        ← Registro de costos de IA
 │   ├── websites/                 ← Sitios generados (uno por tenant)
 │   └── exports/                  ← ZIPs exportados
@@ -153,13 +160,13 @@ saas-platform-v2/
 
 ## Observaciones conocidas del testing
 
-1. **RAG: pregunta doble puede inventar precio.** El buscador recupera k=3 fragmentos. En preguntas con 2 temas distintos puede no traer el fragmento correcto → alucina parcial. **Solución fácil:** subir `k` de 3 a 5 en `rag_service.py:110` (`search_kwargs={"k": 5}`).
+1. **RAG: pregunta doble puede inventar precio.** El buscador recupera k=5 fragmentos. En preguntas con 2 temas distintos puede no traer el fragmento correcto → alucina parcial.
 
-2. **RESEND_API_KEY vacía.** Los emails de lead se omiten sin error. Para producción: poner la clave real en `.env`.
+2. ~~**RESEND_API_KEY vacía.**~~ RESUELTO: API key configurada funcional con `manueltunchan@gmail.com`.
 
-3. **Servicio `db` en compose sin usar.** Hay un servicio Postgres en `docker-compose.yml` (perfil `postgres`) que nunca se arranca. La app es 100% JSON. Se puede borrar para simplificar.
+3. ~~**Servicio `db` en compose sin usar.**~~ RESUELTO: Postgres eliminado de `docker-compose.yml`.
 
-4. **Variables DATABASE_URL/DB_* en `.env` sin uso.** No las lee ningún código Python.
+4. ~~**Variables DATABASE_URL/DB_* en `.env` sin uso.**~~ RESUELTO: Eliminadas del `.env`.
 
 ---
 
@@ -192,22 +199,29 @@ saas-platform-v2/
 ## Mejoras pendientes (priorizadas)
 
 ### Alta prioridad
-1. **Subir logo y fotos reales** — Permitir al admin subir su logo y galería de fotos propias (no solo Unsplash).
-2. **Mapa de Google** — En la sección de contacto del sitio generado.
+1. ~~**Subir logo y fotos reales**~~ — COMPLETADO: Upload de logo y fotos funcional en 7 plantillas.
+2. ~~**Mapa de Google**~~ — COMPLETADO: Google Maps iframe en contacto (7 plantillas).
 
 ### Media prioridad
-3. **Subir k del RAG a 5** — Para reducir alucinaciones en preguntas dobles.
-4. **Configurar Resend** — Para emails de lead reales.
+3. ~~**Subir k del RAG a 5**~~ — COMPLETADO: `search_kwargs={"k": 5}` en `rag_service.py:110`.
+4. ~~**Configurar Resend**~~ — COMPLETADO: API key funcional con `manueltunchan@gmail.com`.
 
 ### Baja prioridad
-5. **Limpiar compose** — Eliminar servicio Postgres/variables sin uso del docker-compose.
-6. **Paginación de leads** — Para cuando hay muchos leads.
+5. ~~**Limpiar compose**~~ — COMPLETADO: Postgres eliminado de `docker-compose.yml` y `.env`.
+6. ~~**Paginación de leads**~~ — COMPLETADO: 20 leads/página con botones anterior/siguiente.
+
+### Completado este bloque
+7. **3 planes SaaS** — Básico ($29, chatbot-only), Pro ($79, sitio+chatbot), Premium ($149, todo+dominio).
+8. **Analytics** — Page views, chat sessions tracking, endpoints por tenant y globales.
+9. **Dominios personalizados** — Registro, verificación y listado de dominios (plan Premium).
+10. **Sitio congelado** — Overlay cuando expira la suscripción, chatbot deshabilitado.
+11. **Landing con planes** — 3 tarjetas de planes con features y pricing en `/static/index.html`.
 
 ---
 
 ## Contenedores Docker (estado actual)
 
-Solo corre `saas-backend`. Los contenedores huérfanos (n8n, postiz, typebot, postgres 15) fueron eliminados en el bloque 6. El servicio `db` del compose existe pero nunca se arranca.
+Solo corre `saas-backend`. Postgres y servicios auxiliares fueron eliminados.
 
 ```
 NAMES          IMAGE                        STATUS
