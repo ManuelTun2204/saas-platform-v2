@@ -1,7 +1,7 @@
 # Estado del Proyecto — SaaS Platform v2
 
-> Última actualización: 2026-08-17
-> Commit HEAD: `9f63a61`
+> Última actualización: 2026-08-18
+> Commit HEAD: `f409fa8`
 > Repo: https://github.com/ManuelTun2204/saas-platform-v2
 
 ---
@@ -27,16 +27,16 @@
 | Contraseña admin | `admin123` |
 | OPENROUTER_API_KEY | En `.env` (no subir a GitHub) |
 | JWT_SECRET_KEY | En `.env` |
-| RESEND_API_KEY | Configurada en `.env` (funcional con `re_fdYSq8SW_GcPAddaSFPiEtnjp8PXPXa`) |
+| RESEND_API_KEY | Configurada en `.env` |
 
 ---
 
-## Qué funciona (probado el 2026-08-17)
+## Qué funciona (probado el 2026-08-18)
 
 ### Pagos
 - Checkout con proveedor demo (pago simulado) → genera sitio completo con IA → entrega lista.
 - También soporta Stripe, Mercado Pago y PayPal (configurar keys en `.env`).
-- **3 paquetes SaaS**: Básico ($29/mes, solo chatbot), Pro ($79/mes, sitio+chatbot), Premium ($149/mes, todo incluido+dominio).
+- **3 paquetes SaaS**: Básico ($29/mes, solo chatbot), Pro ($79/mes, sitio+chatbot), Premium ($149/mes, todo incluido).
 - Checkout return/cancel pages con feedback visual.
 - Modo widget-only para plan Básico (no genera sitio, solo chatbot embebible).
 
@@ -46,47 +46,71 @@
 - Colores de marca personalizables.
 - **Multi-idioma** — Selector ES/EN en el generador. LLM genera contenido en el idioma seleccionado. `lang` HTML dinámico, textos de footer/contacto traducidos.
 - **Testimonios con fotos** — LLM genera `photo_prompt`, imágenes via Pollinations.ai.
-- **Redes sociales** — Facebook, Instagram, TikTok, YouTube, X en el footer de las 3 plantillas.
+- **Redes sociales** — Facebook, Instagram, TikTok, YouTube, X en el footer de las plantillas.
+- **Upload de imágenes** — Logo y fotos reales se suben y persisten entre regeneraciones.
+
+### Plantillas generadas (7)
+- **landing.html** — Restaurantes, cafes, tiendas. Hero con video, testimonios, servicios, galería, contacto.
+- **services.html** — Negocios de servicios. Hero con video, servicios, equipo, contacto.
+- **portfolio.html** — Creativos, fotógrafos, arquitectos. Hero con video, portfolio, contacto.
+- **medical.html** — Consultorios, clínicas, dentistas. Servicios médicos, equipo, testimonios.
+- **ecommerce.html** — Tiendas online. Showcase de productos, categorías, testimonios.
+- **fitness.html** — Gimnasios, entrenadores, yoga. Clases, entrenadores, precios.
+- **hotel.html** — Hoteles, hostales. Habitaciones, galería, amenidades.
+- Las 7: favicon SVG dinámico, `lang` HTML dinámico, Font Awesome 6.4.0, WhatsApp flotante + chatbot lado a lado con tooltips hover.
+
+### Blog integrado (`/blog/{tenant}/{slug}`)
+- CRUD de posts (admin): crear, editar, eliminar, publicar/borrador.
+- Sección "Noticias y Artículos" visible en las 7 plantillas (muestra últimos 3 posts).
+- Página individual de cada post con renderizado de markdown.
+- Tags, imágenes, excerpts.
+
+### E-commerce real (`/store/{tenant}`)
+- CRUD de productos: nombre, descripción, precio, precio anterior (descuento), imagen, categoría, stock.
+- Tienda pública: grid de productos, filtro por categoría, colores de marca.
+- Carrito sidebar: agregar, cantidad +/−, eliminar.
+- Checkout: nombre, email, teléfono, dirección, notas.
+- Métodos de pago: Demo / Stripe / Mercado Pago.
+- Pedidos: flujo de estados (pending → confirmed → shipped → delivered / cancelled).
+- Admin UI: stats (productos, pedidos, ingresos, pendientes), gestión de pedidos.
+
+### App Móvil PWA (`/app/{tenant}`)
+- Dashboard optimizado para celular con 4 tabs: Stats, Leads, Pedidos, Blog.
+- Login integrado dentro de la app (no necesita token en URL).
+- Auto-refresh cada 60 segundos.
+- Colores de marca del negocio.
+- `manifest.json` dinámico (se puede "Agregar a pantalla de inicio" como app).
+- Iconos SVG generados automáticamente con la inicial del negocio.
+- **Cuenta de cliente**: se crea desde admin con usuario/contraseña, el cliente recibe su link.
 
 ### Landing del SaaS (`/landing`)
-- **Escaparate de plantillas** — 4 ejemplos reales con preview, selector de estilos, "Usar esta plantilla" pre-llena el generador.
-- **Video de fondo en hero** — `<video autoplay muted loop>` con URLs Pexels por industria, fallback a imagen si error.
-- **Barra de progreso visual** — 5 pasos animados (validar → contenido IA → imágenes → SEO → publicar) durante generación.
-- **Demo chatbot** — Botón "Abrir chat de demostración" que carga widget con tenant `showcase-restaurante`.
-- **Formulario de contacto** — POST /api/contact funcional, rate limit 5/min por IP, crea lead con `source: "contact_form"`.
+- **Escaparate de plantillas** — 4 ejemplos reales con preview, selector de estilos, "Usar esta plantilla".
+- **Video de fondo en hero** — URLs Pexels por industria, fallback a imagen.
+- **Barra de progreso visual** — 5 pasos animados durante generación.
+- **Demo chatbot** — Botón "Abrir chat de demostración" que carga widget.
+- **Formulario de contacto** — POST /api/contact funcional, rate limit 5/min por IP.
 
 ### Chatbot
-- Widget premium instalable con una línea de código en cualquier página web.
+- Widget premium instalable con una línea de código.
 - **Widget con colores de marca** — Avatar con iniciales del negocio, estado "en línea", quick replies, typing indicator, timestamps, branding configurable.
 - **Widget tracking** — Auto-registra page_view al cargar el widget.
 - Configuración por tenant (título, colores, bienvenida, respuestas rápidas).
 - RAG: subir documentos .txt/.pdf para que el chatbot responda con datos reales.
 - Captura de leads cuando el usuario da su email.
-- Botón WhatsApp flotante (aparece solo si `contact_phone` tiene valor).
-
-### Plantillas generadas (7)
-- **landing.html** — Para restaurantes, cafes, tiendas. Hero con video, testimonios, servicios, galería, contacto, redes sociales, WhatsApp.
-- **services.html** — Para negocios de servicios (dentistas, gimnasios, etc). Hero con video, servicios, equipo, contacto, redes sociales.
-- **portfolio.html** — Para creativos, fotógrafos, arquitectos. Hero con video, portfolio, servicios, contacto, redes sociales.
-- **medical.html** — Para consultorios, clínicas, dentistas. Servicios médicos, equipo, testimonios.
-- **ecommerce.html** — Para tiendas online. Showcase de productos, categorías, carrito, contacto.
-- **fitness.html** — Para gimnasios, entrenadores, yoga. Planes, entrenadores, instalaciones.
-- **hotel.html** — Para hoteles, hostales, airbnb. Habitaciones, galería, servicios, reservas.
-- Las 7: favicon SVG dinámico, `lang` HTML dinámico, Font Awesome 6.4.0.
 
 ### Panel admin
 - Dashboard con métricas reales (leads, ingresos, costo de IA basado en paquetes).
 - **Analytics por tenant** — Endpoint `/api/analytics/tenant/{id}` con page views, chat sessions.
-- **Analytics global** — Endpoint `/api/analytics/global` con métricas globales de la plataforma.
+- **Analytics global** — Endpoint `/api/analytics/global` con métricas globales.
 - Editor visual del sitio (hero, sobre nosotros, servicios, galería, colores, SEO).
 - Leads con búsqueda, filtro por estado y cambio de estado.
-- Leads de formulario de contacto (`POST /api/contact`, rate limit 5/min, `source: contact_form`).
 - Sección "Chatbot para tu Pagina" con snippet de instalación y personalización.
 - Gestión de usuarios (admin/user).
+- **Gestión de Blog** — Crear/editar/eliminar posts, publicar/borrador.
+- **Gestión de Tienda** — CRUD productos, pedidos con flujo de estados.
+- **Cuenta de Cliente** — Crear usuario para el cliente con acceso a app movil.
 - Exportar sitio como ZIP.
-- Selector de pasarela de pago (demo, Stripe, Mercado Pago, PayPal).
-- Selector de tema visual (moderno, minimalista, corporativo, creativo, natural, elegante, glassmorphism).
-- Chatbot demo embebido en la landing.
+- Selector de pasarela de pago y tema visual.
 
 ### Seguridad
 - JWT tokens con refresh.
@@ -106,67 +130,93 @@ saas-platform-v2/
 │   ├── app/
 │   │   ├── main.py              ← FastAPI: CORS, routers, archivos estáticos, /landing
 │   │   ├── deps.py              ← Inyección de dependencias (servicios, auth, rate limit)
-│   │   ├── schemas.py           ← Modelos Pydantic (CheckoutRequest, WebsiteGenerationRequest con language, etc.)
+│   │   ├── schemas.py           ← Modelos Pydantic
 │   │   ├── routers/
 │   │   │   ├── auth.py          ← Login, refresh, register, usuarios, /me
 │   │   │   ├── tenants.py       ← CRUD tenants, chat, editor, export, chat config, docs
-│   │   │   ├── payments.py      ← Checkout, status, finalize, cancel, webhooks, órdenes
+│   │   │   ├── payments.py      ← Checkout, status, finalize, cancel, webhooks
 │   │   │   ├── analytics.py     ← Dashboard, métricas, analytics global/por tenant
-│   │   │   └── leads.py         ← GET/PATCH leads, búsqueda, filtros, POST /api/contact
+│   │   │   ├── leads.py         ← GET/PATCH leads, búsqueda, filtros, POST /api/contact
+│   │   │   ├── blog.py          ← CRUD posts, página individual markdown
+│   │   │   ├── ecommerce.py     ← CRUD productos, tienda, carrito, checkout, pedidos
+│   │   │   └── pwa.py           ← App movil PWA, manifest, iconos, dashboard movil
 │   │   ├── services/
-│   │   │   ├── llm_service.py   ← Llamadas a OpenRouter (Qwen3), genera JSON con social_media, photo_prompt, language
-│   │   │   ├── website_service.py  ← Generación/modular de sitios con IA, video URLs por industria
+│   │   │   ├── llm_service.py   ← Llamadas a OpenRouter (Qwen3)
+│   │   │   ├── website_service.py  ← Generación/modular de sitios con IA
 │   │   │   ├── rag_service.py      ← ChromaDB + embeddings para RAG
-│   │   │   ├── payment_service.py  ← Lógica de pagos (demo, Stripe, MP, PayPal) con 3 tiers (basic/pro/premium)
-│   │   │   ├── analytics_service.py ← Tracking de page views, chats, dashboard por tenant
-│   │   │   ├── domain_service.py   ← Registro/verificación de dominios personalizados (premium)
-│   │   │   ├── export_service.py   ← Exportar sitio como ZIP con imágenes
+│   │   │   ├── payment_service.py  ← Lógica de pagos (demo, Stripe, MP, PayPal)
+│   │   │   ├── analytics_service.py ← Tracking de page views, chats
+│   │   │   ├── domain_service.py   ← Registro/verificación de dominios
+│   │   │   ├── export_service.py   ← Exportar sitio como ZIP
 │   │   │   ├── email_service.py    ← Envío de emails via Resend
 │   │   │   ├── chat_config_service.py ← Config del widget por tenant
-│   │   │   ├── storage_service.py  ← Lectura/escritura de JSON de datos
+│   │   │   ├── storage_service.py  ← Lectura/escritura de JSON
 │   │   │   └── auth_service.py     ← JWT, hashing de contraseñas
 │   │   ├── static/
-│   │   │   ├── index.html       ← Landing del SaaS (escaparate, demo chatbot, generador con progreso + idioma)
-│   │   │   ├── admin/index.html ← Panel admin (HTML + JS inline)
-│   │   │   ├── widget/widget.js ← Widget premium embebible
-│   │   │   └── widget/chatbot-install.html ← Página de instalación del widget
+│   │   │   ├── index.html       ← Landing del SaaS
+│   │   │   ├── admin/index.html ← Panel admin completo
+│   │   │   └── widget/
+│   │   │       ├── widget.js    ← Widget premium embebible
+│   │   │       └── chatbot-install.html
 │   │   └── templates/
-│   │       ├── landing.html     ← Plantilla de sitio generado (hero con video, favicon, contacto, redes)
-│   │       ├── services.html    ← Plantilla para servicios (hero con video, contacto, redes)
-│   │       ├── portfolio.html   ← Plantilla para creativos (hero con video, contacto, redes)
+│   │       ├── landing.html     ← 7 plantillas de sitios
+│   │       ├── services.html
+│   │       ├── portfolio.html
+│   │       ├── medical.html
+│   │       ├── ecommerce.html
+│   │       ├── fitness.html
+│   │       ├── hotel.html
 │   │       ├── checkout_return.html
 │   │       └── checkout_cancel.html
 │   └── requirements.txt
 ├── data/                         ← Datos en JSON (volumen Docker)
-│   ├── tenants.json              ← Lista de tenants
-│   ├── users.json                ← Usuarios admin
+│   ├── tenants.json
+│   ├── users.json
 │   ├── storage/
 │   │   ├── leads.json
 │   │   ├── orders.json
 │   │   ├── conversations.json
 │   │   ├── chat_configs.json
-│   │   ├── domains.json          ← Dominios personalizados registrados
-│   │   └── llm_usage.json        ← Registro de costos de IA
-│   ├── websites/                 ← Sitios generados (uno por tenant)
-│   └── exports/                  ← ZIPs exportados
-├── chats/                        ← Memoria de desarrollo (archivos .md por bloque)
-├── docker-compose.yml            ← Solo servicio backend (JSON, sin Postgres activo)
+│   │   └── llm_usage.json
+│   └── websites/                 ← Sitios generados (uno por tenant)
+│       └── {tenant_id}/
+│           ├── index.html
+│           ├── site_data.json
+│           ├── blog/posts.json  ← Posts del blog
+│           ├── store/           ← Tienda (productos, pedidos, config)
+│           │   ├── products.json
+│           │   ├── orders.json
+│           │   └── config.json
+│           └── uploads/         ← Imágenes subidas
+├── docker-compose.yml
 ├── .env                          ← Variables de entorno (NO subir)
-├── requirements.txt              ← Dependencias Python
+├── requirements.txt
 └── ESTADO-PROYECTO.md            ← Este archivo
 ```
 
 ---
 
-## Observaciones conocidas del testing
+## Endpoints importantes
 
-1. **RAG: pregunta doble puede inventar precio.** El buscador recupera k=5 fragmentos. En preguntas con 2 temas distintos puede no traer el fragmento correcto → alucina parcial.
-
-2. ~~**RESEND_API_KEY vacía.**~~ RESUELTO: API key configurada funcional con `manueltunchan@gmail.com`.
-
-3. ~~**Servicio `db` en compose sin usar.**~~ RESUELTO: Postgres eliminado de `docker-compose.yml`.
-
-4. ~~**Variables DATABASE_URL/DB_* en `.env` sin uso.**~~ RESUELTO: Eliminadas del `.env`.
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/` | Panel admin (HTML) |
+| GET | `/landing` | Landing pública del SaaS |
+| POST | `/api/auth/login` | Login → JWT token |
+| GET | `/api/auth/me` | Verificar token |
+| GET | `/api/tenants` | Listar empresas |
+| POST | `/api/tenants` | Crear empresa |
+| POST | `/api/site-editor/{tenant}` | Regenerar sitio |
+| GET | `/api/blog/{tenant}` | Posts publicados |
+| GET | `/api/blog/{tenant}/all` | Todos los posts (admin) |
+| POST | `/api/blog/{tenant}` | Crear post |
+| GET | `/blog/{tenant}/{slug}` | Ver post individual |
+| GET | `/api/store/{tenant}/products` | Productos activos |
+| POST | `/api/store/{tenant}/products` | Crear producto |
+| POST | `/api/store/{tenant}/orders` | Crear pedido |
+| GET | `/store/{tenant}` | Tienda pública |
+| GET | `/app/{tenant}` | App movil PWA |
+| POST | `/api/contact` | Formulario de contacto |
 
 ---
 
@@ -192,93 +242,37 @@ saas-platform-v2/
 | 16 | Video hero | `ce73448` | Video de fondo con URLs Pexels por industria, fallback imagen |
 | 17 | Barra progreso | `bad5e5b` | 5 pasos animados durante generación de sitio |
 | 18 | Redes sociales | `b318522` | Facebook, Instagram, TikTok, YouTube, X en footer |
-| 19 | Multi-idioma | `cf426f1` | Selector ES/EN, LLM en idioma, lang HTML dinámico, textos traducidos |
+| 19 | Multi-idioma | `cf426f1` | Selector ES/EN, LLM en idioma, lang HTML dinámico |
+| 20 | Upload imágenes | `1f81151` | Logo y fotos reales upload, persisten entre regeneraciones |
+| 21 | 4 plantillas IA | `f4f39d5` | medical, ecommerce, fitness, hotel + _select_template() |
+| 22 | WhatsApp fix | `19707d5` | WhatsApp movido a left-6 para no chocar con chatbot |
+| 23 | WhatsApp + tooltips | `e984d0d` | WhatsApp right-24 junto al chatbot, tooltips hover |
+| 24 | WhatsApp spacing | `0853438` | Más espacio entre iconos (right-24) |
+| 25 | Blog integrado | `b5e6164` | CRUD posts, admin UI, sección en 7 plantillas, post individual markdown |
+| 26 | E-commerce | `f9b0cc1` | Productos, carrito, checkout, pedidos admin |
+| 27 | PWA movil | `8a35bc2` | Dashboard movil leads/pedidos/stats/blog, manifest, iconos |
+| 28 | PWA login | `bd74575` | Login integrado en PWA, ya no pide auth en URL |
+| 29 | Cuenta cliente | `f409fa8` | Crear usuario cliente desde admin con acceso a app movil |
 
 ---
 
-## Mejoras pendientes (priorizadas)
+## Observaciones conocidas
 
-### Alta prioridad
-1. ~~**Subir logo y fotos reales**~~ — COMPLETADO: Upload de logo y fotos funcional en 7 plantillas.
-2. ~~**Mapa de Google**~~ — COMPLETADO: Google Maps iframe en contacto (7 plantillas).
-
-### Media prioridad
-3. ~~**Subir k del RAG a 5**~~ — COMPLETADO: `search_kwargs={"k": 5}` en `rag_service.py:110`.
-4. ~~**Configurar Resend**~~ — COMPLETADO: API key funcional con `manueltunchan@gmail.com`.
-
-### Baja prioridad
-5. ~~**Limpiar compose**~~ — COMPLETADO: Postgres eliminado de `docker-compose.yml` y `.env`.
-6. ~~**Paginación de leads**~~ — COMPLETADO: 20 leads/página con botones anterior/siguiente.
-
-### Completado este bloque
-7. **3 planes SaaS** — Básico ($29, chatbot-only), Pro ($79, sitio+chatbot), Premium ($149, todo+dominio).
-8. **Analytics** — Page views, chat sessions tracking, endpoints por tenant y globales.
-9. **Dominios personalizados** — Registro, verificación y listado de dominios (plan Premium).
-10. **Sitio congelado** — Overlay cuando expira la suscripción, chatbot deshabilitado.
-11. **Landing con planes** — 3 tarjetas de planes con features y pricing en `/static/index.html`.
+1. **RAG: pregunta doble puede inventar precio.** El buscador recupera k=5 fragmentos. En preguntas con 2 temas distintos puede no traer el fragmento correcto.
+2. **RESEND_API_KEY** configurada funcional con `manueltunchan@gmail.com`.
+3. **Cambios de código requieren rebuild:** `docker compose up -d --build backend`
+4. **El rebuild sale con exit-code no-cero** por un warning de PowerShell, pero la imagen se construye (~35-60s por carga del embedding model).
+5. **Datos en volumen:** `./data:/app/data` (persiste entre reinicios)
+6. **El .env no se sube a GitHub** (tiene secretos).
+7. **httpx==0.27.2** en requirements → integraciones de pago por REST directo (sin SDKs).
 
 ---
 
-## Contenedores Docker (estado actual)
+## Notas para continuar después
 
-Solo corre `saas-backend`. Postgres y servicios auxiliares fueron eliminados.
-
-```
-NAMES          IMAGE                        STATUS
-saas-backend   saas-platform-v2-backend     Up X minutes
-```
-
----
-
-## Desarrollo local con IA (Ollama + Aider)
-
-El proyecto está configurado para desarrollo local sin costo usando Ollama y Aider.
-
-### Herramientas instaladas
-- **Ollama v0.32.14** — `C:\Users\Emilio Tun\AppData\Local\Programs\Ollama\ollama.exe` (inicio automático configurado en registry)
-- **Aider v0.86.2** — `C:\Users\Emilio Tun\.local\bin\aider.exe`
-- **Variable de entorno:** `OLLAMA_API_BASE=http://127.0.0.1:11434` (configurada con `setx`)
-- **Acceso directo:** `Aider-SaaS.lnk` en el escritorio (abre cmd con todo configurado)
-
-### Modelos disponibles
-| Modelo | Tamaño | Velocidad CPU | Notas |
-|---|---|---|---|
-| `llama3.2:3b` | 2GB | ~10s | Rápido, buena calidad para ediciones simples |
-| `qwen3:4b` | 2.5GB | ~30s+ | Tiene "thinking" (lento en CPU) |
-| `deepseek-r1:latest` | 5.2GB | ~60s+ | Tiene "thinking" (muy lento en CPU) |
-
-### Cómo usar Aider
-Desde la carpeta del proyecto (`C:\projects\saas-platform-v2`):
-
-```powershell
-# Siempre abrir una consola nueva (para cargar OLLAMA_API_BASE)
-$env:PATH = "C:\Users\Emilio Tun\.local\bin;$env:PATH"
-$env:OLLAMA_API_BASE = "http://127.0.0.1:11434"
-
-# Ejemplo: editar un archivo
-aider --model ollama_chat/llama3.2:3b --no-show-model-warnings --no-pretty --no-gitignore --map-tokens 0 --yes-always --no-auto-commits --message "Tu instrucción aquí" -- backend/app/main.py
-```
-
-**Flags importantes:**
-- `--map-tokens 0` — Desactiva el repo-map (ahorra 30+ segundos de análisis)
-- `--yes-always` — Auto-acepta cambios sin confirmar
-- `--no-auto-commits` — No hace commits automáticos
-- `--exit` — Sale después de ejecutar el mensaje (no abre modo interactivo)
-
-**Limitaciones conocidas:**
-- Sin consola interactiva en este entorno (no detecta Windows console)
-- Modelos grandes son muy lentos en CPU (sin GPU)
-- Para tareas complejas, usar `llama3.2:3b` que es el más rápido
-- Después de cambios, ejecutar: `docker compose up -d --build backend`
-
----
-
-## Notas para la oficina
-
-- **Cambios de código requieren rebuild:** `docker compose up -d --build backend`
-- **El rebuild sale con exit-code no-cero** por un warning de PowerShell, pero la imagen se construye y el contenedor arranca (~35-60s por carga del embedding model).
-- **Datos en volumen:** `./data:/app/data` (persiste entre reinicios)
-- **El .env no se sube a GitHub** (tiene secretos). Si cambias de computadora, recrearlo.
-- **Modelo LLM por defecto:** Qwen3 30B vía OpenRouter (barato, ~$0.01-0.02 por sitio generado).
-- **Los archivos de memoria en `chats/`** son la documentación del desarrollo. Siempre hay uno por bloque funcional.
-- **httpx==0.27.2** ya está en requirements → integraciones de pago por REST directo (sin SDKs).
+- **Pendientes de media prioridad**: Animaciones de scroll (IntersectionObserver), modo oscuro, testimonios de Google, páginas múltiples.
+- **Pendientes de alta prioridad**: Dashboard del cliente con analytics, Calendly embebido, SEO automático (sitemap, schema.org), Google Analytics/Pixel, popup captura leads.
+- **El usuario usa opencode como herramienta principal** para desarrollo.
+- **2 PCs**: casa (Emilio Tun) y trabajo (Manuel) con sync via GitHub.
+- **Variable `OPENCODE_SERVER_PASSWORD`** está en el entorno del proceso, NO en el registro de Windows.
+- **Panel de proyectos simplificado**: `C:\projects\project-panel` (repo `ManuelTun2204/project-panel`). `open_opencode` solo abre la app de escritorio (`OpenCode.exe`).
