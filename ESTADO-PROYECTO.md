@@ -221,9 +221,10 @@ saas-backend   saas-platform-v2-backend     Up X minutes
 El proyecto está configurado para desarrollo local sin costo usando Ollama y Aider.
 
 ### Herramientas instaladas
-- **Ollama v0.32.14** — `C:\Users\Emilio Tun\AppData\Local\Programs\Ollama\ollama.exe`
+- **Ollama v0.32.14** — `C:\Users\Emilio Tun\AppData\Local\Programs\Ollama\ollama.exe` (inicio automático configurado en registry)
 - **Aider v0.86.2** — `C:\Users\Emilio Tun\.local\bin\aider.exe`
 - **Variable de entorno:** `OLLAMA_API_BASE=http://127.0.0.1:11434` (configurada con `setx`)
+- **Acceso directo:** `Aider-SaaS.lnk` en el escritorio (abre cmd con todo configurado)
 
 ### Modelos disponibles
 | Modelo | Tamaño | Velocidad CPU | Notas |
