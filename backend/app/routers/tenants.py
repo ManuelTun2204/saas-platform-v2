@@ -226,6 +226,12 @@ async def delete_upload(tenant_id: str, filename: str, current_user: dict = Depe
 @router.post("/api/chat/{tenant_id}")
 async def chat_endpoint(tenant_id: str, request: ChatRequest, http_request: Request):
     """Endpoint para el chatbot"""
+    # Validar que el tenant exista ANTES de procesar nada. Esto evita que
+    # cualquiera golpee /api/chat/<id-inventado> y consuma tu API de OpenRouter.
+    _tenants = read_json_file(DATA_DIR / "tenants.json", [])
+    if not any(t.get("tenant_id") == tenant_id or t.get("id") == tenant_id for t in _tenants):
+        raise HTTPException(status_code=404, detail="Tenant no encontrado")
+
     try:
         client_ip = http_request.client.host if http_request.client else "unknown"
         if not check_rate_limit(f"chat:{tenant_id}:{client_ip}", limit=20, window_seconds=60):
@@ -236,8 +242,26 @@ async def chat_endpoint(tenant_id: str, request: ChatRequest, http_request: Requ
         user_email = request.email
         source = request.source
 
+        # Validar que el tenant exista (evita que cualquiera consuma tu API
+        # golpeando /api/chat/<id-inventado>).
+        tenants = read_json_file(DATA_DIR / "tenants.json", [])
+        tenant_info = next((t for t in tenants if t.get("tenant_id") == tenant_id or t.get("id") == tenant_id), None)
+        if tenant_info is None:
+            raise HTTPException(status_code=404, detail="Tenant no encontrado")
+
         from app.services.analytics_service import analytics_service
         analytics_service.track_chat(tenant_id, session_id=session_id)
+
+        # Limite de mensajes por mes segun el plan (protege tu API key de OpenRouter).
+        from app.services.usage_service import enforce_usage
+        allowed, used, limit, remaining = enforce_usage(tenant_id, tenant_info.get("package"))
+        if not allowed:
+            return {
+                "status": "limit",
+                "answer": "Se alcanzo el limite mensual de mensajes de tu plan. Contacta al administrador para ampliarlo.",
+                "is_lead": False,
+                "session_id": session_id,
+            }
 
         answer = await rag_service.query(tenant_id, question, session_id=session_id)
 

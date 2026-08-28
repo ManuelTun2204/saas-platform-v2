@@ -14,7 +14,13 @@ logger = logging.getLogger(__name__)
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "super-secret-key-change-in-production-" + secrets.token_hex(16))
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not JWT_SECRET_KEY:
+    raise RuntimeError(
+        "FALTA configurar JWT_SECRET_KEY en el archivo .env. "
+        "Es obligatorio para firmar las sesiones; sin un valor fijo los "
+        "tokens se invalidan cada vez que se reinicia el contenedor."
+    )
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 REFRESH_TOKEN_EXPIRE_DAYS = 30
