@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tu negocio en internet — Demo para tu restaurante</title>
+<style>
+  :root{
+    --brand:#2563eb; --brand2:#764ba2; --dark:#0f172a; --card:#111c30; --text:#e2e8f0; --muted:#94a3b8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--dark);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.6}
+  a{color:inherit}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  .grad{background:linear-gradient(135deg,var(--brand),var(--brand2))}
+  .btn{display:inline-block;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-weight:700;padding:14px 28px;border-radius:12px;text-decoration:none;box-shadow:0 10px 30px rgba(37,99,235,.35)}
+  .btn:hover{filter:brightness(1.1)}
+  header{position:sticky;top:0;z-index:10;background:rgba(15,23,42,.9);backdrop-filter:blur(8px);border-bottom:1px solid #1e293b}
+  nav{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;max-width:1080px;margin:0 auto}
+  .logo{font-weight:800;font-size:1.15rem}
+  .logo span{background:linear-gradient(135deg,var(--brand),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  nav a{margin-left:24px;color:var(--muted);text-decoration:none;font-size:.95rem}
+  nav a:hover{color:#fff}
+  .hero{padding:90px 24px 70px;text-align:center;background:radial-gradient(800px 400px at 50% -10%,#1d3a7e66,transparent)}
+  .hero .kicker{letter-spacing:2px;text-transform:uppercase;color:#93c5fd;font-weight:700;font-size:.8rem}
+  h1{font-size:2.6rem;line-height:1.15;margin:18px 0 16px}
+  h1 .grad{display:inline-block;-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:1.15rem;max-width:640px;margin:0 auto 30px}
+  .hero small{display:block;color:var(--muted);margin-top:16px;font-size:.9rem}
+  section{padding:64px 0}
+  h2{font-size:1.9rem;margin-bottom:8px}
+  h2 .grad{display:inline-block;-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{color:var(--muted);max-width:760px;margin-bottom:36px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+  .card{background:var(--card);border:1px solid #1e293b;border-radius:18px;padding:28px}
+  .card h3{font-size:1.2rem;margin-bottom:10px}
+  .card p{color:var(--muted);font-size:.98rem}
+  .card .num{font-size:2rem;font-weight:800;background:linear-gradient(135deg,var(--brand),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  ul.check{list-style:none;margin-top:12px}
+  ul.check li{padding:8px 0 8px 34px;position:relative;color:var(--text);border-bottom:1px dashed #1e293b}
+  ul.check li:before{content:"✓";position:absolute;left:0;color:#34d399;font-weight:800}
+  .shot{width:100%;height:auto;border-radius:16px;border:1px solid #1e293b;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+  .caption{text-align:center;color:var(--muted);font-size:.85rem;margin-top:12px}
+  .frame{background:var(--card);border:1px solid #1e293b;border-radius:20px;padding:18px}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center}
+  .pill{display:inline-block;background:#1e293b;color:#93c5fd;font-size:.78rem;font-weight:700;padding:6px 14px;border-radius:999px;margin:4px 6px 4px 0;border:1px solid #334155}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:0;border-radius:18px;overflow:hidden;border:1px solid #1e293b}
+  .compare .col{padding:28px}
+  .compare .before{background:#1a2235}
+  .compare .after{background:var(--card)}
+  .compare h4{margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;font-size:.85rem}
+  .compare .before h4{color:#f87171}
+  .compare .after h4{color:#34d399}
+  .compare li{list-style:none;padding:8px 0 8px 26px;position:relative;color:var(--muted);font-size:.95rem}
+  .compare .before li:before{content:"✕";position:absolute;left:0;color:#f87171;font-weight:800}
+  .compare .after li:before{content:"✓";position:absolute;left:0;color:#34d399;font-weight:800}
+  .cta{text-align:center;background:radial-gradient(700px 300px at 50% 100%,#1d3a7e66,transparent);padding:70px 24px}
+  .cta h2{font-size:2.1rem;margin-bottom:14px}
+  .cta p{color:var(--muted);max-width:600px;margin:0 auto 28px}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;padding:28px 24px;border-top:1px solid #1e293b}
+  @media(max-width:820px){h1{font-size:2rem}.grid2,.duo,.compare{grid-template-columns:1fr} nav a{display:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <div class="logo">Tu<span>Negocio</span>EnLínea</div>
+    <div>
+      <a href="#problema">El problema</a>
+      <a href="#solucion">La solución</a>
+      <a href="#chatbot">Chat 24/7</a>
+      <a href="#app">App móvil</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker">Demo real · Restaurante "Casa Sabor"</div>
+    <h1>Tu restaurante merece estar<br>en internet <span class="grad">atendiendo por ti</span></h1>
+    <p class="sub">Una página web profesional + chatbot de IA + app para el celular, que captura pedidos y clientes mientras tú atiendes tu cocina.</p>
+    <a class="btn" href="#oportunidad">Ver lo que tu negocio se pierde hoy</a>
+    <small>Esto es una captura real de un sitio generado con nuestro sistema.</small>
+  </div>
+</section>
+
+<section id="problema">
+  <div class="wrap">
+    <h2>El problema: <span class="grad">cada día pierdes clientes</span> y no lo sabes</h2>
+    <p class="lede">Hoy la mayoría de tus clientes buscan en Google y redes sociales. Si no te encuentran bien, encuentran a la competencia.</p>
+    <div class="compare">
+      <div class="col before">
+        <h4>Sin tu presencia en línea</h4>
+        <ul>
+          <li>Dependes de recomendaciones cara a cara</li>
+          <li>No respondes a las 2 a.m. cuando te escriben</li>
+          <li>No capturas el correo de tus clientes</li>
+          <li>No apareces en Google Maps ni en SEO</li>
+          <li>Pierdes pedidos mientras estás cerrado</li>
+        </ul>
+      </div>
+      <div class="col after">
+        <h4>Con tu negocio en internet</h4>
+        <ul>
+          <li>Te encuentran al buscar "restaurante cerca de mí"</li>
+          <li>Un chatbot responde por ti a toda hora</li>
+          <li>Capturas correos → conviertes visitas en clientes</li>
+          <li>Apareces con SEO + Google Maps + WhatsApp</li>
+          <li>Recibes pedidos y cotizaciones 24/7</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="solucion">
+  <div class="wrap">
+    <h2>La solución: <span class="grad">tu web lista, con IA</span></h2>
+    <p class="lede">Generamos tu sitio web completo en cuestión de minutos: textos, fotos, menú, contacto y diseño a tu medida. Sin semanas de desarrollo y sin costos de miles de dólares.</p>
+
+    <div class="duo">
+      <div>
+        <div class="frame">
+          <img class="shot" src="capturas/01-web-full.png" alt="Sitio web de Casa Sabor">
+        </div>
+        <div class="caption">Tu página web profesional — lista para que la vea el mundo.</div>
+      </div>
+      <div class="card">
+        <h3>Tu web en minutos, no en meses</h3>
+        <p>Texto, imágenes, menú, galería y colores de tu marca. Todo con la mejor tecnología de IA, sin depender de agencias costosas ni esperar semanas para tener presencia.</p>
+        <div>
+          <span class="pill">Diseño profesional</span>
+          <span class="pill">Texto e imágenes con IA</span>
+          <span class="pill">Galería y menú</span>
+          <span class="pill">Google Maps</span>
+          <span class="pill">Multi-idioma</span>
+          <span class="pill">SEO</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="chatbot" style="background:#0b1222">
+  <div class="wrap">
+    <h2>Tu <span class="grad">asistente 24/7</span> que nunca se cansa</h2>
+    <p class="lede">Un chatbot con inteligencia artificial que responde las preguntas de tus clientes usando la información real de tu negocio: horarios, menú, precios, ubicación.</p>
+    <div class="grid2">
+      <div class="card">
+        <div class="num">24/7</div>
+        <h3>Atiende a toda hora</h3>
+        <p>Mientras duermes o atiendes la cocina, el chatbot contesta dudas y captura el correo del interesado.</p>
+      </div>
+      <div class="card">
+        <div class="num">100%</div>
+        <h3>Con tus datos reales</h3>
+        <p>Le cargamos la información de tu negocio (menú, precios, horarios) para que responda con exactitud — no con respuestas genéricas.</p>
+      </div>
+      <div class="card">
+        <div class="num">+</div>
+        <h3>WhatsApp flotante</h3>
+        <p>Botón de WhatsApp siempre visible para que el cliente te contacte al instante con un toque.</p>
+      </div>
+      <div class="card">
+        <div class="num">✉</div>
+        <h3>Captura de leads</h3>
+        <p>Cada correo que el visitante deja te llega a tu email al momento. Conviertes visitas en contactos accionables.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="app">
+  <div class="wrap">
+    <h2>La app de tu negocio <span class="grad">en tu bolsillo</span></h2>
+    <p class="lede">Tú administra todo desde tu celular, sin saber programar: revisa pedidos, clientes y estadísticas en cualquier momento.</p>
+    <div class="duo">
+      <div class="frame" style="max-width:340px;margin:0 auto">
+        <img class="shot" src="capturas/03-app-cliente.png" alt="App móvil del cliente">
+      </div>
+      <div>
+        <ul class="check">
+          <li>Dashboard con tus leads y pedidos en tiempo real</li>
+          <li>Edita textos y promociones al momento</li>
+          <li>Recibe notificaciones de nuevos clientes</li>
+          <li>Funciona como app instalable en tu celular</li>
+        </ul>
+        <div style="margin-top:20px">
+          <span class="pill">Pedidos</span>
+          <span class="pill">Leads</span>
+          <span class="pill">Estadísticas</span>
+          <span class="pill">Blog</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="oportunidad" class="cta">
+  <div class="wrap">
+    <h2>Esta es tu <span class="grad">oportunidad</span></h2>
+    <p>Mientras tú decides, hay un negocio por ahí ganando clientes que hoy podrían ser tuyos. El costo promedio de no estar en línea es más alto que tener tu presencia funcionando.</p>
+    <p><strong>Empieza con una membresía mensual — sin desarrollo caro, sin dolor de cabeza técnico.</strong></p>
+    <a class="btn" href="#problema" style="margin-right:10px">Ver otra vez por qué importa</a>
+    <a class="btn" href="capturas/01-web-full.png" download style="background:#0ea5e9">Descargar vista previa</a>
+  </div>
+</section>
+
+<footer>
+  <p>Demo generado con un sitio real de la plataforma · Contacta para armar el tuyo hoy mismo</p>
+</footer>
+
+</body>
+</html>
