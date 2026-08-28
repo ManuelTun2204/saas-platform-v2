@@ -222,6 +222,8 @@
 <button id="editor-btn" onclick="openEditor()" class="block w-full bg-gray-800 text-white px-4 py-3 rounded-lg hover:bg-gray-900">Editar Sitio</button>
 <button id="blog-btn" onclick="openBlog()" class="block w-full bg-indigo-600 text-white px-4 py-3 rounded-lg hover:bg-indigo-700"><i class="fa-solid fa-pen-nib mr-1"></i>Gestionar Blog</button>
 <button id="store-btn" onclick="openStore()" class="block w-full bg-orange-600 text-white px-4 py-3 rounded-lg hover:bg-orange-700"><i class="fa-solid fa-store mr-1"></i>Gestionar Tienda</button>
+<a id="client-site-link" target="_blank" class="block w-full text-center bg-sky-600 text-white px-4 py-3 rounded-lg hover:bg-sky-700"><i class="fa-solid fa-mobile-screen mr-1"></i>Ver sitio (cliente)</a>
+<a id="visitor-site-link" target="_blank" class="block w-full text-center bg-emerald-600 text-white px-4 py-3 rounded-lg hover:bg-emerald-700"><i class="fa-solid fa-globe mr-1"></i>Ver sitio (visitante)</a>
 <div class="border-t pt-3 mt-2">
 <h4 class="font-bold text-sm mb-2 text-gray-700">Cuenta del Cliente (App Movil)</h4>
 <div id="client-user-info" class="text-sm text-gray-500 mb-2"></div>
@@ -1118,6 +1120,8 @@ async function viewCompanyDetails(tenantId, name) {
     }
     document.getElementById('web-link').href = '/data/websites/' + tenantId + '/index.html';
     document.getElementById('seo-link').href = '/data/websites/' + tenantId + '/seo-report.html';
+    document.getElementById('client-site-link').href = '/app/' + encodeURIComponent(tenantId);
+    document.getElementById('visitor-site-link').href = '/data/websites/' + tenantId + '/index.html';
     previewEl.src = iframeSrc + '?v=' + Date.now();
     showView('company-detail');
     loadClientUserInfo();
