@@ -268,6 +268,19 @@ saas-platform-v2/
 
 ---
 
+## Seguridad aplicada (2026-08-28, commit `e63ff3c`)
+
+Antes de entregar a clientes reales se aplicaron 3 fixes críticos:
+
+1. **Validación de tenant en `/api/chat/{tenant_id}`**: si el tenant no existe responde **404** antes de tocar el LLM. Evita que cualquiera golpee `/api/chat/<id-inventado>` y consuma tu API de OpenRouter.
+2. **Límites de uso de chat por plan**: nuevo `backend/app/services/usage_service.py` cuenta mensajes por tenant/mes y aplica tope según el paquete (basic=500, pro=3000, premium/full=10000, por defecto 3000). Al alcanzar el límite responde "plan alcanzado" sin gastar API. Contador en `data/storage/usage.json` (gitignored).
+3. **`JWT_SECRET_KEY` obligatoria**: ahora el backend **falla al arrancar** si no está en `.env` (antes generaba una aleatoria y rompía las sesiones en cada reinicio).
+
+> Para aplicar los dos primeros hay que reconstruir: `docker compose up -d --build backend`.
+> El `.env` ya incluye `JWT_SECRET_KEY`.
+
+---
+
 ## Notas para continuar después
 
 - **Pendientes de media prioridad**: Animaciones de scroll (IntersectionObserver), modo oscuro, testimonios de Google, páginas múltiples.
