@@ -4,7 +4,7 @@ import os
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 
 from app.deps import BASE_DIR, DATA_DIR
 from app.routers import auth, tenants, payments, analytics, leads, blog, ecommerce, pwa
@@ -28,6 +28,11 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 (DATA_DIR / "websites").mkdir(exist_ok=True)
 (DATA_DIR / "exports").mkdir(exist_ok=True)
+
+# Carpeta de material demo para clientes (montada como volumen: ./cliente-demo)
+CLIENTE_DEMO_DIR = BASE_DIR.parent / "cliente-demo"
+CLIENTE_DEMO_DIR.mkdir(exist_ok=True)
+app.mount("/demo-cliente", StaticFiles(directory=str(CLIENTE_DEMO_DIR)), name="demo_cliente")
 app.mount("/data/websites", StaticFiles(directory=str(DATA_DIR / "websites")), name="websites")
 app.mount("/data/exports", StaticFiles(directory=str(DATA_DIR / "exports")), name="exports")
 
@@ -60,6 +65,15 @@ async def serve_admin_panel():
             "Expires": "0"
         }
     )
+
+
+@app.get("/demo")
+async def serve_demo():
+    """Página de venta / material demo para clientes"""
+    demo_file = CLIENTE_DEMO_DIR / "demo.html"
+    if not demo_file.exists():
+        raise HTTPException(status_code=404, detail="Demo no encontrado")
+    return FileResponse(demo_file, media_type="text/html; charset=utf-8")
 
 
 @app.get("/health")

@@ -31,6 +31,7 @@
       HF_HUB_DISABLE_TELEMETRY: "1"
     volumes:
       - ./data:/app/data
+      - ./cliente-demo:/app/cliente-demo
     restart: always
     networks:
       - saas-network
