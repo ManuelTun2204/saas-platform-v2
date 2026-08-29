@@ -54,6 +54,8 @@
   .compare li{list-style:none;padding:8px 0 8px 26px;position:relative;color:var(--muted);font-size:.95rem}
   .compare .before li:before{content:"✕";position:absolute;left:0;color:#f87171;font-weight:800}
   .compare .after li:before{content:"✓";position:absolute;left:0;color:#34d399;font-weight:800}
+  .video-wrap{background:var(--card);border:1px solid #1e293b;border-radius:20px;padding:14px;margin:40px 0}
+  video{width:100%;height:auto;border-radius:12px;display:block;background:#000}
   .cta{text-align:center;background:radial-gradient(700px 300px at 50% 100%,#1d3a7e66,transparent);padding:70px 24px}
   .cta h2{font-size:2.1rem;margin-bottom:14px}
   .cta p{color:var(--muted);max-width:600px;margin:0 auto 28px}
@@ -139,10 +141,16 @@
         </div>
       </div>
     </div>
+
+    <div class="video-wrap">
+      <video controls preload="metadata" playsinline poster="capturas/01-web-full.png">
+        <source src="/demo-cliente/video-demo-final.mp4" type="video/mp4">
+        Tu navegador no soporta el video.
+      </video>
+      <div class="caption">Así luce tu negocio en internet — mira el demo en acción (29 segundos).</div>
+    </div>
   </div>
 </section>
-
-<section id="chatbot" style="background:#0b1222">
   <div class="wrap">
     <h2>Tu <span class="grad">asistente 24/7</span> que nunca se cansa</h2>
     <p class="lede">Un chatbot con inteligencia artificial que responde las preguntas de tus clientes usando la información real de tu negocio: horarios, menú, precios, ubicación.</p>
