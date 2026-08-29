@@ -43,3 +43,6 @@ fix_*.py
 update_*.py
 PROMT_MAESTRO_V4.md
 .aider*
+# rutas del proyecto
+apikey.txt
+cliente-demo/video_work/

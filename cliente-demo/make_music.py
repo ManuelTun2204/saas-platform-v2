@@ -4,6 +4,7 @@ SR = 44100
 DUR = 40.0
 BASE = r"C:\projects\saas-platform-v2\cliente-demo"
 OUT = os.path.join(BASE, "video_work", "musica_up.wav")
+os.makedirs(os.path.dirname(OUT), exist_ok=True)
 
 # Progresion alegre/moderna: C - G - Am - F (upbeat pop)
 C4=261.63; D4=293.66; E4=329.63; F4=349.23; G4=392.00; A4=440.00; B4=493.88

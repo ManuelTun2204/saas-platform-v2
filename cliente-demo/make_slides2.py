@@ -4,12 +4,12 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 BASE = r"C:\projects\saas-platform-v2\cliente-demo"
 CAP = os.path.join(BASE, "capturas")
 OUT = os.path.join(BASE, "slides")
-W, H = 1280, 720
+W, H = 1920, 1080
 os.makedirs(OUT, exist_ok=True)
 
 def font(size, bold=False):
     name = "arialbd.ttf" if bold else "arial.ttf"
-    return ImageFont.truetype(os.path.join("C:/Windows/Fonts", name), size)
+    return ImageFont.truetype(os.path.join("C:/Windows/Fonts", name), int(size*1.5))
 
 def gradient_bg(w, h, c1=(15,23,42), c2=(30,58,138)):
     img = Image.new("RGB", (1, h))
@@ -43,16 +43,16 @@ def title_card(fname, kicker, title_lines, sub_lines, accent=(59,130,246,139,92,
     kw = d.textlength(kicker, font=kf)+52
     img2 = Image.new("RGBA", img.size, (0,0,0,0))
     d2 = ImageDraw.Draw(img2)
-    d2.rounded_rectangle(((W-kw)/2, 130, (W+kw)/2, 196), radius=33, fill=(255,255,255,28))
+    d2.rounded_rectangle(((W-kw)/2, 195, (W+kw)/2, 295), radius=50, fill=(255,255,255,28))
     img.paste(img2, (0,0), img2)
     d = ImageDraw.Draw(img)
-    d.text(((W-kw+26)/2, 146), kicker, font=kf, fill=(147,197,253))
+    d.text(((W-kw+39)/2, 219), kicker, font=kf, fill=(147,197,253))
     # title (bigger, bold)
     tf = font(78, True)
-    cy = draw_multiline_center(img, (0,0,W,H), title_lines, tf, (255,255,255), 250, 10)
+    cy = draw_multiline_center(img, (0,0,W,H), title_lines, tf, (255,255,255), 375, 15)
     # subtitle
     sf = font(34)
-    draw_multiline_center(img, (0,0,W,H), sub_lines, sf, (203,213,225), cy+40, 12)
+    draw_multiline_center(img, (0,0,W,H), sub_lines, sf, (203,213,225), cy+60, 18)
     img.save(os.path.join(OUT, fname))
 
 def photo_card(fname, src_img, label, sub=""):
@@ -83,14 +83,14 @@ def chat_mockup(fname):
     img = gradient_bg(W, H, (8,14,30), (20,40,90))
     gl = glow_layer(); img.paste(gl, (0,0), gl)
     # header bar of the widget
-    hdr = Image.new("RGBA", (W,96), (0,0,0,0))
+    hdr = Image.new("RGBA", (W,144), (0,0,0,0))
     dh = ImageDraw.Draw(hdr)
-    dh.rectangle((0,0,W,96), fill=(30,64,175,255))
+    dh.rectangle((0,0,W,144), fill=(30,64,175,255))
     # avatar circle
-    dh.ellipse((40,24,88,72), fill=(255,255,255,255))
-    dh.text((50,40), "C", font=font(26, True), fill=(30,64,175))
-    dh.text((104,36), "Casa Sabor · en línea", font=font(28, True), fill=(255,255,255))
-    dh.text((104,70), "Asistente de tu restaurante", font=font(19), fill=(191,219,254))
+    dh.ellipse((60,36,132,108), fill=(255,255,255,255))
+    dh.text((75,60), "C", font=font(26, True), fill=(30,64,175))
+    dh.text((156,54), "Casa Sabor · en línea", font=font(28, True), fill=(255,255,255))
+    dh.text((156,105), "Asistente de tu restaurante", font=font(19), fill=(191,219,254))
     img.paste(hdr, (0,0), hdr)
     d = ImageDraw.Draw(img)
     # messages (user right blue, bot left gray)
@@ -101,23 +101,23 @@ def chat_mockup(fname):
         ("user", "A una, delivery a mi casa a las 8"),
         ("bot", "¡Listo! Te confirmo para las 8:00 p.m. ¿Tu correo para enviarte el ticket? 📩"),
     ]
-    y = 140
+    y = 210
     for who, text in msgs:
         fnt = font(30)
         tf = font(30)
-        wbox = min(int(d.textlength(text, font=tf)+60), 1000)
-        x0 = 60 if who=="bot" else W-60-wbox
-        x1 = 60+wbox if who=="bot" else W-60
+        wbox = min(int(d.textlength(text, font=tf)+90), 1500)
+        x0 = 90 if who=="bot" else W-90-wbox
+        x1 = 90+wbox if who=="bot" else W-90
         color = (36,46,70,255) if who=="bot" else (37,99,235,255)
         tcol = (226,232,240) if who=="bot" else (255,255,255)
         # bubble
         bub = Image.new("RGBA", (W,H), (0,0,0,0))
         db = ImageDraw.Draw(bub)
-        db.rounded_rectangle((x0, y, x1, y+78), radius=22, fill=color)
+        db.rounded_rectangle((x0, y, x1, y+117), radius=33, fill=color)
         img.paste(bub, (0,0), bub)
         d = ImageDraw.Draw(img)
-        d.text((x0+24, y+22), text, font=fnt, fill=tcol)
-        y += 92
+        d.text((x0+36, y+33), text, font=fnt, fill=tcol)
+        y += 138
     img.save(os.path.join(OUT, fname))
 
 # ---- slides ----
@@ -137,13 +137,13 @@ if __name__ == "__main__":
         img = gradient_bg(W, H, (10,18,38), (20,50,110))
         gl = glow_layer(); img.paste(gl, (0,0), gl)
         d = ImageDraw.Draw(img)
-        d.text((60,60), "TUS GANANCIAS CREEN", font=font(40, True), fill=(52,211,153))
+        d.text((90,90), "TUS GANANCIAS CREEN", font=font(40, True), fill=(52,211,153))
         ch = Image.open(os.path.join(OUT,"s_chart_ganancias.png")).convert("RGBA")
-        ch = ch.resize((1000, 560), Image.LANCZOS)
-        img.paste(ch, ((W-1000)//2, 150), ch)
+        ch = ch.resize((1500, 840), Image.LANCZOS)
+        img.paste(ch, ((W-1500)//2, 225), ch)
         d = ImageDraw.Draw(img)
         w = d.textlength("Cada cliente en línea = más ventas para ti", font=font(30))
-        d.text(((W-w)/2, 22), "Cada cliente en línea = más ventas para ti", font=font(30), fill=(203,213,225))
+        d.text(((W-w)/2, 33), "Cada cliente en línea = más ventas para ti", font=font(30), fill=(203,213,225))
         img.save(os.path.join(OUT,"n6.png"))
     ganancias_card()
     # 7 app cliente
