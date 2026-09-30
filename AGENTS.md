@@ -1,5 +1,20 @@
 # SaaS Platform V2 - Guia para Opencode
 
+## ⚠️ Regla de la casa: UN PROYECTO A LA VEZ
+
+Decisión permanente de Manuel: **se trabaja con un solo proyecto activo a la vez.**
+
+Este proyecto usa el **8000** (backend), que es el mismo puerto que pide
+`municipal-reclutamiento` (api). Si los dos suben juntos, el segundo falla con
+`port is already allocated`. Por eso no se cambian los puertos: la regla ya lo
+evita.
+
+- Al pedir este proyecto: `docker compose up -d` en este repo, verificar el
+  puerto y abrir `http://localhost:8000/docs`.
+- Antes de levantar otro: `docker compose stop` aquí (apaga sin borrar datos).
+- El procedimiento completo por proyecto está en la skill `levantar-proyecto`
+  (opencode). Este bloque es solo el recordatorio de por qué.
+
 ## Comandos Principales
 
 ### Docker (Backend)
