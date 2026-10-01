@@ -32,7 +32,11 @@
     volumes:
       - ./data:/app/data
       - ./cliente-demo:/app/cliente-demo
-    restart: always
+    # Era `always`: la politica mas agresiva de las cinco, porque ni un reinicio
+    # manual lo apagaba. Este backend se levantaba solo al abrir Docker Desktop y
+    # ocupaba el 8000. Decision de Manuel (2026-09-30): cada proyecto arranca
+    # cuando se elige, no en automatico.
+    restart: "no"
     networks:
       - saas-network
 
