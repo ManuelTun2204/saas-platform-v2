@@ -1,6 +1,45 @@
 # SaaS Platform V2 - Guia para Opencode
 
-## ⚠️ Regla de la casa: UN PROYECTO A LA VEZ
+## 🔴 URGENTE 2026-10-01 - LEER ANTES DE TOCAR NADA
+
+**LO QUE DICE ESTE ARCHIVO DEBAJO ESTA MALO. NO CONFIES EN EL.**
+
+Verificado en esta PC (no es opinion, es `Test-Path` + `docker compose config`):
+
+| Este doc afirma | Realidad verificada |
+|---|---|
+| `frontend/` Next.js en 3000 | **NO EXISTE** el directorio |
+| `dashboard/` Streamlit en 8501 | **NO EXISTE** el directorio |
+| `docker compose exec postgres` | **NO hay servicio `postgres`** |
+| `docker compose logs -f postgres` | **idem, servicio inexistente** |
+| Redis en 6379 | **NO esta en el compose** |
+| `curl /api/users`, `/api/sites`, `/api/templates`, `/api/ecommerce` | **NO existen** |
+
+**Realidad (2026-10-01):** el compose declara UN solo servicio, `backend`
+(FastAPI). Los endpoints que SI existen son:
+`/`, `/demo`, `/health`, `/landing`,
+`/api/analytics/global`, `/api/analytics/tenant/{tenant_id}`,
+`/api/auth/me`, `/api/leads`, `/api/payments/config`,
+`/api/domain/{tenant_id}`, `/api/domains`,
+`/api/blog/{tenant_id}`, `/api/blog/{tenant_id}/all`,
+`/api/chat/{tenant_id}/config`, `/api/chat-config/{tenant_id}`.
+Persistencia en archivos JSON (`./data`), no en Postgres.
+
+**Open problems (auditoria 2026-09-28, `chats/2026-09-28-auditoria-recomendacion.md`):**
+1. `storage_service.py` hace JSON read-modify-write SIN locks = condicion de
+   carrera entre tenants [ALTO].
+2. Credenciales `admin/admin123` documentadas [ALTO].
+3. Sin suite de tests (solo hay un generator).
+4. `website_service.py` ~53 KB, un solo archivo gigante.
+
+**Este proyecto NO esta vendible hoy** (ver la seccion comercial de la
+memoria central). Se trabaja "despues". Cuando se retome, lo primero es
+**reescribir este archivo a la realidad**; lo de abajo se conserva solo como
+registro de lo que se CREIA que habia.
+
+---
+
+## [OBSOLETO] Regla de la casa: UN PROYECTO A LA VEZ
 
 Decisión permanente de Manuel: **se trabaja con un solo proyecto activo a la vez.**
 
