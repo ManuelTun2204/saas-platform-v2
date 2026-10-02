@@ -1,4 +1,4 @@
-﻿__pycache__/
+__pycache__/
 *.py[cod]
 *.class
 *.so
@@ -46,3 +46,5 @@ PROMT_MAESTRO_V4.md
 # rutas del proyecto
 apikey.txt
 cliente-demo/video_work/
+.n.env.bak-*
+.env.bak-*
